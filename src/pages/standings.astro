@@ -1,0 +1,223 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { fetchRosters, fetchUsers, fetchLeague, LEAGUE_CONFIG } from "../data/sleeper-api";
+import { getNflTeamLogoUrl } from "../data/players";
+import { getNFLTeam } from "../data/nfl-teams";
+
+const [rosters, users, league] = await Promise.all([
+  fetchRosters(),
+  fetchUsers(),
+  fetchLeague(),
+]);
+
+const userMap = new Map(users.map(u => [u.user_id, u]));
+
+// Build standings with all stats
+const standings = rosters
+  .map(roster => {
+    const user = userMap.get(roster.owner_id);
+    const teamName = user?.metadata?.team_name || user?.display_name || "Unknown";
+    const owner = user?.display_name || "Unknown";
+    const avatar = user?.avatar ? `https://sleepercdn.com/avatars/${user.avatar}` : null;
+    const wins = roster.settings.wins;
+    const losses = roster.settings.losses;
+    const ties = roster.settings.ties;
+    const pf = roster.settings.fpts;
+    const pa = roster.settings.fpts_against;
+    const totalGames = wins + losses + ties;
+    const winPct = totalGames > 0 ? (wins / totalGames) : 0;
+    const streak = roster.settings.wins - roster.settings.losses > 0 ? `W${roster.settings.wins}` : `L${roster.settings.losses}`;
+    
+    return {
+      teamName,
+      owner,
+      avatar,
+      wins,
+      losses,
+      ties,
+      pf,
+      pa,
+      winPct,
+      diff: pf - pa,
+      streak,
+      waiverBudget: roster.settings.waiver_budget_used,
+      moves: roster.settings.total_moves,
+    };
+  })
+  .sort((a, b) => b.wins - a.wins || b.pf - a.pf);
+
+const currentWeek = league?.settings?.last_scored_week || 0;
+const seasonType = league?.settings?.season_type || "regular";
+---
+
+<Layout title="Standings">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">📊</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Live Standings</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · {LEAGUE_CONFIG.season} Season · Week {currentWeek}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Standings Table -->
+  <div class="glass-card-static rounded-xl overflow-x-auto">
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th class="w-8">#</th>
+          <th>Team</th>
+          <th class="text-center">W</th>
+          <th class="text-center">L</th>
+          <th class="text-center">T</th>
+          <th class="text-center">Pct</th>
+          <th class="text-right">PF</th>
+          <th class="text-right">PA</th>
+          <th class="text-right">Diff</th>
+          <th class="text-center">Streak</th>
+          <th class="text-center">Moves</th>
+        </tr>
+      </thead>
+      <tbody>
+        {standings.map((s, i) => {
+          const rowClass = i < 6 ? "text-emerald-400/50" : i >= 12 ? "text-red-400/50" : "text-zinc-600/50";
+          return (
+            <tr class="hover:bg-zinc-800/30 transition-colors">
+              <td class="text-zinc-500 font-mono text-xs">
+                {i === 0 ? <span class="text-amber-400">🥇</span> : i === 1 ? <span class="text-zinc-300">🥈</span> : i === 2 ? <span class="text-amber-600">🥉</span> : i + 1}
+              </td>
+              <td>
+                <div class="flex items-center gap-2.5">
+                  {s.avatar ? (
+                    <img src={s.avatar} alt={s.owner} class="h-8 w-8 rounded-lg object-cover" />
+                  ) : (
+                    <div class="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">?</div>
+                  )}
+                  <div>
+                    <div class="text-sm font-semibold text-zinc-100">{s.teamName}</div>
+                    <div class="text-[10px] text-zinc-500">{s.owner}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center font-mono text-sm font-semibold">{s.wins}</td>
+              <td class="text-center font-mono text-sm">{s.losses}</td>
+              <td class="text-center font-mono text-sm text-zinc-500">{s.ties}</td>
+              <td class="text-center font-mono text-xs text-zinc-400">{(s.winPct * 1000).toFixed(0)}</td>
+              <td class="text-right font-mono text-sm font-semibold text-emerald-400">{s.pf.toFixed(1)}</td>
+              <td class="text-right font-mono text-sm text-zinc-400">{s.pa.toFixed(1)}</td>
+              <td class="text-right font-mono text-sm" class:list={[s.diff > 0 ? 'text-emerald-400' : 'text-red-400']}>
+                {s.diff > 0 ? '+' : ''}{s.diff.toFixed(1)}
+              </td>
+              <td class="text-center">
+                <span class="inline-flex items-center gap-1 text-xs font-mono" class:list={[s.streak.startsWith('W') ? 'text-emerald-400' : 'text-red-400']}>
+                  {s.streak.startsWith('W') ? '🔥' : '💧'} {s.streak}
+                </span>
+              </td>
+              <td class="text-center font-mono text-xs text-zinc-400">{s.moves}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Playoff Picture -->
+  <div class="mt-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">🏆</div>
+      <h2 class="text-lg font-bold text-amber-400">Playoff Picture</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
+      <!-- In Playoffs -->
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-lg">✅</span>
+          <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider">In Playoffs</h3>
+        </div>
+        <div class="space-y-2">
+          {standings.slice(0, 6).map((s, i) => (
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono text-zinc-500 w-4">{i + 1}</span>
+                <span class="text-zinc-200 font-medium">{s.teamName}</span>
+              </div>
+              <span class="text-xs font-mono text-zinc-400">{s.wins}-{s.losses}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- On the Bubble -->
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-lg">👀</span>
+          <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">On the Bubble</h3>
+        </div>
+        <div class="space-y-2">
+          {standings.slice(6, 10).map((s, i) => (
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono text-zinc-500 w-4">{i + 7}</span>
+                <span class="text-zinc-200 font-medium">{s.teamName}</span>
+              </div>
+              <span class="text-xs font-mono text-zinc-400">{s.wins}-{s.losses}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Eliminated -->
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-lg">❌</span>
+          <h3 class="text-sm font-bold text-red-400 uppercase tracking-wider">Eliminated</h3>
+        </div>
+        <div class="space-y-2">
+          {standings.slice(10).map((s, i) => (
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono text-zinc-500 w-4">{i + 11}</span>
+                <span class="text-zinc-200 font-medium">{s.teamName}</span>
+              </div>
+              <span class="text-xs font-mono text-zinc-400">{s.wins}-{s.losses}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- League Stats -->
+  <div class="mt-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📈</div>
+      <h2 class="text-lg font-bold text-amber-400">League Stats</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+      <div class="glass-card rounded-xl p-4 text-center">
+        <div class="text-2xl font-bold text-amber-400">{standings.reduce((sum, s) => sum + s.pf, 0).toFixed(0)}</div>
+        <div class="text-xs text-zinc-500 mt-1">Total Points Scored</div>
+      </div>
+      <div class="glass-card rounded-xl p-4 text-center">
+        <div class="text-2xl font-bold text-emerald-400">{(standings.reduce((sum, s) => sum + s.pf, 0) / standings.length).toFixed(0)}</div>
+        <div class="text-xs text-zinc-500 mt-1">Avg Points Per Team</div>
+      </div>
+      <div class="glass-card rounded-xl p-4 text-center">
+        <div class="text-2xl font-bold text-amber-400">{standings.reduce((sum, s) => sum + s.moves, 0)}</div>
+        <div class="text-xs text-zinc-500 mt-1">Total Transactions</div>
+      </div>
+      <div class="glass-card rounded-xl p-4 text-center">
+        <div class="text-2xl font-bold text-amber-400">{standings[0]?.teamName || "—"}</div>
+        <div class="text-xs text-zinc-500 mt-1">Current Leader</div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,192 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { players, getEspnHeadshotUrl, getPositionColor } from "../data/players";
+import { getNFLTeam } from "../data/nfl-teams";
+
+// Group players by position
+const byPosition: Record<string, typeof players> = {};
+for (const p of players) {
+  if (!byPosition[p.position]) byPosition[p.position] = [];
+  byPosition[p.position].push(p);
+}
+
+// Sort each position by ADP
+for (const pos of Object.keys(byPosition)) {
+  byPosition[pos].sort((a, b) => (a.adp || 999) - (b.adp || 999));
+}
+
+const positions = ["QB", "RB", "WR", "TE", "K", "DEF"];
+const positionColors: Record<string, string> = {
+  QB: "from-blue-500 to-indigo-500",
+  RB: "from-emerald-500 to-teal-500",
+  WR: "from-amber-500 to-orange-500",
+  TE: "from-purple-500 to-pink-500",
+  K: "from-red-500 to-rose-500",
+  DEF: "from-zinc-500 to-zinc-600",
+};
+---
+
+<Layout title="Trade Analyzer">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">🔄</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Trade Analyzer</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">Compare player values · Find fair trades · Win your league</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="grid gap-4 sm:grid-cols-3 mb-8 stagger-children">
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-3xl mb-2">1️⃣</div>
+      <h3 class="text-sm font-bold text-zinc-100 mb-1">Select Players</h3>
+      <p class="text-xs text-zinc-500">Choose players from your team and their team</p>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-3xl mb-2">2️⃣</div>
+      <h3 class="text-sm font-bold text-zinc-100 mb-1">Compare Values</h3>
+      <p class="text-xs text-zinc-500">See ADP, tier, and position-adjusted value</p>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-3xl mb-2">3️⃣</div>
+      <h3 class="text-sm font-bold text-zinc-100 mb-1">Make the Deal</h3>
+      <p class="text-xs text-zinc-500">Get a fair trade recommendation with analysis</p>
+    </div>
+  </div>
+
+  <!-- Player Database by Position -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📋</div>
+      <h2 class="text-lg font-bold text-amber-400">Player Value Chart</h2>
+    </div>
+
+    {positions.filter(p => byPosition[p]?.length).map(pos => (
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-3">
+          <div class={`h-6 w-6 rounded flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-br ${positionColors[pos]}`}>{pos}</div>
+          <h3 class="text-sm font-bold text-zinc-200">{pos}s</h3>
+          <span class="text-xs text-zinc-600">({byPosition[pos].length} players)</span>
+        </div>
+        <div class="glass-card-static rounded-xl overflow-x-auto">
+          <table class="premium-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th class="text-center">Team</th>
+                <th class="text-center">Bye</th>
+                <th class="text-center">Tier</th>
+                <th class="text-right">ADP</th>
+                <th class="text-center">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {byPosition[pos].slice(0, 20).map(p => {
+                const nfl = getNFLTeam(p.team);
+                const valueScore = p.tier ? Math.max(0, 5 - p.tier) * 20 + (p.adp ? Math.max(0, 200 - p.adp) / 10 : 0) : 0;
+                const valueLabel = valueScore >= 80 ? "Elite" : valueScore >= 60 ? "High" : valueScore >= 40 ? "Mid" : valueScore >= 20 ? "Low" : "Depth";
+                const valueColor = valueScore >= 80 ? "text-amber-400" : valueScore >= 60 ? "text-emerald-400" : valueScore >= 40 ? "text-blue-400" : valueScore >= 20 ? "text-zinc-400" : "text-zinc-600";
+                return (
+                  <tr class="hover:bg-zinc-800/30 transition-colors">
+                    <td>
+                      <div class="flex items-center gap-2.5">
+                        {p.espnId > 0 ? (
+                          <img src={getEspnHeadshotUrl(p.espnId)} alt={p.name} class="h-8 w-8 rounded-lg object-cover" loading="lazy" onerror="this.style.display='none'" />
+                        ) : (
+                          <div class="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">?</div>
+                        )}
+                        <div>
+                          <div class="text-sm font-semibold text-zinc-100">{p.name}</div>
+                          <div class="text-[10px] text-zinc-500">{p.position}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      {nfl ? (
+                        <span class="text-xs font-mono text-zinc-400">{nfl.shortName}</span>
+                      ) : (
+                        <span class="text-xs text-zinc-600">{p.team}</span>
+                      )}
+                    </td>
+                    <td class="text-center font-mono text-xs text-zinc-500">{p.byeWeek || "—"}</td>
+                    <td class="text-center">
+                      {p.tier ? (
+                        <span class="inline-flex items-center justify-center h-6 w-6 rounded text-xs font-bold" class:list={[
+                          p.tier === 1 ? 'bg-amber-500/20 text-amber-400' :
+                          p.tier === 2 ? 'bg-emerald-500/20 text-emerald-400' :
+                          p.tier === 3 ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-zinc-800 text-zinc-500'
+                        ]}>{p.tier}</span>
+                      ) : (
+                        <span class="text-xs text-zinc-600">—</span>
+                      )}
+                    </td>
+                    <td class="text-right font-mono text-sm text-zinc-300">{p.adp?.toFixed(1) || "—"}</td>
+                    <td class="text-center">
+                      <span class={`text-xs font-semibold ${valueColor}`}>{valueLabel}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Trade Tips -->
+  <div class="glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">💡</span>
+      <h2 class="text-lg font-bold text-zinc-100">Trade Tips</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-amber-400 mb-2">Buy Low Candidates</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• Players with tough schedule ahead getting easier</li>
+          <li>• Studs coming off injury (buy before they return)</li>
+          <li>• Players with bad luck (high air yards, low TDs)</li>
+          <li>• Rookies hitting their stride mid-season</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2">Sell High Candidates</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• Players with unsustainable TD rates</li>
+          <li>• Aging veterans with hot starts</li>
+          <li>• Handcuff RBs after starter gets hurt</li>
+          <li>• Players with easy schedule getting harder</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-blue-400 mb-2">Fair Trade Framework</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• 1 elite player ≈ 2 good players</li>
+          <li>• RB depth for WR upgrade (positional scarcity)</li>
+          <li>• Future picks discount: next year = 80% value</li>
+          <li>• Keeper value: young + productive = premium</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-purple-400 mb-2">Avoid These Traps</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• Trading away too much depth for one star</li>
+          <li>• Panic selling after 2 bad weeks</li>
+          <li>• Accepting first offer without countering</li>
+          <li>• Trading future picks for win-now rentals</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</Layout>
