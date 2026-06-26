@@ -66,21 +66,39 @@ const latestImages = getImagesByYear(latestYear);
     <!-- Photo Grid -->
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
       {latestImages.map(img => (
-        <div class="glass-card rounded-xl overflow-hidden group">
-          <div class="aspect-[4/3] bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-            <span class="text-6xl opacity-30 group-hover:opacity-50 transition-opacity">
-              {img.type === "champion" ? "🏆" : img.type === "draft" ? "📋" : img.type === "team" ? "👥" : "📸"}
-            </span>
-            <div class="absolute bottom-0 left-0 right-0 p-4 transform translate-y-1 group-hover:translate-y-0 transition-transform">
-              <div class="text-sm font-bold text-white">{img.title}</div>
-              <div class="text-xs text-zinc-300 mt-1">{img.description}</div>
+        <div class="glass-card rounded-xl overflow-hidden group cursor-pointer" data-lightbox={img.imageUrl} data-title={img.title}>
+          <div class="aspect-[4/3] bg-zinc-900 relative overflow-hidden">
+            <img src={img.imageUrl} alt={img.title} class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-70"></div>
+            <div class="absolute bottom-0 left-0 right-0 p-4">
+              <div class="text-sm font-bold text-white drop-shadow-lg">{img.title}</div>
+              <div class="text-xs text-zinc-300 mt-1 drop-shadow">{img.description}</div>
+              {img.credit && <div class="text-[10px] text-zinc-500 mt-1">📷 {img.credit}</div>}
             </div>
           </div>
         </div>
       ))}
     </div>
   </div>
+
+  <!-- Lightbox Modal -->
+  <div id="lightbox" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl hidden items-center justify-center p-4" onclick="this.classList.add('hidden')">
+    <button class="absolute top-4 right-4 text-white/60 hover:text-white text-2xl transition-colors" onclick="document.getElementById('lightbox').classList.add('hidden')">✕</button>
+    <img id="lightbox-img" src="" alt="" class="max-h-[90vh] max-w-full rounded-2xl shadow-2xl" onclick="event.stopPropagation()" />
+  </div>
+
+  <script>
+    // Lightbox
+    document.querySelectorAll('[data-lightbox]').forEach(el => {
+      el.addEventListener('click', () => {
+        const img = document.getElementById('lightbox-img');
+        img.src = el.dataset.lightbox;
+        img.alt = el.dataset.title || '';
+        document.getElementById('lightbox').classList.remove('hidden');
+        document.getElementById('lightbox').classList.add('flex');
+      });
+    });
+  </script>
 
   <!-- Add Your Photos Section -->
   <div class="glass-card rounded-xl p-6 text-center">
