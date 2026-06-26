@@ -1,0 +1,125 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { draftHistory, getDraftYears, getPicksByPosition } from "../../data/draft";
+import { getNflTeamLogoUrl } from "../../data/players";
+const years = getDraftYears();
+const latestYear = years[0];
+const latestDraft = draftHistory.find(d => d.year === latestYear);
+---
+
+<Layout title="Draft Board">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">D</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Draft Board</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Historical Draft Results</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Year Selector -->
+  <div class="flex flex-wrap gap-2 mb-6">
+    {years.map(year => (
+      <a href={`/draft/${year}`} class="rounded-lg px-4 py-2 text-sm font-medium transition-all" class:list={[year === latestYear ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-zinc-800/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-700/30']}>
+        {year} Draft
+      </a>
+    ))}
+  </div>
+
+  <!-- Keeper Declaration -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10 text-sm">🔒</div>
+      <h2 class="text-lg font-bold text-teal-400">2026 Keepers</h2>
+    </div>
+    <p class="text-sm text-zinc-500 mb-4">Per Article XVI: 1 offensive + 1 defensive keeper. Must be rostered by Week 8. Declared 24 hrs before draft.</p>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="rounded-lg bg-zinc-800/20 p-4 border border-dashed border-zinc-700/30">
+        <div class="text-xs font-medium text-zinc-500">Team</div>
+        <div class="text-sm font-semibold text-zinc-300 mt-1">TBD</div>
+        <div class="mt-2 flex gap-2">
+          <span class="rounded bg-zinc-800/50 px-2 py-0.5 text-[10px] text-zinc-500">Off: TBD</span>
+          <span class="rounded bg-zinc-800/50 px-2 py-0.5 text-[10px] text-zinc-500">Def: TBD</span>
+        </div>
+      </div>
+    </div>
+    <p class="text-xs text-zinc-600 mt-3">Keepers will appear here once declared before the 2026 draft.</p>
+  </div>
+
+  <!-- Latest Draft Results -->
+  {latestDraft && (
+    <div>
+      <h2 class="text-lg font-bold text-zinc-100 mb-4">{latestYear} Draft Results</h2>
+      <div class="glass-card rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-zinc-700/50 bg-zinc-800/30">
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">Pick</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">Team</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">Player</th>
+              <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-zinc-500">Pos</th>
+              <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-zinc-500">NFL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {latestDraft.picks.map(pick => {
+              const isYou = pick.owner === "Carlitos";
+              return (
+                <tr class="border-b border-zinc-800/30 hover:bg-zinc-800/20 transition-colors" class:list={[isYou ? 'bg-amber-500/5' : '']}>
+                  <td class="px-4 py-3">
+                    <span class="font-mono text-xs text-zinc-500">R{pick.round}.{String(pick.pick).padStart(2, '0')}</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium" class:list={[isYou ? 'text-amber-400' : 'text-zinc-200']}>{pick.teamName}</span>
+                      {isYou && <span class="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">YOU</span>}
+                    </div>
+                    <div class="text-[10px] text-zinc-600">{pick.owner}</div>
+                  </td>
+                  <td class="px-4 py-3 font-semibold text-zinc-100">{pick.playerName}</td>
+                  <td class="px-4 py-3 text-center">
+                    <span class="position-badge" class:list={[`position-badge-${pick.position.toLowerCase()}`]}>{pick.position}</span>
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <img src={getNflTeamLogoUrl(pick.nflTeam)} alt={pick.nflTeam} class="inline-block h-5 w-5 object-contain" loading="lazy" />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
+
+  <!-- Draft Stats -->
+  <div class="mt-8">
+    <h2 class="text-lg font-bold text-zinc-100 mb-4">Draft Stats</h2>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+      <div class="glass-card rounded-xl p-4 text-center">
+        <div class="text-2xl font-extrabold text-amber-400">{latestDraft?.picks.length || 0}</div>
+        <div class="text-xs text-zinc-500 mt-1">Total Picks</div>
+      </div>
+      <div class="glass-card rounded-xl p-4 text-center">
+        <div class="text-2xl font-extrabold text-emerald-400">{latestDraft?.picks.filter(p => p.position === "QB").length || 0}</div>
+        <div class="text-xs text-zinc-500 mt-1">QBs Drafted</div>
+      </div>
+      <div class="glass-card rounded-xl p-4 text-center">
+        <div class="text-2xl font-extrabold text-blue-400">{latestDraft?.picks.filter(p => p.position === "RB").length || 0}</div>
+        <div class="text-xs text-zinc-500 mt-1">RBs Drafted</div>
+      </div>
+      <div class="glass-card rounded-xl p-4 text-center">
+        <div class="text-2xl font-extrabold text-purple-400">{latestDraft?.picks.filter(p => p.position === "WR").length || 0}</div>
+        <div class="text-xs text-zinc-500 mt-1">WRs Drafted</div>
+      </div>
+    </div>
+  </div>
+</Layout>

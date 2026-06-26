@@ -1,0 +1,134 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { payoutStructure, payoutHistory, getPayoutsByYear, getCarlitosEarnings } from "../data/payouts";
+import { champions } from "../data/champions";
+const carlitosEarnings = getCarlitosEarnings();
+const totalPaidOut = payoutHistory.reduce((sum, p) => sum + p.amount, 0);
+const years = [...new Set(payoutHistory.map(p => p.year))].sort((a, b) => b - a);
+---
+
+<Layout title="Payouts">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 text-lg font-bold text-white shadow-lg shadow-emerald-500/20">$</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Payouts</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Prize Pool & Payout Ledger</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prize Pool Overview -->
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-8 stagger-children">
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-2xl font-extrabold text-amber-400">${payoutStructure.totalPool.toLocaleString()}</div>
+      <div class="text-xs text-zinc-500 mt-1">Total Prize Pool</div>
+      <div class="text-[10px] text-zinc-600">${payoutStructure.entryFee}/team × {payoutStructure.totalTeams} teams</div>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-2xl font-extrabold text-emerald-400">${payoutStructure.firstPlace.toLocaleString()}</div>
+      <div class="text-xs text-zinc-500 mt-1">1st Place</div>
+      <div class="text-[10px] text-zinc-600">Yahoo Prize Pool</div>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-2xl font-extrabold text-zinc-100">${payoutStructure.secondPlace}</div>
+      <div class="text-xs text-zinc-500 mt-1">2nd Place</div>
+      <div class="text-[10px] text-zinc-600">Yahoo Prize Pool</div>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-2xl font-extrabold text-sky-400">${payoutStructure.bonusPool}</div>
+      <div class="text-xs text-zinc-500 mt-1">Weekly Bonus Pool</div>
+      <div class="text-[10px] text-zinc-600">${payoutStructure.weeklyPrize} × {payoutStructure.weeklyWeeks.length} weeks</div>
+    </div>
+  </div>
+
+  <!-- Weekly Winners -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sm">📅</div>
+      <h2 class="text-lg font-bold text-sky-400">Weekly Winners (Weeks 11-14)</h2>
+    </div>
+    <p class="text-xs text-zinc-500 mb-4">Per Article III: $30 to the highest-scoring team each week. Tracked in TINEZFFL.xlsx.</p>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {payoutStructure.weeklyWeeks.map(week => (
+        <div class="rounded-lg bg-zinc-800/20 p-4 text-center border border-dashed border-zinc-700/30">
+          <div class="text-lg font-extrabold text-zinc-100">Week {week}</div>
+          <div class="text-xs text-zinc-500 mt-1">$30 Prize</div>
+          <div class="mt-2 rounded bg-zinc-800/50 px-2 py-1 text-xs text-zinc-600">TBD — Season starts</div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Your Career Earnings -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">👑</div>
+      <h2 class="text-lg font-bold text-amber-400">Your Career Earnings</h2>
+    </div>
+    <div class="text-center py-4">
+      <div class="text-4xl font-extrabold text-amber-400">${carlitosEarnings.toLocaleString()}</div>
+      <div class="text-xs text-zinc-500 mt-1">Lifetime TINEZ LEAGUE winnings</div>
+    </div>
+    <div class="grid gap-2 mt-4">
+      {payoutHistory.filter(p => p.recipient.includes("Carlitos")).map(p => (
+        <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-zinc-500">{p.year}</span>
+            <span class="text-sm text-zinc-300">{p.note}</span>
+          </div>
+          <span class="font-semibold text-emerald-400">${p.amount.toLocaleString()}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- All-Time Payout History -->
+  <div>
+    <h2 class="text-lg font-bold text-zinc-100 mb-4">All-Time Payout History</h2>
+    <div class="space-y-4 stagger-children">
+      {years.map(year => {
+        const yearPayouts = getPayoutsByYear(year);
+        const yearTotal = yearPayouts.reduce((sum, p) => sum + p.amount, 0);
+        return (
+          <div class="glass-card rounded-xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-zinc-100">{year} Season</h3>
+              <span class="text-sm font-semibold text-emerald-400">${yearTotal.toLocaleString()} paid out</span>
+            </div>
+            <div class="space-y-2">
+              {yearPayouts.map(p => (
+                <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-2">
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm">{p.type === "champion" ? "🏆" : "🥈"}</span>
+                    <div>
+                      <div class="text-sm font-medium text-zinc-200">{p.note}</div>
+                      <div class="text-xs text-zinc-500">{p.recipient}</div>
+                    </div>
+                  </div>
+                  <span class="font-semibold text-emerald-400">${p.amount.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+
+  <!-- Payout Ledger Note -->
+  <div class="mt-8 glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-3">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/50 text-sm">📊</div>
+      <h2 class="text-lg font-bold text-zinc-200">Payout Ledger</h2>
+    </div>
+    <p class="text-sm text-zinc-500">Per Article XX: Weekly payouts are tracked in <span class="font-mono text-zinc-400">TINEZFFL.xlsx</span>. Screenshot posted weekly in chat. End-of-season report shows all money collected and paid.</p>
+  </div>
+</Layout>
