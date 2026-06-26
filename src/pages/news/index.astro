@@ -2,9 +2,11 @@
 import Layout from "../../layouts/Layout.astro";
 import { fetchTrendingWithDetails, getPositionEmoji, getInjuryBadge } from "../../data/sleeper";
 import { getEspnHeadshotUrl, getNflTeamLogoUrl } from "../../data/players";
+import { fetchNflNews } from "../../data/nfl-api";
 
 const trendingAdds = await fetchTrendingWithDetails("add", 24, 15);
 const trendingDrops = await fetchTrendingWithDetails("drop", 24, 10);
+const news = await fetchNflNews(15);
 ---
 
 <Layout title="Fantasy News Hub">
@@ -118,6 +120,40 @@ const trendingDrops = await fetchTrendingWithDetails("drop", 24, 10);
       </div>
     </div>
   </div>
+
+  <!-- NFL Headlines -->
+  {news.length > 0 && (
+    <div class="mt-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-zinc-100">📰 NFL Headlines</h2>
+        <span class="text-xs text-zinc-500 bg-zinc-800/30 px-2 py-1 rounded-md">ESPN · NFL.com · Rotoworld</span>
+      </div>
+      <div class="space-y-2">
+        {news.map((item) => (
+          <a href={item.link} target="_blank" rel="noopener noreferrer" class="glass-card rounded-lg p-4 block group hover:bg-zinc-800/40 transition-all">
+            <div class="flex items-start gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors line-clamp-2">{item.title}</div>
+                {item.snippet && (
+                  <p class="mt-1 text-xs text-zinc-500 line-clamp-2">{item.snippet}</p>
+                )}
+                <div class="mt-2 flex items-center gap-2 text-xs">
+                  <span class="text-amber-400 font-medium">{item.source}</span>
+                  {item.date && (
+                    <>
+                      <span class="text-zinc-700">·</span>
+                      <span class="text-zinc-600">{new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <svg class="w-4 h-4 text-zinc-600 group-hover:text-amber-400 transition-colors shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
 
   <!-- Injury Report -->
   <div class="mt-8">

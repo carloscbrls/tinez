@@ -1,6 +1,21 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { teams } from "../data/teams";
+import { fetchScoreboard, fetchTeamWeather, getWeatherEmoji, getWeatherImpact, stadiums } from "../data/nfl-api";
+
+const scoreboard = await fetchScoreboard(1);
+const events = scoreboard?.events || [];
+
+// Fetch weather for each game
+const weatherPromises = events.map(async (e) => {
+  const comp = e.competitions[0];
+  const homeTeam = comp.competitors.find(c => c.homeAway === "home");
+  if (!homeTeam) return { gameId: e.id, weather: null };
+  const weather = await fetchTeamWeather(homeTeam.team.abbreviation);
+  return { gameId: e.id, weather };
+});
+const weatherResults = await Promise.all(weatherPromises);
+const weatherMap = new Map(weatherResults.map(r => [r.gameId, r.weather]));
 ---
 
 <Layout title="Matchups">
@@ -12,66 +27,252 @@ import { teams } from "../data/teams";
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">📅</div>
           <div>
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
-              <span class="gradient-text">Weekly Matchups</span>
+              <span class="gradient-text">NFL Week {scoreboard?.week?.number || 1} Matchups</span>
             </h1>
-            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · 2026 Season · 14 Teams</p>
+            <p class="text-zinc-400 text-sm mt-0.5">2026 Season · Live from ESPN</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Pre-Season Notice -->
-  <div class="glass-card-accent rounded-xl p-8 text-center mb-8">
-    <div class="text-5xl mb-4">📅</div>
-    <h2 class="text-xl font-bold text-amber-400 mb-2">Pre-Season — No matchups yet</h2>
-    <p class="text-zinc-400 mb-1">Season starts in 75 days.</p>
-    <p class="text-xs text-zinc-600">Matchup data will appear once the 2026 season begins.</p>
-  </div>
-
-  <!-- Team List -->
-  <div class="mb-8">
+  <!-- TINEZ League Matchups -->
+  <div class="glass-card-accent rounded-xl p-6 mb-8">
     <div class="flex items-center gap-2 mb-4">
-      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">👥</div>
-      <h2 class="text-lg font-bold text-amber-400">The 14 Teams</h2>
+      <span class="text-lg">🏆</span>
+      <h2 class="text-lg font-bold text-amber-400">TINEZ LEAGUE Matchups</h2>
     </div>
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {teams.map(t => (
-        <div class="glass-card rounded-xl p-4 flex items-center gap-3">
-          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${t.primaryColor}, ${t.secondaryColor})`}>
-            {t.shortName}
-          </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="glass-card rounded-xl p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #00BFFF, #FFFFFF)">FF</div>
           <div>
-            <div class="text-sm font-semibold text-zinc-100">{t.name}</div>
-            <div class="text-[10px] text-zinc-500">{t.owner}</div>
+            <div class="text-sm font-semibold text-zinc-100">Frozen Fury</div>
+            <div class="text-xs text-zinc-500">Carlitos</div>
           </div>
         </div>
-      ))}
+        <div class="text-lg font-bold text-zinc-600">vs</div>
+        <div class="flex items-center gap-3">
+          <div>
+            <div class="text-sm font-semibold text-zinc-100 text-right">APieceofToast!</div>
+            <div class="text-xs text-zinc-500 text-right">Daniel</div>
+          </div>
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #6B705C, #A5A58D)">APT</div>
+        </div>
+      </div>
+      <div class="glass-card rounded-xl p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #DC2626, #FFD700)">RHGD</div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">The Red Hare & Golden Dragon</div>
+            <div class="text-xs text-zinc-500">darnell</div>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-zinc-600">vs</div>
+        <div class="flex items-center gap-3">
+          <div>
+            <div class="text-sm font-semibold text-zinc-100 text-right">L.E.T. Gang</div>
+            <div class="text-xs text-zinc-500 text-right">Eric</div>
+          </div>
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #4A0E4E, #C77DFF)">LET</div>
+        </div>
+      </div>
+      <div class="glass-card rounded-xl p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #FF4500, #FFD700)">LFB</div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">LaFlamaBlanca</div>
+            <div class="text-xs text-zinc-500">scooter</div>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-zinc-600">vs</div>
+        <div class="flex items-center gap-3">
+          <div>
+            <div class="text-sm font-semibold text-zinc-100 text-right">THIS WILL HURTS A LITTLE</div>
+            <div class="text-xs text-zinc-500 text-right">tyler</div>
+          </div>
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #9B2226, #CA6702)">TWHL</div>
+        </div>
+      </div>
+      <div class="glass-card rounded-xl p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #1A1A2E, #E94560)">BTB</div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">Black Team Bitch</div>
+            <div class="text-xs text-zinc-500">Timothy</div>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-zinc-600">vs</div>
+        <div class="flex items-center gap-3">
+          <div>
+            <div class="text-sm font-semibold text-zinc-100 text-right">Syrup Squad</div>
+            <div class="text-xs text-zinc-500 text-right">karter</div>
+          </div>
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #7F4F24, #DDB892)">SS</div>
+        </div>
+      </div>
+      <div class="glass-card rounded-xl p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #2D6A4F, #D4A373)">EB</div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">El Bolillo</div>
+            <div class="text-xs text-zinc-500">James</div>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-zinc-600">vs</div>
+        <div class="flex items-center gap-3">
+          <div>
+            <div class="text-sm font-semibold text-zinc-100 text-right">Injured Reserve's Finest</div>
+            <div class="text-xs text-zinc-500 text-right">David</div>
+          </div>
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #5C4D7D, #B8B8D1)">IRF</div>
+        </div>
+      </div>
+      <div class="glass-card rounded-xl p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #0A9396, #94D2BD)">JITM</div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">JUST IN Tucker's Massage…</div>
+            <div class="text-xs text-zinc-500">Skyler Gray</div>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-zinc-600">vs</div>
+        <div class="flex items-center gap-3">
+          <div>
+            <div class="text-sm font-semibold text-zinc-100 text-right">Take that Daak</div>
+            <div class="text-xs text-zinc-500 text-right">DatDudeVic</div>
+          </div>
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #001219, #EE9B00)">TTD</div>
+        </div>
+      </div>
+      <div class="glass-card rounded-xl p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #005F73, #AE2012)">BPH</div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">Best Pacheco Hoe</div>
+            <div class="text-xs text-zinc-500">jayyphilly</div>
+          </div>
+        </div>
+        <div class="text-lg font-bold text-zinc-600">vs</div>
+        <div class="flex items-center gap-3">
+          <div>
+            <div class="text-sm font-semibold text-zinc-100 text-right">RemeberTheTrojans</div>
+            <div class="text-xs text-zinc-500 text-right">Todd</div>
+          </div>
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white" style="background: linear-gradient(135deg, #800000, #FFB347)">RTT</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Season Overview -->
+  <!-- NFL Schedule -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-bold text-zinc-100">🏈 NFL Week {scoreboard?.week?.number || 1} Schedule</h2>
+      <span class="text-xs text-zinc-500 bg-zinc-800/30 px-2 py-1 rounded-md">Live from ESPN</span>
+    </div>
+    <div class="space-y-3">
+      {events.map((e) => {
+        const comp = e.competitions[0];
+        const away = comp.competitors.find(c => c.homeAway === "away");
+        const home = comp.competitors.find(c => c.homeAway === "home");
+        const weather = weatherMap.get(e.id);
+        const impact = weather ? getWeatherImpact(weather) : null;
+        const stadium = home ? stadiums[home.team.abbreviation] : null;
+        const isPre = e.status.type.state === "pre";
+        const isLive = e.status.type.state === "in";
+        const isFinal = e.status.type.state === "post";
+
+        return (
+          <div class="glass-card rounded-xl p-4 group hover:bg-zinc-800/40 transition-all">
+            <div class="flex items-center gap-4">
+              <!-- Status Badge -->
+              <div class="w-16 shrink-0 text-center">
+                {isFinal ? (
+                  <span class="text-xs font-semibold text-zinc-500">FINAL</span>
+                ) : isLive ? (
+                  <span class="text-xs font-semibold text-red-400 animate-pulse">LIVE</span>
+                ) : (
+                  <span class="text-xs text-zinc-600">{new Date(e.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                )}
+              </div>
+
+              <!-- Away Team -->
+              <div class="flex-1 text-right">
+                <div class="text-sm font-semibold text-zinc-100">{away?.team.displayName || away?.team.abbreviation}</div>
+                <div class="text-xs text-zinc-500">{away?.team.abbreviation}</div>
+              </div>
+
+              {/* Score / vs */}
+              <div class="shrink-0 text-center">
+                {isFinal || isLive ? (
+                  <div class="flex items-center gap-2">
+                    <span class={`text-lg font-extrabold font-mono ${away?.winner ? "text-emerald-400" : "text-zinc-400"}`}>{away?.score || "0"}</span>
+                    <span class="text-xs text-zinc-600">-</span>
+                    <span class={`text-lg font-extrabold font-mono ${home?.winner ? "text-emerald-400" : "text-zinc-400"}`}>{home?.score || "0"}</span>
+                  </div>
+                ) : (
+                  <span class="text-xs font-bold text-zinc-600">VS</span>
+                )}
+              </div>
+
+              <!-- Home Team -->
+              <div class="flex-1 text-left">
+                <div class="text-sm font-semibold text-zinc-100">{home?.team.displayName || home?.team.abbreviation}</div>
+                <div class="text-xs text-zinc-500">{home?.team.abbreviation}</div>
+              </div>
+
+              <!-- Weather -->
+              {weather && stadium?.roof === "open" && (
+                <div class="w-20 shrink-0 text-center hidden md:block" title={impact?.description}>
+                  <div class="text-sm">{getWeatherEmoji(weather.weatherCode)}</div>
+                  <div class="text-xs text-zinc-500">{Math.round(weather.temperature)}°F</div>
+                  {weather.windSpeed > 15 && <div class="text-[10px] text-zinc-600">{Math.round(weather.windSpeed)} mph</div>}
+                </div>
+              )}
+
+              {/* Stadium */}
+              {stadium && (
+                <div class="w-24 shrink-0 text-center hidden lg:block">
+                  <div class="text-[10px] text-zinc-600 truncate">{stadium.name}</div>
+                  {stadium.roof !== "open" && (
+                    <span class="text-[10px] text-zinc-500">{stadium.roof === "closed" ? "🏟️ Dome" : "🔽 Retractable"}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+
+  <!-- Weather Impact Guide -->
   <div class="glass-card rounded-xl p-6">
     <div class="flex items-center gap-2 mb-4">
-      <span class="text-lg">📊</span>
-      <h2 class="text-lg font-bold text-zinc-100">Season Overview</h2>
+      <span class="text-lg">🌤️</span>
+      <h2 class="text-lg font-bold text-zinc-100">Weather Impact Guide</h2>
     </div>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
-        <div class="text-2xl font-bold text-amber-400">14</div>
-        <div class="text-xs text-zinc-500">Teams</div>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
+        <div class="text-xl mb-1">☀️</div>
+        <div class="text-xs font-semibold text-emerald-400">Clear</div>
+        <div class="text-[10px] text-zinc-500 mt-0.5">Normal scoring</div>
       </div>
-      <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
-        <div class="text-2xl font-bold text-amber-400">18</div>
-        <div class="text-xs text-zinc-500">Regular Season Weeks</div>
+      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
+        <div class="text-xl mb-1">🌧️</div>
+        <div class="text-xs font-semibold text-blue-400">Rain</div>
+        <div class="text-[10px] text-zinc-500 mt-0.5">Passing game down</div>
       </div>
-      <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
-        <div class="text-2xl font-bold text-amber-400">126</div>
-        <div class="text-xs text-zinc-500">Total Matchups</div>
+      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
+        <div class="text-xl mb-1">💨</div>
+        <div class="text-xs font-semibold text-amber-400">Windy</div>
+        <div class="text-[10px] text-zinc-500 mt-0.5">Deep passes affected</div>
       </div>
-      <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
-        <div class="text-2xl font-bold text-amber-400">6</div>
-        <div class="text-xs text-zinc-500">Playoff Teams</div>
+      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
+        <div class="text-xl mb-1">❄️</div>
+        <div class="text-xs font-semibold text-blue-300">Snow</div>
+        <div class="text-[10px] text-zinc-500 mt-0.5">RBs get a boost</div>
       </div>
     </div>
   </div>
