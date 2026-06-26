@@ -1,0 +1,46 @@
+---
+import { teams } from "../data/teams";
+export interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Tinez Fantasy Football</title>
+    <meta name="description" content={description || "Tinez Fantasy Football League - 16 team dedicated league website"} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="min-h-screen bg-zinc-950 text-zinc-100">
+    <nav class="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-50">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <a href="/" class="flex items-center gap-2 text-lg font-bold tracking-tight">
+          <span class="text-2xl">🏈</span>
+          <span class="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Tinez</span>
+        </a>
+        <div class="flex items-center gap-4 text-sm">
+          <a href="/" class="text-zinc-400 hover:text-zinc-100 transition-colors">Standings</a>
+          <a href="/schedule" class="text-zinc-400 hover:text-zinc-100 transition-colors">Schedule</a>
+          <a href="/teams" class="text-zinc-400 hover:text-zinc-100 transition-colors">Teams</a>
+          <a href="/draft" class="text-zinc-400 hover:text-zinc-100 transition-colors">Draft</a>
+          <a href="/x-feed" class="text-zinc-400 hover:text-zinc-100 transition-colors">X Feed</a>
+        </div>
+      </div>
+    </nav>
+    <main class="mx-auto max-w-6xl px-4 py-6">
+      <slot />
+    </main>
+    <footer class="border-t border-zinc-800 py-6 text-center text-xs text-zinc-600">
+      Tinez Fantasy Football League · 16 Teams
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  @import "tailwindcss";
+</style>

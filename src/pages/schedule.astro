@@ -1,0 +1,23 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { teams } from "../data/teams";
+---
+
+<Layout title="Schedule">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold">Schedule</h1>
+    <p class="mt-1 text-zinc-400">Weekly matchups and results</p>
+  </div>
+
+  <div class="rounded-xl border border-zinc-800 p-8 text-center">
+    <p class="text-zinc-500">Weekly matchups will be populated when the season starts.</p>
+    <p class="mt-2 text-sm text-zinc-600">Data syncs from Yahoo Fantasy API.</p>
+  </div>
+
+  <div class="mt-8">
+    <h2 class="mb-4 text-lg font-semibold">Playoff Bracket</h2>
+    <div class="rounded-xl border border-zinc-800 p-8 text-center">
+      <p class="text-zinc-500">Playoff bracket will appear here during the postseason.</p>
+    </div>
+  </div>
+</Layout>

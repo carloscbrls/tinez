@@ -1,0 +1,36 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { teams } from "../data/teams";
+const teamsWithX = teams.filter(t => t.xHandle);
+---
+
+<Layout title="X Feed">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold">X Feed</h1>
+    <p class="mt-1 text-zinc-400">Aggregated tweets from all 16 teams</p>
+  </div>
+
+  {teamsWithX.length === 0 ? (
+    <div class="rounded-xl border border-zinc-800 p-8 text-center">
+      <p class="text-zinc-500">X/Twitter handles will be added once teams are set up.</p>
+      <p class="mt-2 text-sm text-zinc-600">Each team's feed will appear here.</p>
+    </div>
+  ) : (
+    <div class="grid gap-6 md:grid-cols-2">
+      {teamsWithX.map(team => (
+        <div class="rounded-xl border border-zinc-800 p-4">
+          <div class="mb-3 flex items-center gap-2">
+            <div class="h-6 w-6 rounded flex items-center justify-center text-xs font-bold text-white" style={`background: ${team.primaryColor}`}>
+              {team.shortName}
+            </div>
+            <span class="font-medium text-sm">{team.name}</span>
+            <span class="text-xs text-zinc-500">@{team.xHandle}</span>
+          </div>
+          <div class="rounded-lg bg-zinc-900 p-4 text-center text-sm text-zinc-500">
+            Twitter embed widget for @{team.xHandle}
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</Layout>
