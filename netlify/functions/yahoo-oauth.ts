@@ -10,6 +10,7 @@ const API_BASE = "https://fantasysports.yahooapis.com/fantasy/v2";
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 let tokenExpiresAt: number = 0;
+let lastCallback: any = null;
 
 function respond(statusCode: number, body: string, contentType: string, location?: string) {
   const headers: Record<string, string> = { "Content-Type": contentType };
@@ -23,14 +24,11 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   const params = event.queryStringParameters || {};
   const rawQuery = event.rawQuery || "";
 
-  // GET /api/yahoo/debug — show what Yahoo sent us
+  // GET /api/yahoo/debug — show last callback data
   if (path === "/debug" || path === "/debug/") {
     return respond(200, JSON.stringify({
-      rawPath,
-      path,
-      rawQuery,
-      params,
-      headers: Object.fromEntries(event.headers.entries?.() || []),
+      lastCallback,
+      currentRequest: { rawPath, path, rawQuery, params },
     }, null, 2), "application/json");
   }
 
@@ -42,14 +40,14 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
 
   // GET /api/yahoo/callback — handle OAuth callback
   if (path === "/callback" || path === "/callback/") {
+    // Store everything Yahoo sent us
+    lastCallback = { rawPath, path, rawQuery, params, timestamp: new Date().toISOString() };
+
     const code = params.code;
     if (!code) {
       return respond(400, JSON.stringify({
         error: "Missing authorization code",
-        rawPath,
-        path,
-        rawQuery,
-        params,
+        ...lastCallback,
       }), "application/json");
     }
 
