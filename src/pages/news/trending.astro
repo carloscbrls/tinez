@@ -1,0 +1,74 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { fetchTrendingWithDetails, getPositionEmoji, getInjuryBadge } from "../../data/sleeper";
+
+const adds = await fetchTrendingWithDetails("add", 168, 50);
+const drops = await fetchTrendingWithDetails("drop", 168, 50);
+---
+
+<Layout title="Trending Players | News">
+  <a href="/news" class="mb-4 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+    ← News Hub
+  </a>
+
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold">Trending Players</h1>
+    <p class="mt-1 text-zinc-400">Most added and dropped players over the last 7 days</p>
+  </div>
+
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div>
+      <h2 class="mb-3 text-lg font-semibold text-emerald-400">🔥 Top Adds (7 days)</h2>
+      <div class="space-y-1.5">
+        {adds.map((t, i) => {
+          const p = t.player!;
+          const badge = getInjuryBadge(p.injury_status);
+          return (
+            <div class="flex items-center gap-3 rounded-lg border border-zinc-800/50 bg-zinc-900/30 p-2.5 hover:bg-zinc-900/50 transition-colors">
+              <span class="w-6 text-right text-xs font-mono text-zinc-600">{i + 1}</span>
+              <div class="flex h-7 w-7 items-center justify-center rounded bg-zinc-800 text-xs">
+                {getPositionEmoji(p.position)}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 text-sm">
+                  <span class="truncate font-medium">{p.full_name}</span>
+                  <span class="shrink-0 rounded bg-zinc-800 px-1 text-xs text-zinc-400">{p.position}</span>
+                  <span class="shrink-0 text-xs text-zinc-500">{p.team}</span>
+                  {badge && <span class={`shrink-0 rounded px-1 text-xs ${badge.color}`}>{badge.label}</span>}
+                </div>
+              </div>
+              <div class="text-right text-sm font-semibold text-emerald-400">{t.count.toLocaleString()}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    <div>
+      <h2 class="mb-3 text-lg font-semibold text-red-400">❄️ Top Drops (7 days)</h2>
+      <div class="space-y-1.5">
+        {drops.map((t, i) => {
+          const p = t.player!;
+          const badge = getInjuryBadge(p.injury_status);
+          return (
+            <div class="flex items-center gap-3 rounded-lg border border-zinc-800/50 bg-zinc-900/30 p-2.5 hover:bg-zinc-900/50 transition-colors">
+              <span class="w-6 text-right text-xs font-mono text-zinc-600">{i + 1}</span>
+              <div class="flex h-7 w-7 items-center justify-center rounded bg-zinc-800 text-xs">
+                {getPositionEmoji(p.position)}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 text-sm">
+                  <span class="truncate font-medium">{p.full_name}</span>
+                  <span class="shrink-0 rounded bg-zinc-800 px-1 text-xs text-zinc-400">{p.position}</span>
+                  <span class="shrink-0 text-xs text-zinc-500">{p.team}</span>
+                  {badge && <span class={`shrink-0 rounded px-1 text-xs ${badge.color}`}>{badge.label}</span>}
+                </div>
+              </div>
+              <div class="text-right text-sm font-semibold text-red-400">{t.count.toLocaleString()}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</Layout>
