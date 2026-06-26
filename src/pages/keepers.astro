@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { teams } from "../data/teams";
+import { teamRosters, getKeeperEligible, getKeeperCost, getKeeperSummary } from "../data/keepers";
 ---
 
 <Layout title="Keepers">
@@ -21,11 +22,29 @@ import { teams } from "../data/teams";
     </div>
   </div>
 
-  <!-- Pre-Season Notice -->
-  <div class="glass-card-accent rounded-xl p-12 text-center mb-8">
-    <div class="text-5xl mb-4">🔄</div>
-    <h2 class="text-xl font-bold text-amber-400 mb-2">Pre-Season — Keeper selections pending</h2>
-    <p class="text-zinc-400">Keeper data will appear once teams submit their selections before the draft.</p>
+  <!-- 2025 Final Standings -->
+  <div class="glass-card-accent rounded-xl p-5 mb-8">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-lg">🏆</span>
+      <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">2025 Season Results</h2>
+    </div>
+    <div class="grid gap-2 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="text-yellow-400">🥇</span>
+        <span class="text-zinc-200 font-semibold">Best Pacheco Hoe</span>
+        <span class="text-zinc-500">(jayyphilly) — Champion</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-zinc-400">🥈</span>
+        <span class="text-zinc-200 font-semibold">The Red Hare & Golden Dragon</span>
+        <span class="text-zinc-500">(darnell) — 2nd Place</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-amber-700">🥉</span>
+        <span class="text-zinc-200 font-semibold">LaFlamaBlanca</span>
+        <span class="text-zinc-500">(scooter) — 3rd Place</span>
+      </div>
+    </div>
   </div>
 
   <!-- Keeper Rules -->
@@ -64,19 +83,66 @@ import { teams } from "../data/teams";
 
   <!-- Team Keeper Cards -->
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
-    {teams.map(t => (
-      <div class="glass-card rounded-xl overflow-hidden">
-        <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/5 p-4 border-b border-zinc-800/40">
-          <h3 class="text-sm font-bold text-zinc-100">{t.name}</h3>
-          <p class="text-[10px] text-zinc-500">{t.owner}</p>
-        </div>
-        <div class="p-4">
-          <div class="text-center py-4">
-            <p class="text-xs text-zinc-600">Keeper selections pending</p>
+    {teamRosters.map(roster => {
+      const { eligible, kept } = getKeeperSummary(roster.teamName);
+      return (
+        <div class="glass-card rounded-xl overflow-hidden">
+          <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/5 p-4 border-b border-zinc-800/40">
+            <h3 class="text-sm font-bold text-zinc-100">{roster.teamName}</h3>
+            <p class="text-[10px] text-zinc-500">{roster.manager}</p>
+          </div>
+          <div class="p-4">
+            <!-- Previously Kept Players -->
+            {kept.length > 0 && (
+              <div class="mb-3">
+                <h4 class="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-2">Previously Kept (2025)</h4>
+                <div class="space-y-1.5">
+                  {kept.map(p => (
+                    <div class="flex items-center justify-between bg-amber-500/5 rounded-lg px-2.5 py-1.5">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-xs">🔒</span>
+                        <span class="text-xs font-medium text-zinc-200">{p.name}</span>
+                        <span class="text-[10px] text-zinc-500">{p.position} · {p.nflTeam}</span>
+                      </div>
+                      <span class="text-[10px] text-amber-400 font-mono">Rd {p.draftRound}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <!-- Keeper Eligible Players -->
+            <div>
+              <h4 class="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider mb-2">Keeper Eligible (Rd 4+)</h4>
+              <div class="space-y-1 max-h-48 overflow-y-auto">
+                {eligible.map(p => {
+                  const cost = getKeeperCost(p);
+                  return (
+                    <div class="flex items-center justify-between px-2.5 py-1 hover:bg-zinc-800/30 rounded-lg transition-colors">
+                      <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="text-xs shrink-0">{p.isKeeper ? "🔒" : "🔓"}</span>
+                        <span class="text-xs text-zinc-200 truncate">{p.name}</span>
+                        <span class="text-[10px] text-zinc-500 shrink-0">{p.position} · {p.nflTeam}</span>
+                      </div>
+                      <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="text-[10px] text-zinc-600 font-mono">Rd {p.draftRound}</span>
+                        <span class="text-[10px] text-emerald-400 font-mono">→ Rd {cost}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {eligible.length === 0 && kept.length === 0 && (
+              <div class="text-center py-4">
+                <p class="text-xs text-zinc-600">Keeper selections pending</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-    ))}
+      );
+    })}
   </div>
 
   <!-- Keeper Strategy Tips -->
