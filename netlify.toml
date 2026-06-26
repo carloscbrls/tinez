@@ -11,3 +11,8 @@
   from = "/api/yahoo"
   to = "/.netlify/functions/yahoo-oauth"
   status = 200
+
+[[redirects]]
+  from = "/api/yahoo/callback"
+  to = "/.netlify/functions/yahoo-oauth"
+  status = 200

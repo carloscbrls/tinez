@@ -44,11 +44,11 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
 
   // GET /api/yahoo/login — redirect to Yahoo OAuth
   if (path === "/login" || path === "/login/") {
-    const authUrl = `${AUTH_URL}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=fspt-w`;
+    const authUrl = `${AUTH_URL}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=fspt-w`;
     return respond(302, "", "text/plain", authUrl);
   }
 
-  // Handle ANY callback path — catch trailing slash, different paths, etc.
+  // Handle ANY path with a code parameter
   const code = params.code;
 
   if (code) {
