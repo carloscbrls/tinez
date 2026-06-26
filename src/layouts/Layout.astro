@@ -39,19 +39,19 @@ const { title, description } = Astro.props;
         <div class="flex items-center gap-3 text-xs">
           <span class="flex items-center gap-1.5">
             <span class="flex h-4 w-4 items-center justify-center rounded bg-gradient-to-br from-amber-400 to-orange-500 text-[8px] font-bold text-white">T</span>
-            <span class="font-semibold text-zinc-300">TINEZ LEAGUE</span>
+            <span class="font-semibold text-zinc-300 text-[11px] sm:text-sm">TINEZ LEAGUE</span>
           </span>
-          <span class="text-zinc-700">|</span>
-          <span class="text-zinc-500">2026 Season</span>
-          <span class="text-zinc-700 hidden sm:inline">|</span>
-          <span class="text-zinc-600 hidden sm:inline">14 Teams · 0.5 PPR · Keeper</span>
+          <span class="text-zinc-700 text-[10px] sm:text-xs">|</span>
+          <span class="text-zinc-500 text-[10px] sm:text-xs">2026</span>
+          <span class="text-zinc-700 hidden sm:inline text-xs">|</span>
+          <span class="text-zinc-600 hidden sm:inline text-xs">14 Teams · 0.5 PPR · Keeper</span>
         </div>
-        <div class="flex items-center gap-2">
-          <a href="/rules" class="text-[11px] text-zinc-500 hover:text-amber-400 transition-colors">Rules</a>
-          <span class="text-zinc-700">·</span>
-          <a href="/constitution" class="text-[11px] text-zinc-500 hover:text-amber-400 transition-colors">Constitution</a>
-          <span class="text-zinc-700">·</span>
-          <a href="/payouts" class="text-[11px] text-zinc-500 hover:text-amber-400 transition-colors">Payouts</a>
+        <div class="flex items-center gap-1 sm:gap-2">
+          <a href="/rules" class="text-[10px] sm:text-[11px] text-zinc-500 hover:text-amber-400 transition-colors">Rules</a>
+          <span class="text-zinc-700 text-[8px] sm:text-[10px]">·</span>
+          <a href="/constitution" class="text-[10px] sm:text-[11px] text-zinc-500 hover:text-amber-400 transition-colors">Constitution</a>
+          <span class="text-zinc-700 text-[8px] sm:text-[10px]">·</span>
+          <a href="/payouts" class="text-[10px] sm:text-[11px] text-zinc-500 hover:text-amber-400 transition-colors">Payouts</a>
         </div>
       </div>
     </div>
@@ -411,6 +411,60 @@ const { title, description } = Astro.props;
       @keyframes twinkle {
         0%, 100% { opacity: 0.2; transform: scale(1); }
         50% { opacity: 0.8; transform: scale(1.5); }
+      }
+      
+      /* Mobile-friendly table scroll */
+      .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(251, 191, 36, 0.2) transparent;
+      }
+      .table-scroll::-webkit-scrollbar {
+        height: 4px;
+      }
+      .table-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .table-scroll::-webkit-scrollbar-thumb {
+        background: rgba(251, 191, 36, 0.2);
+        border-radius: 4px;
+      }
+      
+      /* Mobile tap targets */
+      @media (max-width: 640px) {
+        .glass-card a, .glass-card button, nav a, nav button {
+          min-height: 44px;
+        }
+        .glass-card a, .glass-card button {
+          padding-top: 0.5rem;
+          padding-bottom: 0.5rem;
+        }
+        .premium-table th, .premium-table td {
+          padding-left: 0.5rem;
+          padding-right: 0.5rem;
+          white-space: nowrap;
+        }
+        .hero-gradient {
+          min-height: 200px;
+        }
+        .ticker-content {
+          animation-duration: 20s !important;
+        }
+        .stagger-children > * {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      }
+      
+      /* Better touch scrolling */
+      .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Prevent text size adjustment on orientation change */
+      html {
+        -webkit-text-size-adjust: 100%;
       }
     </style>
   </body>
