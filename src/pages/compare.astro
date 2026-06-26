@@ -1,63 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { fetchRosters, fetchUsers, fetchAllMatchups, LEAGUE_CONFIG } from "../data/sleeper-api";
 import { teams } from "../data/teams";
-
-const [rosters, users, matchupsByWeek] = await Promise.all([
-  fetchRosters(),
-  fetchUsers(),
-  fetchAllMatchups(1, 18),
-]);
-
-const userMap = new Map(users.map(u => [u.user_id, u]));
-const teamNameMap = new Map(rosters.map(r => {
-  const user = userMap.get(r.owner_id);
-  return [r.roster_id, user?.metadata?.team_name || user?.display_name || `Team ${r.roster_id}`];
-}));
-
-// Build standings
-const standings = rosters
-  .map(r => ({
-    rosterId: r.roster_id,
-    name: teamNameMap.get(r.roster_id) || `Team ${r.roster_id}`,
-    wins: r.settings.wins,
-    losses: r.settings.losses,
-    pf: r.settings.fpts,
-    pa: r.settings.fpts_decimal ? r.settings.fpts_decimal : 0,
-  }))
-  .sort((a, b) => b.wins - a.wins || b.pf - a.pf);
-
-// Build head-to-head records between all pairs
-const h2h = new Map<string, { team1: string; team2: string; t1Wins: number; t2Wins: number; t1PF: number; t2PF: number; meetings: number }>();
-
-for (const [, m] of matchupsByWeek) {
-  const grouped = new Map<number, any[]>();
-  for (const matchup of m) {
-    if (!grouped.has(matchup.matchup_id)) grouped.set(matchup.matchup_id, []);
-    grouped.get(matchup.matchup_id)!.push(matchup);
-  }
-  for (const g of grouped.values()) {
-    if (g.length < 2) continue;
-    const [t1, t2] = g.sort((a, b) => b.points - a.points);
-    const t1Name = teamNameMap.get(t1.roster_id) || `Team ${t1.roster_id}`;
-    const t2Name = teamNameMap.get(t2.roster_id) || `Team ${t2.roster_id}`;
-    const key = [t1Name, t2Name].sort().join("||");
-    if (!h2h.has(key)) {
-      h2h.set(key, { team1: t1Name, team2: t2Name, t1Wins: 0, t2Wins: 0, t1PF: 0, t2PF: 0, meetings: 0 });
-    }
-    const record = h2h.get(key)!;
-    record.meetings++;
-    if (t1.roster_id === t1.roster_id) {
-      // t1 is the winner
-      if (record.team1 === t1Name) { record.t1Wins++; record.t1PF += t1.points; record.t2PF += t2.points; }
-      else { record.t2Wins++; record.t2PF += t1.points; record.t1PF += t2.points; }
-    }
-  }
-}
-
-// Get all team names for the selector
-const allTeamNames = standings.map(s => s.name);
-const teamOptions = allTeamNames.map((name, i) => ({ value: name, label: name }));
 ---
 
 <Layout title="Compare">
@@ -78,158 +21,31 @@ const teamOptions = allTeamNames.map((name, i) => ({ value: name, label: name })
     </div>
   </div>
 
-  <!-- Team Selector -->
-  <div class="glass-card rounded-xl p-6 mb-8">
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div>
-        <label class="block text-xs font-medium text-zinc-500 mb-1.5">Team A</label>
-        <select id="team-a" class="w-full rounded-lg bg-zinc-800/50 border border-zinc-700/30 px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-amber-500/50 transition-colors">
-          {teamOptions.map(t => (
-            <option value={t.value} selected={t.value === allTeamNames[0]}>{t.label}</option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-zinc-500 mb-1.5">Team B</label>
-        <select id="team-b" class="w-full rounded-lg bg-zinc-800/50 border border-zinc-700/30 px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-amber-500/50 transition-colors">
-          {teamOptions.map(t => (
-            <option value={t.value} selected={t.value === allTeamNames[1]}>{t.label}</option>
-          ))}
-        </select>
-      </div>
-    </div>
+  <!-- Pre-Season Notice -->
+  <div class="glass-card-accent rounded-xl p-8 text-center mb-8">
+    <div class="text-5xl mb-4">⚖️</div>
+    <h2 class="text-xl font-bold text-amber-400 mb-2">Pre-Season — No stats to compare yet</h2>
+    <p class="text-zinc-400 mb-4">All 14 teams are 0-0-0 with 0.0 points for and 0.0 points against.</p>
   </div>
 
-  <!-- Comparison Grid -->
-  <div class="glass-card rounded-xl overflow-hidden mb-8">
-    <table class="premium-table w-full">
-      <thead>
-        <tr>
-          <th class="text-left">Stat</th>
-          <th class="text-center text-emerald-400" id="header-a">{allTeamNames[0]}</th>
-          <th class="text-center text-amber-400">VS</th>
-          <th class="text-center text-blue-400" id="header-b">{allTeamNames[1]}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {[
-          { label: "Record", key: "record", icon: "📊" },
-          { label: "Win %", key: "winPct", icon: "📈" },
-          { label: "Points For", key: "pf", icon: "🔥" },
-          { label: "Points Against", key: "pa", icon: "🛡️" },
-          { label: "Avg PF/Week", key: "avgPf", icon: "📊" },
-          { label: "Avg PA/Week", key: "avgPa", icon: "📊" },
-          { label: "Point Diff", key: "diff", icon: "⚖️" },
-          { label: "Max Score", key: "maxPf", icon: "🚀" },
-          { label: "Min Score", key: "minPf", icon: "📉" },
-          { label: "Streak", key: "streak", icon: "🔥" },
-        ].map(stat => (
-          <tr class="hover:bg-zinc-800/30 transition-colors">
-            <td class="text-sm text-zinc-400">
-              <span class="mr-2">{stat.icon}</span>
-              {stat.label}
-            </td>
-            <td class="text-center font-mono text-sm font-semibold text-emerald-400" id={`a-${stat.key}`}>—</td>
-            <td class="text-center text-xs text-zinc-600">vs</td>
-            <td class="text-center font-mono text-sm font-semibold text-blue-400" id={`b-${stat.key}`}>—</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Head to Head -->
-  <div class="glass-card rounded-xl p-6">
+  <!-- Team List -->
+  <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
-      <span class="text-lg">⚔️</span>
-      <h2 class="text-lg font-bold text-zinc-100">Head-to-Head History</h2>
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">👥</div>
+      <h2 class="text-lg font-bold text-amber-400">The 14 Teams</h2>
     </div>
-    <div id="h2h-container" class="text-center py-8 text-zinc-500 text-sm">
-      Select two teams to compare their head-to-head history.
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {teams.map(t => (
+        <div class="glass-card rounded-xl p-4 flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${t.primaryColor}, ${t.secondaryColor})`}>
+            {t.shortName}
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">{t.name}</div>
+            <div class="text-[10px] text-zinc-500">{t.owner}</div>
+          </div>
+        </div>
+      ))}
     </div>
   </div>
 </Layout>
-
-<script>
-  const standingsData = JSON.parse(`<%= JSON.stringify(standings) %>`);
-  const h2hData = JSON.parse(`<%= JSON.stringify(Array.from(h2h.values())) %>`);
-  const allNames = JSON.parse(`<%= JSON.stringify(allTeamNames) %>`);
-
-  function getTeamData(name) {
-    return standingsData.find(s => s.name === name);
-  }
-
-  function getH2H(nameA, nameB) {
-    return h2hData.find(h => 
-      (h.team1 === nameA && h.team2 === nameB) || 
-      (h.team1 === nameB && h.team2 === nameA)
-    );
-  }
-
-  function updateComparison() {
-    const teamA = document.getElementById('team-a').value;
-    const teamB = document.getElementById('team-b').value;
-    
-    document.getElementById('header-a').textContent = teamA;
-    document.getElementById('header-b').textContent = teamB;
-    
-    const a = getTeamData(teamA);
-    const b = getTeamData(teamB);
-    
-    if (!a || !b) return;
-    
-    const totalGames = a.wins + a.losses;
-    
-    document.getElementById('a-record').textContent = `${a.wins}-${a.losses}`;
-    document.getElementById('b-record').textContent = `${b.wins}-${b.losses}`;
-    document.getElementById('a-winPct').textContent = totalGames > 0 ? (a.wins / totalGames * 100).toFixed(1) + '%' : '0%';
-    document.getElementById('b-winPct').textContent = totalGames > 0 ? (b.wins / totalGames * 100).toFixed(1) + '%' : '0%';
-    document.getElementById('a-pf').textContent = a.pf.toFixed(1);
-    document.getElementById('b-pf').textContent = b.pf.toFixed(1);
-    document.getElementById('a-pa').textContent = a.pa.toFixed(1);
-    document.getElementById('b-pa').textContent = b.pa.toFixed(1);
-    document.getElementById('a-avgPf').textContent = totalGames > 0 ? (a.pf / totalGames).toFixed(1) : '0';
-    document.getElementById('b-avgPf').textContent = totalGames > 0 ? (b.pf / totalGames).toFixed(1) : '0';
-    document.getElementById('a-avgPa').textContent = totalGames > 0 ? (a.pa / totalGames).toFixed(1) : '0';
-    document.getElementById('b-avgPa').textContent = totalGames > 0 ? (b.pa / totalGames).toFixed(1) : '0';
-    document.getElementById('a-diff').textContent = (a.pf - a.pa).toFixed(1);
-    document.getElementById('b-diff').textContent = (b.pf - b.pa).toFixed(1);
-    
-    // H2H
-    const h2h = getH2H(teamA, teamB);
-    const h2hContainer = document.getElementById('h2h-container');
-    
-    if (h2h) {
-      const aWins = h2h.team1 === teamA ? h2h.t1Wins : h2h.t2Wins;
-      const bWins = h2h.team1 === teamB ? h2h.t1Wins : h2h.t2Wins;
-      const aPF = h2h.team1 === teamA ? h2h.t1PF : h2h.t2PF;
-      const bPF = h2h.team1 === teamB ? h2h.t1PF : h2h.t2PF;
-      
-      h2hContainer.innerHTML = `
-        <div class="grid gap-4 sm:grid-cols-3">
-          <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
-            <div class="text-2xl font-bold text-emerald-400">${aWins}</div>
-            <div class="text-xs text-zinc-500">${teamA} Wins</div>
-          </div>
-          <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
-            <div class="text-2xl font-bold text-amber-400">${h2h.meetings}</div>
-            <div class="text-xs text-zinc-500">Total Meetings</div>
-          </div>
-          <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
-            <div class="text-2xl font-bold text-blue-400">${bWins}</div>
-            <div class="text-xs text-zinc-500">${teamB} Wins</div>
-          </div>
-        </div>
-        <div class="mt-4 text-xs text-zinc-600">
-          ${teamA} has scored ${aPF.toFixed(1)} total points vs ${teamB} (${bPF.toFixed(1)})
-        </div>
-      `;
-    } else {
-      h2hContainer.innerHTML = '<div class="text-zinc-500 text-sm">These teams have not faced each other yet.</div>';
-    }
-  }
-
-  document.getElementById('team-a').addEventListener('change', updateComparison);
-  document.getElementById('team-b').addEventListener('change', updateComparison);
-  updateComparison();
-</script>

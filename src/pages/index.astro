@@ -2,7 +2,8 @@
 import Layout from "../layouts/Layout.astro";
 import { getStandings, teams } from "../data/teams";
 import { getNflTeamLogoUrl } from "../data/players";
-import { fetchTrendingWithDetails, getPositionEmoji, getPlayerHeadshotUrl } from "../data/sleeper-api";
+import { fetchTrendingWithDetails, getPositionEmoji } from "../data/sleeper";
+import { getPlayerHeadshotUrl } from "../data/players";
 const standings = getStandings();
 
 // Pre-season: all teams start at baseline 50

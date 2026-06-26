@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { fetchTrendingWithDetails, getPositionEmoji, getInjuryBadge, getPlayerHeadshotUrl } from "../data/sleeper-api";
+import { fetchTrendingWithDetails, getPositionEmoji, getInjuryBadge } from "../data/sleeper";
+import { getPlayerHeadshotUrl } from "../data/players";
 
 let adds: Awaited<ReturnType<typeof fetchTrendingWithDetails>> = [];
 let drops: Awaited<ReturnType<typeof fetchTrendingWithDetails>> = [];

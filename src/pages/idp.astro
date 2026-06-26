@@ -1,11 +1,11 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { fetchAllPlayers, LEAGUE_CONFIG } from "../data/sleeper-api";
+import { fetchPlayers } from "../data/sleeper";
 import { getEspnHeadshotUrl } from "../data/players";
 import { getNFLTeam } from "../data/nfl-teams";
 import { scoringSummary } from "../data/scoring";
 
-const allPlayers = await fetchAllPlayers();
+const allPlayers = await fetchPlayers();
 
 // Filter IDP players (DL, LB, DB)
 const idpPlayers = Object.values(allPlayers).filter(p => {
@@ -76,6 +76,17 @@ const positionColors: Record<string, string> = {
             <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Individual Defensive Players · {idpPlayers.length} players</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pre-Season Notice -->
+  <div class="glass-card-accent rounded-xl p-6 mb-8">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl">🛡️</span>
+      <div>
+        <h2 class="text-lg font-bold text-amber-400">Pre-Season — IDP data will update once the season starts</h2>
+        <p class="text-sm text-zinc-500 mt-1">Live IDP stats and scoring will appear during the regular season.</p>
       </div>
     </div>
   </div>

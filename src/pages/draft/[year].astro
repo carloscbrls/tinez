@@ -1,53 +1,12 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { fetchDraft, fetchDraftPicks, fetchAllPlayers, fetchUsers, LEAGUE_CONFIG } from "../../data/sleeper-api";
-import { getEspnHeadshotUrl } from "../../data/players";
-import { getNFLTeam } from "../../data/nfl-teams";
+import { teams } from "../../data/teams";
 
 export async function getStaticPaths() {
   return [{ params: { year: "2025" }, props: { year: 2025 } }];
 }
 
 const { year } = Astro.props;
-
-const [draft, picks, allPlayers, users] = await Promise.all([
-  fetchDraft(),
-  fetchDraftPicks(),
-  fetchAllPlayers(),
-  fetchUsers(),
-]);
-
-const userMap = new Map(users.map(u => [u.user_id, u]));
-
-// Group picks by round
-const byRound: Record<number, typeof picks> = {};
-for (const pick of picks) {
-  if (!byRound[pick.round]) byRound[pick.round] = [];
-  byRound[pick.round].push(pick);
-}
-
-// Sort rounds
-const rounds = Object.keys(byRound).map(Number).sort((a, b) => a - b);
-
-// Get player info for a pick
-function getPickPlayer(pick: typeof picks[0]) {
-  if (!pick.player_id) return null;
-  return allPlayers[pick.player_id] || null;
-}
-
-function getPickOwner(pick: typeof picks[0]) {
-  const user = userMap.get(pick.picked_by_user_id);
-  return user?.metadata?.team_name || user?.display_name || "Unknown";
-}
-
-const positionColors: Record<string, string> = {
-  QB: "from-blue-500 to-indigo-500",
-  RB: "from-emerald-500 to-teal-500",
-  WR: "from-amber-500 to-orange-500",
-  TE: "from-purple-500 to-pink-500",
-  K: "from-red-500 to-rose-500",
-  DEF: "from-zinc-500 to-zinc-600",
-};
 ---
 
 <Layout title={`${year} Draft`}>
@@ -61,106 +20,58 @@ const positionColors: Record<string, string> = {
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
               <span class="gradient-text">{year} Draft Board</span>
             </h1>
-            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · {picks.length} picks · {rounds.length} rounds</p>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · 2026 Season</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Pre-Season Notice -->
+  <div class="glass-card-accent rounded-xl p-12 text-center mb-8">
+    <div class="text-5xl mb-4">📋</div>
+    <h2 class="text-xl font-bold text-amber-400 mb-2">Pre-Season — Draft results not yet available</h2>
+    <p class="text-zinc-400">The draft board will populate once the 2026 draft takes place.</p>
+  </div>
+
   <!-- Draft Summary -->
   <div class="grid gap-4 sm:grid-cols-4 mb-8 stagger-children">
     <div class="glass-card rounded-xl p-4 text-center">
-      <div class="text-2xl font-bold text-amber-400">{picks.length}</div>
+      <div class="text-2xl font-bold text-amber-400">—</div>
       <div class="text-xs text-zinc-500 mt-1">Total Picks</div>
     </div>
     <div class="glass-card rounded-xl p-4 text-center">
-      <div class="text-2xl font-bold text-emerald-400">{rounds.length}</div>
+      <div class="text-2xl font-bold text-emerald-400">—</div>
       <div class="text-xs text-zinc-500 mt-1">Rounds</div>
     </div>
     <div class="glass-card rounded-xl p-4 text-center">
-      <div class="text-2xl font-bold text-blue-400">{picks.filter(p => p.player_id).length}</div>
+      <div class="text-2xl font-bold text-blue-400">—</div>
       <div class="text-xs text-zinc-500 mt-1">Players Drafted</div>
     </div>
     <div class="glass-card rounded-xl p-4 text-center">
-      <div class="text-2xl font-bold text-purple-400">{new Set(picks.filter(p => p.player_id).map(p => allPlayers[p.player_id!]?.position).filter(Boolean)).size}</div>
+      <div class="text-2xl font-bold text-purple-400">—</div>
       <div class="text-xs text-zinc-500 mt-1">Positions</div>
     </div>
   </div>
 
-  <!-- Draft Board by Round -->
-  {rounds.map(round => (
-    <div class="mb-6">
-      <div class="flex items-center gap-2 mb-3">
-        <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-xs font-bold text-amber-400">{round}</div>
-        <h2 class="text-sm font-bold text-zinc-200">Round {round}</h2>
-        <span class="text-xs text-zinc-600">({byRound[round].length} picks)</span>
-      </div>
-      <div class="glass-card-static rounded-xl overflow-x-auto">
-        <table class="premium-table">
-          <thead>
-            <tr>
-              <th class="w-8">Pick</th>
-              <th>Player</th>
-              <th class="text-center">Pos</th>
-              <th class="text-center">Team</th>
-              <th>Drafted By</th>
-            </tr>
-          </thead>
-          <tbody>
-            {byRound[round].map(pick => {
-              const player = getPickPlayer(pick);
-              const owner = getPickOwner(pick);
-              const espnId = player?.espn_id || 0;
-              const nfl = player?.team ? getNFLTeam(player.team) : null;
-              return (
-                <tr class="hover:bg-zinc-800/30 transition-colors">
-                  <td class="text-zinc-500 font-mono text-xs">{pick.pick_no}</td>
-                  <td>
-                    <div class="flex items-center gap-2.5">
-                      {espnId > 0 ? (
-                        <img src={getEspnHeadshotUrl(espnId)} alt={player?.full_name || "Player"} class="h-8 w-8 rounded-lg object-cover" loading="lazy" onerror="this.style.display='none'" />
-                      ) : (
-                        <div class="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">?</div>
-                      )}
-                      <div>
-                        <div class="text-sm font-semibold text-zinc-100">{player?.full_name || "Unknown"}</div>
-                        <div class="text-[10px] text-zinc-500">{nfl?.name || player?.team || "FA"}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="text-center">
-                    {player?.position ? (
-                      <span class={`inline-flex items-center justify-center h-6 w-8 rounded text-[10px] font-bold text-white bg-gradient-to-br ${positionColors[player.position] || 'from-zinc-600 to-zinc-700'}`}>
-                        {player.position}
-                      </span>
-                    ) : (
-                      <span class="text-xs text-zinc-600">—</span>
-                    )}
-                  </td>
-                  <td class="text-center">
-                    {player?.team ? (
-                      <span class="text-xs font-mono text-zinc-400">{player.team}</span>
-                    ) : (
-                      <span class="text-xs text-zinc-600">—</span>
-                    )}
-                  </td>
-                  <td>
-                    <span class="text-sm text-zinc-300">{owner}</span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+  <!-- Team List -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">👥</div>
+      <h2 class="text-lg font-bold text-amber-400">The 14 Teams</h2>
     </div>
-  ))}
-
-  {picks.length === 0 && (
-    <div class="glass-card rounded-xl p-8 text-center">
-      <div class="text-4xl mb-3">📭</div>
-      <p class="text-sm text-zinc-500">No draft data available yet. Check back when the draft happens.</p>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {teams.map(t => (
+        <div class="glass-card rounded-xl p-4 flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${t.primaryColor}, ${t.secondaryColor})`}>
+            {t.shortName}
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">{t.name}</div>
+            <div class="text-[10px] text-zinc-500">{t.owner}</div>
+          </div>
+        </div>
+      ))}
     </div>
-  )}
+  </div>
 </Layout>

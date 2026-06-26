@@ -1,9 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getTeamById, teams } from "../../data/teams";
-import { getNFLTeam } from "../../data/nfl-teams";
-import { getNflTeamLogoUrl, getEspnHeadshotUrl } from "../../data/players";
-import { fetchRosters, fetchUsers, fetchAllPlayers, LEAGUE_CONFIG } from "../../data/sleeper-api";
 
 export async function getStaticPaths() {
   return teams.map(team => ({
@@ -14,65 +11,13 @@ export async function getStaticPaths() {
 
 const { team } = Astro.props;
 
-// Fetch live data from Sleeper
-const [rosters, users, allPlayers] = await Promise.all([
-  fetchRosters(),
-  fetchUsers(),
-  fetchAllPlayers(),
-]);
-
-// Find this team's roster by matching owner display name
-const user = users.find(u => u.display_name?.toLowerCase() === team.owner.toLowerCase());
-const roster = rosters.find(r => r.owner_id === user?.user_id);
-
-// Get roster players
-const rosterPlayers = roster?.players?.map((pid: string) => allPlayers[pid]).filter(Boolean) || [];
-const starters = roster?.starters || [];
-
-// Group by position
-const byPosition: Record<string, any[]> = {};
-for (const p of rosterPlayers) {
-  const pos = p.position || "BN";
-  if (!byPosition[pos]) byPosition[pos] = [];
-  byPosition[pos].push(p);
-}
-
-// Sort each position
-for (const pos of Object.keys(byPosition)) {
-  byPosition[pos].sort((a, b) => {
-    const aStart = starters.includes(a.player_id) ? 0 : 1;
-    const bStart = starters.includes(b.player_id) ? 0 : 1;
-    return aStart - bStart;
-  });
-}
-
-const wins = roster?.settings?.wins || team.wins;
-const losses = roster?.settings?.losses || team.losses;
-const ties = roster?.settings?.ties || team.ties;
-const pf = roster?.settings?.fpts || team.pointsFor;
-const pa = roster?.settings?.fpts_against || team.pointsAgainst;
+const wins = team.wins;
+const losses = team.losses;
+const ties = team.ties;
+const pf = team.pointsFor;
+const pa = team.pointsAgainst;
 const record = `${wins}-${losses}-${ties}`;
 const diff = pf - pa;
-const nfl = team.nflTeam ? getNFLTeam(team.nflTeam) : undefined;
-
-const positionOrder = ["QB", "RB", "WR", "TE", "K", "DL", "LB", "DB", "DEF", "BN"];
-const positionColors: Record<string, string> = {
-  QB: "from-blue-500 to-indigo-500",
-  RB: "from-emerald-500 to-teal-500",
-  WR: "from-amber-500 to-orange-500",
-  TE: "from-purple-500 to-pink-500",
-  K: "from-red-500 to-rose-500",
-  DL: "from-zinc-600 to-zinc-700",
-  LB: "from-zinc-500 to-zinc-600",
-  DB: "from-zinc-400 to-zinc-500",
-  DEF: "from-zinc-500 to-zinc-600",
-  BN: "from-zinc-700 to-zinc-800",
-};
-const positionEmojis: Record<string, string> = {
-  QB: "🎯", RB: "🏃", WR: "✈️", TE: "🦾", K: "🦵",
-  DL: "💪", LB: "🛡️", DB: "⚡",
-  DEF: "🏈", BN: "📋",
-};
 ---
 
 <Layout title={`${team.name} | Teams`}>
@@ -101,6 +46,17 @@ const positionEmojis: Record<string, string> = {
     </div>
   </div>
 
+  <!-- Pre-Season Notice -->
+  <div class="glass-card-accent rounded-xl p-6 mb-8">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl">🏖️</span>
+      <div>
+        <h2 class="text-lg font-bold text-amber-400">Pre-Season</h2>
+        <p class="text-sm text-zinc-500 mt-1">All stats are at 0. Team data will populate once the 2026 season starts.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Stats Grid -->
   <div class="grid gap-4 sm:grid-cols-3 mb-8 stagger-children">
     <div class="glass-card rounded-xl p-5 text-center">
@@ -115,107 +71,29 @@ const positionEmojis: Record<string, string> = {
     <div class="glass-card rounded-xl p-5 text-center">
       <div class="text-3xl font-extrabold text-emerald-400">{pf.toFixed(1)}</div>
       <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">Points For</div>
-      <div class="mt-2 text-xs text-zinc-600">Avg: {(pf / Math.max(wins + losses + ties, 1)).toFixed(1)}/game</div>
+      <div class="mt-2 text-xs text-zinc-600">Avg: 0.0/game</div>
     </div>
     <div class="glass-card rounded-xl p-5 text-center">
       <div class="text-3xl font-extrabold text-red-400">{pa.toFixed(1)}</div>
       <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">Points Against</div>
       <div class="mt-2 text-xs">
-        <span class={diff > 0 ? "text-emerald-400" : diff < 0 ? "text-red-400" : "text-zinc-500"}>
-          Diff: {diff > 0 ? '+' : ''}{diff.toFixed(1)}
-        </span>
+        <span class="text-zinc-500">Diff: 0.0</span>
       </div>
     </div>
   </div>
 
-  <!-- Roster -->
+  <!-- Roster Placeholder -->
   <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
       <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">👥</div>
       <h2 class="text-lg font-bold text-amber-400">Roster</h2>
-      <span class="text-xs text-zinc-600">({rosterPlayers.length} players)</span>
+      <span class="text-xs text-zinc-600">(0 players)</span>
     </div>
-
-    {positionOrder.filter(pos => byPosition[pos]?.length).map(pos => (
-      <div class="mb-4">
-        <div class="flex items-center gap-2 mb-2">
-          <div class={`h-6 w-6 rounded flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-br ${positionColors[pos]}`}>{positionEmojis[pos]}</div>
-          <h3 class="text-sm font-bold text-zinc-200">{pos === "BN" ? "Bench" : pos + "s"}</h3>
-          <span class="text-xs text-zinc-600">({byPosition[pos].length})</span>
-        </div>
-        <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {byPosition[pos].map(p => {
-            const isStarter = starters.includes(p.player_id);
-            const espnId = p.espn_id || 0;
-            const injuryStatus = p.injury_status;
-            const injuryBadge = injuryStatus && injuryStatus !== "active" ? injuryStatus : null;
-            return (
-              <div class="glass-card rounded-xl p-3 flex items-center gap-3 group hover:bg-zinc-800/50 transition-all">
-                {espnId > 0 ? (
-                  <img src={getEspnHeadshotUrl(espnId)} alt={p.full_name} class="h-10 w-10 rounded-lg object-cover shrink-0" loading="lazy" onerror="this.style.display='none'" />
-                ) : (
-                  <div class="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500 shrink-0">?</div>
-                )}
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-sm font-semibold text-zinc-100 truncate">{p.full_name}</span>
-                    {isStarter && <span class="text-[10px] text-emerald-400 shrink-0">★</span>}
-                    {injuryBadge && (
-                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-medium shrink-0">{injuryBadge}</span>
-                    )}
-                  </div>
-                  <div class="flex items-center gap-2 text-[10px] text-zinc-500">
-                    <span>{p.team || "FA"}</span>
-                    <span>·</span>
-                    <span>{p.position}{p.number ? ` #${p.number}` : ''}</span>
-                    {p.age && <><span>·</span><span>{p.age} yrs</span></>}
-                  </div>
-                </div>
-                {p.week_pts !== undefined && (
-                  <div class="text-right shrink-0">
-                    <div class="text-sm font-bold text-zinc-200">{p.week_pts.toFixed(1)}</div>
-                    <div class="text-[9px] text-zinc-600">WK</div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    ))}
-
-    {rosterPlayers.length === 0 && (
-      <div class="glass-card rounded-xl p-8 text-center">
-        <div class="text-4xl mb-3">📭</div>
-        <p class="text-sm text-zinc-500">No roster data available yet. Check back when the season starts.</p>
-      </div>
-    )}
+    <div class="glass-card rounded-xl p-8 text-center">
+      <div class="text-4xl mb-3">📭</div>
+      <p class="text-sm text-zinc-500">No roster data available yet. Check back when the season starts.</p>
+    </div>
   </div>
-
-  <!-- NFL Team Feed -->
-  {nfl && (
-    <div class="glass-card-accent rounded-xl p-5 mb-8">
-      <div class="flex items-center gap-3 mb-3">
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400">NFL Team Affiliation</h2>
-      </div>
-      <a
-        href={`https://x.com/${nfl.xHandle}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex items-center gap-4 rounded-xl bg-zinc-800/30 p-4 hover:bg-zinc-800/50 transition-all group border border-zinc-700/30"
-      >
-        <img src={getNflTeamLogoUrl(nfl.shortName)} alt={nfl.name} class="h-12 w-12 object-contain" loading="lazy" onerror="this.style.display='none'" />
-        <div class="flex-1">
-          <div class="font-semibold text-zinc-100 group-hover:text-amber-400 transition-colors">{nfl.name}</div>
-          <div class="text-xs text-zinc-500">@{nfl.xHandle}</div>
-        </div>
-        <div class="flex items-center gap-2 text-xs text-zinc-500">
-          <span>Follow on X</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-0.5 transition-transform"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
-        </div>
-      </a>
-    </div>
-  )}
 
   <!-- Team Details -->
   <div class="glass-card-static rounded-xl p-5">
@@ -235,7 +113,7 @@ const positionEmojis: Record<string, string> = {
       </div>
       <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-3">
         <span class="text-sm text-zinc-500">Roster Size</span>
-        <span class="text-sm font-semibold text-zinc-200">{rosterPlayers.length} players</span>
+        <span class="text-sm font-semibold text-zinc-200">0 players</span>
       </div>
     </div>
   </div>

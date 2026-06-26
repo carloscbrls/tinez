@@ -1,7 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { players, getEspnHeadshotUrl, getNflTeamLogoUrl, getPositionColor } from "../../data/players";
-import { fetchTrendingWithDetails, getPositionEmoji } from "../../data/sleeper-api";
+import { fetchTrendingWithDetails, getPositionEmoji } from "../../data/sleeper";
 
 let trendingPlayerIds = new Set<string>();
 try {

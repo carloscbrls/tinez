@@ -1,16 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { fetchAllPlayers, fetchRosters, fetchUsers, fetchAllMatchups, LEAGUE_CONFIG } from "../data/sleeper-api";
+import { fetchPlayers } from "../data/sleeper";
 import { getEspnHeadshotUrl } from "../data/players";
 import { getNFLTeam } from "../data/nfl-teams";
 
-const [allPlayers, rosters, users] = await Promise.all([
-  fetchAllPlayers(),
-  fetchRosters(),
-  fetchUsers(),
-]);
-
-const userMap = new Map(users.map(u => [u.user_id, u]));
+const allPlayers = await fetchPlayers();
 
 // Get all IDP players
 const idpPlayers = Object.values(allPlayers).filter(p => {
@@ -70,6 +64,17 @@ const positionColors: Record<string, string> = {
             <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Top Defensive Players · {idpPlayers.length} total</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pre-Season Notice -->
+  <div class="glass-card-accent rounded-xl p-6 mb-8">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl">🛡️</span>
+      <div>
+        <h2 class="text-lg font-bold text-amber-400">Pre-Season — IDP leaders will appear during the season</h2>
+        <p class="text-sm text-zinc-500 mt-1">Live IDP stats and rankings will populate once the regular season begins.</p>
       </div>
     </div>
   </div>

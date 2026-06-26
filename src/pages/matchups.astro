@@ -1,76 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { fetchRosters, fetchUsers, fetchAllMatchups, fetchAllPlayers, LEAGUE_CONFIG } from "../data/sleeper-api";
-import { getEspnHeadshotUrl } from "../data/players";
 import { teams } from "../data/teams";
-
-const [rosters, users, matchupsByWeek, allPlayers] = await Promise.all([
-  fetchRosters(),
-  fetchUsers(),
-  fetchAllMatchups(1, 18),
-  fetchAllPlayers(),
-]);
-
-const userMap = new Map(users.map(u => [u.user_id, u]));
-const teamMap = new Map(rosters.map(r => [r.roster_id, r]));
-const teamNameMap = new Map(rosters.map(r => {
-  const user = userMap.get(r.owner_id);
-  return [r.roster_id, user?.metadata?.team_name || user?.display_name || `Team ${r.roster_id}`];
-}));
-
-// Build standings for records
-const standings = rosters
-  .map(r => ({
-    rosterId: r.roster_id,
-    wins: r.settings.wins,
-    losses: r.settings.losses,
-    pf: r.settings.fpts,
-  }))
-  .sort((a, b) => b.wins - a.wins || b.pf - a.pf);
-
-const recordMap = new Map(standings.map(s => [s.rosterId, `${s.wins}-${s.losses}`]));
-
-// Process matchups into readable format
-const weeks: { week: number; matchups: any[] }[] = [];
-for (const [week, m] of matchupsByWeek) {
-  if (week > 18) continue;
-  
-  // Group by matchup_id
-  const grouped = new Map<number, any[]>();
-  for (const matchup of m) {
-    if (!grouped.has(matchup.matchup_id)) grouped.set(matchup.matchup_id, []);
-    grouped.get(matchup.matchup_id)!.push(matchup);
-  }
-
-  const matchups = Array.from(grouped.values())
-    .filter(g => g.length >= 2)
-    .map(g => {
-      const [team1, team2] = g.sort((a, b) => b.points - a.points);
-      const t1Name = teamNameMap.get(team1.roster_id) || `Team ${team1.roster_id}`;
-      const t2Name = teamNameMap.get(team2.roster_id) || `Team ${team2.roster_id}`;
-      const t1Record = recordMap.get(team1.roster_id) || "0-0";
-      const t2Record = recordMap.get(team2.roster_id) || "0-0";
-      
-      // Get top starters
-      const t1Starters = (team1.starters || []).slice(0, 3).map((pid: string) => allPlayers[pid]).filter(Boolean);
-      const t2Starters = (team2.starters || []).slice(0, 3).map((pid: string) => allPlayers[pid]).filter(Boolean);
-      
-      return {
-        team1: { rosterId: team1.roster_id, name: t1Name, points: team1.points, record: t1Record, starters: t1Starters },
-        team2: { rosterId: team2.roster_id, name: t2Name, points: team2.points, record: t2Record, starters: t2Starters },
-        spread: Math.abs(team1.points - team2.points).toFixed(1),
-        total: (team1.points + team2.points).toFixed(1),
-        favorite: team1.points >= team2.points ? t1Name : t2Name,
-      };
-    });
-
-  weeks.push({ week, matchups });
-}
-
-// Current week
-const currentWeek = 1; // Will be updated when season starts
-const upcomingWeeks = weeks.filter(w => w.week >= currentWeek).slice(0, 4);
-const pastWeeks = weeks.filter(w => w.week < currentWeek).slice(-3).reverse();
 ---
 
 <Layout title="Matchups">
@@ -84,129 +14,43 @@ const pastWeeks = weeks.filter(w => w.week < currentWeek).slice(-3).reverse();
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
               <span class="gradient-text">Weekly Matchups</span>
             </h1>
-            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · {LEAGUE_CONFIG.season} Season · 14 Teams · 18 Weeks</p>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · 2026 Season · 14 Teams</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Week Navigation -->
-  <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-    {weeks.map(w => (
-      <a href={`#week-${w.week}`} class="flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all" class:list={[
-        w.week === currentWeek ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-        w.week < currentWeek ? 'bg-zinc-800/50 text-zinc-500 border border-zinc-700/30' :
-        'bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50 border border-zinc-800/30'
-      ]}>
-        Week {w.week}
-        {w.week === currentWeek && <span class="ml-1">🔥</span>}
-      </a>
-    ))}
+  <!-- Pre-Season Notice -->
+  <div class="glass-card-accent rounded-xl p-8 text-center mb-8">
+    <div class="text-5xl mb-4">📅</div>
+    <h2 class="text-xl font-bold text-amber-400 mb-2">Pre-Season — No matchups yet</h2>
+    <p class="text-zinc-400 mb-1">Season starts in 75 days.</p>
+    <p class="text-xs text-zinc-600">Matchup data will appear once the 2026 season begins.</p>
   </div>
 
-  <!-- Current/Upcoming Weeks -->
+  <!-- Team List -->
   <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
-      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">🔥</div>
-      <h2 class="text-lg font-bold text-amber-400">Upcoming Matchups</h2>
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">👥</div>
+      <h2 class="text-lg font-bold text-amber-400">The 14 Teams</h2>
     </div>
-
-    {upcomingWeeks.length === 0 && (
-      <div class="glass-card rounded-xl p-8 text-center">
-        <div class="text-4xl mb-3">📅</div>
-        <h3 class="text-lg font-bold text-zinc-200 mb-1">Season hasn't started yet</h3>
-        <p class="text-sm text-zinc-500">Matchup data will appear once the 2025 season begins. Check back for live projections!</p>
-      </div>
-    )}
-
-    {upcomingWeeks.map(w => (
-      <div id={`week-${w.week}`} class="mb-6">
-        <div class="flex items-center gap-2 mb-3">
-          <h3 class="text-sm font-bold text-zinc-200">Week {w.week}</h3>
-          <span class="text-xs text-zinc-600">{w.matchups.length} matchups</span>
-        </div>
-        <div class="grid gap-3 sm:grid-cols-2">
-          {w.matchups.map(m => (
-            <div class="glass-card rounded-xl p-4 hover:border-amber-500/20 transition-all">
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex-1 text-center">
-                  <div class="text-sm font-bold text-zinc-100 truncate">{m.team1.name}</div>
-                  <div class="text-[10px] text-zinc-500">{m.team1.record}</div>
-                </div>
-                <div class="flex items-center gap-2 px-3">
-                  <span class="text-lg font-bold text-amber-400">vs</span>
-                </div>
-                <div class="flex-1 text-center">
-                  <div class="text-sm font-bold text-zinc-100 truncate">{m.team2.name}</div>
-                  <div class="text-[10px] text-zinc-500">{m.team2.record}</div>
-                </div>
-              </div>
-              <div class="flex items-center justify-center gap-2 text-xs text-zinc-600">
-                <span class="text-amber-400 font-semibold">{m.favorite}</span>
-                <span>favored by {m.spread}</span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-zinc-800/30">
-                <div class="flex items-center justify-between text-[10px] text-zinc-600">
-                  <span>Projected Total: <span class="text-zinc-400 font-semibold">{m.total}</span></span>
-                  <span>Avg: <span class="text-zinc-400 font-semibold">{(parseFloat(m.total) / 2).toFixed(1)}</span></span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    ))}
-  </div>
-
-  <!-- Past Results -->
-  {pastWeeks.length > 0 && (
-    <div class="mb-8">
-      <div class="flex items-center gap-2 mb-4">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800 text-sm">📋</div>
-        <h2 class="text-lg font-bold text-zinc-200">Past Results</h2>
-      </div>
-
-      {pastWeeks.map(w => (
-        <div class="mb-6">
-          <div class="flex items-center gap-2 mb-3">
-            <h3 class="text-sm font-bold text-zinc-200">Week {w.week}</h3>
-            <span class="text-xs text-zinc-600">{w.matchups.length} matchups</span>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {teams.map(t => (
+        <div class="glass-card rounded-xl p-4 flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${t.primaryColor}, ${t.secondaryColor})`}>
+            {t.shortName}
           </div>
-          <div class="grid gap-3 sm:grid-cols-2">
-            {w.matchups.map(m => (
-              <div class="glass-card rounded-xl p-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex-1 text-center">
-                    <div class="text-sm font-bold" class:list={[m.team1.points > m.team2.points ? 'text-emerald-400' : 'text-zinc-400']}>
-                      {m.team1.name}
-                    </div>
-                    <div class="text-lg font-bold font-mono" class:list={[m.team1.points > m.team2.points ? 'text-emerald-400' : 'text-zinc-500']}>
-                      {m.team1.points.toFixed(1)}
-                    </div>
-                  </div>
-                  <div class="px-3 text-center">
-                    <div class="text-[10px] text-zinc-600 mb-1">FINAL</div>
-                    <div class="text-xs text-zinc-500">{m.team1.record}</div>
-                  </div>
-                  <div class="flex-1 text-center">
-                    <div class="text-sm font-bold" class:list={[m.team2.points > m.team1.points ? 'text-emerald-400' : 'text-zinc-400']}>
-                      {m.team2.name}
-                    </div>
-                    <div class="text-lg font-bold font-mono" class:list={[m.team2.points > m.team1.points ? 'text-emerald-400' : 'text-zinc-500']}>
-                      {m.team2.points.toFixed(1)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">{t.name}</div>
+            <div class="text-[10px] text-zinc-500">{t.owner}</div>
           </div>
         </div>
       ))}
     </div>
-  )}
+  </div>
 
-  <!-- Season Stats -->
+  <!-- Season Overview -->
   <div class="glass-card rounded-xl p-6">
     <div class="flex items-center gap-2 mb-4">
       <span class="text-lg">📊</span>
@@ -214,7 +58,7 @@ const pastWeeks = weeks.filter(w => w.week < currentWeek).slice(-3).reverse();
     </div>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
-        <div class="text-2xl font-bold text-amber-400">{rosters.length}</div>
+        <div class="text-2xl font-bold text-amber-400">14</div>
         <div class="text-xs text-zinc-500">Teams</div>
       </div>
       <div class="bg-zinc-800/30 rounded-lg p-4 text-center">

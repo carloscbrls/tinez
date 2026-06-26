@@ -1,14 +1,5 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { fetchRosters, fetchUsers, LEAGUE_CONFIG } from "../data/sleeper-api";
-
-const [rosters, users] = await Promise.all([
-  fetchRosters(),
-  fetchUsers(),
-]);
-
-const userMap = new Map(users.map(u => [u.user_id, u]));
-const teamCount = rosters.length;
 ---
 
 <Layout title="Mini Games">
@@ -27,6 +18,13 @@ const teamCount = rosters.length;
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Pre-Season Notice -->
+  <div class="glass-card-accent rounded-xl p-12 text-center mb-8">
+    <div class="text-5xl mb-4">🎮</div>
+    <h2 class="text-xl font-bold text-amber-400 mb-2">Pre-Season — Mini games will be available during the season</h2>
+    <p class="text-zinc-400">Survivor, Pick'em, Trivia, and more will activate once the season starts.</p>
   </div>
 
   <!-- Survivor -->

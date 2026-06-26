@@ -1,41 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { fetchRosters, fetchUsers, LEAGUE_CONFIG } from "../data/sleeper-api";
-
-const [rosters, users] = await Promise.all([
-  fetchRosters(),
-  fetchUsers(),
-]);
-
-const userMap = new Map(users.map(u => [u.user_id, u]));
-
-// Build team data with finances
-const teams = rosters
-  .map(r => {
-    const user = userMap.get(r.owner_id);
-    return {
-      name: user?.metadata?.team_name || user?.display_name || `Team ${r.roster_id}`,
-      owner: user?.display_name || "Unknown",
-      wins: r.settings.wins,
-      losses: r.settings.losses,
-      pf: r.settings.fpts,
-      rosterId: r.roster_id,
-    };
-  })
-  .sort((a, b) => b.wins - a.wins || b.pf - a.pf);
-
-const duesPerTeam = 150;
-const totalDues = teams.length * duesPerTeam;
-const payouts = {
-  first: 1400,
-  second: 700,
-  third: 350,
-  regSeason: 100,
-  weekly: 25,
-  weeklyWeeks: 14,
-};
-const totalPayouts = payouts.first + payouts.second + payouts.third + payouts.regSeason + (payouts.weekly * payouts.weeklyWeeks);
-const remaining = totalDues - totalPayouts;
+import { teams } from "../data/teams";
 ---
 
 <Layout title="Finances">
@@ -49,34 +14,41 @@ const remaining = totalDues - totalPayouts;
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
               <span class="gradient-text">League Finances</span>
             </h1>
-            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · {LEAGUE_CONFIG.season} Season · ${duesPerTeam}/team</p>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · 2026 Season · $150/team</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Pre-Season Notice -->
+  <div class="glass-card-accent rounded-xl p-12 text-center mb-8">
+    <div class="text-5xl mb-4">💰</div>
+    <h2 class="text-xl font-bold text-amber-400 mb-2">Pre-Season — Financial data will appear after the season starts</h2>
+    <p class="text-zinc-400">Dues, payouts, and team financial status will update once the season begins.</p>
+  </div>
+
   <!-- Summary Cards -->
   <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-8 stagger-children">
     <div class="glass-card rounded-xl p-5 text-center">
-      <div class="text-2xl font-extrabold text-amber-400">${totalDues.toLocaleString()}</div>
+      <div class="text-2xl font-extrabold text-amber-400">$2,100</div>
       <div class="text-xs text-zinc-500 mt-1">Total Dues Collected</div>
-      <div class="text-[10px] text-zinc-600 mt-0.5">{teams.length} teams × ${duesPerTeam}</div>
+      <div class="text-[10px] text-zinc-600 mt-0.5">14 teams × $150</div>
     </div>
     <div class="glass-card rounded-xl p-5 text-center">
-      <div class="text-2xl font-extrabold text-emerald-400">${totalPayouts.toLocaleString()}</div>
+      <div class="text-2xl font-extrabold text-emerald-400">$2,100</div>
       <div class="text-xs text-zinc-500 mt-1">Total Payouts</div>
       <div class="text-[10px] text-zinc-600 mt-0.5">Championship + Weekly + Season</div>
     </div>
     <div class="glass-card rounded-xl p-5 text-center">
-      <div class="text-2xl font-extrabold text-zinc-100">${remaining.toLocaleString()}</div>
+      <div class="text-2xl font-extrabold text-zinc-100">$0</div>
       <div class="text-xs text-zinc-500 mt-1">Remaining Balance</div>
       <div class="text-[10px] text-zinc-600 mt-0.5">Platform fees + carryover</div>
     </div>
     <div class="glass-card rounded-xl p-5 text-center">
-      <div class="text-2xl font-extrabold text-amber-400">${(totalDues / teams.length).toFixed(0)}</div>
+      <div class="text-2xl font-extrabold text-amber-400">$150</div>
       <div class="text-xs text-zinc-500 mt-1">Avg per Team</div>
-      <div class="text-[10px] text-zinc-600 mt-0.5">${duesPerTeam} buy-in</div>
+      <div class="text-[10px] text-zinc-600 mt-0.5">$150 buy-in</div>
     </div>
   </div>
 
@@ -107,8 +79,8 @@ const remaining = totalDues - totalPayouts;
                 </div>
               </div>
             </td>
-            <td class="text-right text-lg font-bold text-emerald-400">${payouts.first.toLocaleString()}</td>
-            <td class="text-center font-mono text-sm text-zinc-400">{((payouts.first / totalPayouts) * 100).toFixed(0)}%</td>
+            <td class="text-right text-lg font-bold text-emerald-400">$1,400</td>
+            <td class="text-center font-mono text-sm text-zinc-400">67%</td>
             <td class="text-center text-xs text-zinc-500">1 team</td>
           </tr>
           <tr class="hover:bg-zinc-800/30 transition-colors">
@@ -121,8 +93,8 @@ const remaining = totalDues - totalPayouts;
                 </div>
               </div>
             </td>
-            <td class="text-right text-lg font-bold text-zinc-300">${payouts.second.toLocaleString()}</td>
-            <td class="text-center font-mono text-sm text-zinc-400">{((payouts.second / totalPayouts) * 100).toFixed(0)}%</td>
+            <td class="text-right text-lg font-bold text-zinc-300">$700</td>
+            <td class="text-center font-mono text-sm text-zinc-400">33%</td>
             <td class="text-center text-xs text-zinc-500">1 team</td>
           </tr>
           <tr class="hover:bg-zinc-800/30 transition-colors">
@@ -135,8 +107,8 @@ const remaining = totalDues - totalPayouts;
                 </div>
               </div>
             </td>
-            <td class="text-right text-lg font-bold text-amber-400">${payouts.third.toLocaleString()}</td>
-            <td class="text-center font-mono text-sm text-zinc-400">{((payouts.third / totalPayouts) * 100).toFixed(0)}%</td>
+            <td class="text-right text-lg font-bold text-amber-400">$350</td>
+            <td class="text-center font-mono text-sm text-zinc-400">17%</td>
             <td class="text-center text-xs text-zinc-500">1 team</td>
           </tr>
           <tr class="hover:bg-zinc-800/30 transition-colors">
@@ -149,8 +121,8 @@ const remaining = totalDues - totalPayouts;
                 </div>
               </div>
             </td>
-            <td class="text-right text-lg font-bold text-blue-400">${payouts.regSeason.toLocaleString()}</td>
-            <td class="text-center font-mono text-sm text-zinc-400">{((payouts.regSeason / totalPayouts) * 100).toFixed(0)}%</td>
+            <td class="text-right text-lg font-bold text-blue-400">$100</td>
+            <td class="text-center font-mono text-sm text-zinc-400">5%</td>
             <td class="text-center text-xs text-zinc-500">1 team</td>
           </tr>
           <tr class="hover:bg-zinc-800/30 transition-colors">
@@ -163,8 +135,8 @@ const remaining = totalDues - totalPayouts;
                 </div>
               </div>
             </td>
-            <td class="text-right text-lg font-bold text-purple-400">${payouts.weekly} × {payouts.weeklyWeeks}</td>
-            <td class="text-center font-mono text-sm text-zinc-400">{((payouts.weekly * payouts.weeklyWeeks / totalPayouts) * 100).toFixed(0)}%</td>
+            <td class="text-right text-lg font-bold text-purple-400">$25 × 14</td>
+            <td class="text-center font-mono text-sm text-zinc-400">17%</td>
             <td class="text-center text-xs text-zinc-500">14 weeks</td>
           </tr>
         </tbody>
@@ -173,7 +145,7 @@ const remaining = totalDues - totalPayouts;
             <td class="px-4 py-3">
               <span class="text-sm font-bold text-amber-400">Total Payouts</span>
             </td>
-            <td class="px-4 py-3 text-right text-lg font-bold text-amber-400">${totalPayouts.toLocaleString()}</td>
+            <td class="px-4 py-3 text-right text-lg font-bold text-amber-400">$2,100</td>
             <td class="px-4 py-3 text-center font-mono text-sm text-amber-400">100%</td>
             <td class="px-4 py-3 text-center text-xs text-zinc-500">—</td>
           </tr>
@@ -205,11 +177,10 @@ const remaining = totalDues - totalPayouts;
                 <span class="text-sm font-semibold text-zinc-100">{t.name}</span>
               </td>
               <td class="text-center text-sm text-zinc-400">{t.owner}</td>
-              <td class="text-center font-mono text-sm text-zinc-300">${duesPerTeam}</td>
+              <td class="text-center font-mono text-sm text-zinc-300">$150</td>
               <td class="text-center">
-                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-medium text-emerald-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Paid
+                <span class="inline-flex items-center gap-1 rounded-full bg-zinc-800/50 px-2.5 py-0.5 text-[10px] font-medium text-zinc-500">
+                  Pending
                 </span>
               </td>
             </tr>
@@ -229,7 +200,7 @@ const remaining = totalDues - totalPayouts;
       <div class="bg-zinc-800/30 rounded-lg p-4">
         <h3 class="text-sm font-bold text-amber-400 mb-2">How to Pay</h3>
         <ul class="space-y-1.5 text-xs text-zinc-400">
-          <li>• Dues are <strong class="text-zinc-200">${duesPerTeam}</strong> per team per season</li>
+          <li>• Dues are <strong class="text-zinc-200">$150</strong> per team per season</li>
           <li>• Due before the annual draft</li>
           <li>• Payment via Venmo, PayPal, or Cash</li>
           <li>• Unpaid teams forfeit draft eligibility</li>
@@ -238,8 +209,8 @@ const remaining = totalDues - totalPayouts;
       <div class="bg-zinc-800/30 rounded-lg p-4">
         <h3 class="text-sm font-bold text-emerald-400 mb-2">Payout Schedule</h3>
         <ul class="space-y-1.5 text-xs text-zinc-400">
-          <li>• Weekly high score: <strong class="text-zinc-200">${payouts.weekly}</strong> per week (Weeks 1-14)</li>
-          <li>• Regular season champ: <strong class="text-zinc-200">${payouts.regSeason}</strong> after Week 14</li>
+          <li>• Weekly high score: <strong class="text-zinc-200">$25</strong> per week (Weeks 1-14)</li>
+          <li>• Regular season champ: <strong class="text-zinc-200">$100</strong> after Week 14</li>
           <li>• Playoff payouts: Week 17 after Super Bowl</li>
           <li>• All payouts via Venmo within 7 days</li>
         </ul>

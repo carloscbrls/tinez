@@ -186,3 +186,14 @@ export function getEspnHeadshotUrl(espnId: number): string {
 export function getNflTeamLogoUrl(abbr: string): string {
   return `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png`;
 }
+
+/**
+ * Get player headshot URL from ESPN CDN
+ */
+export function getPlayerHeadshotUrl(player: { espn_id?: number; yahoo_id?: number | null }): string {
+  const espnId = player.espn_id || player.yahoo_id;
+  if (espnId) {
+    return `https://a.espncdn.com/i/headshots/nfl/players/full/${espnId}.png`;
+  }
+  return "";
+}

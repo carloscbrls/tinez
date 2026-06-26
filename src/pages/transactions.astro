@@ -1,28 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { fetchAllTransactions, fetchUsers, fetchRosters, getPositionEmoji } from "../data/sleeper-api";
 import { teams } from "../data/teams";
-
-// Try to fetch real data, fall back gracefully
-let transactions: Awaited<ReturnType<typeof fetchAllTransactions>> = [];
-let userMap = new Map<string, string>();
-let rosterMap = new Map<number, string>();
-
-try {
-  transactions = await fetchAllTransactions(1, 18);
-  const users = await fetchUsers();
-  const rosters = await fetchRosters();
-  
-  userMap = new Map(users.map(u => [u.user_id, u.display_name]));
-  rosterMap = new Map(rosters.map(r => [r.roster_id, r.owner_id]));
-} catch {
-  // Fall back to empty data
-}
-
-// Categorize transactions
-const trades = transactions.filter(t => t.type === "trade").slice(0, 20);
-const waivers = transactions.filter(t => t.type === "waiver" || t.type === "free_agent").slice(0, 20);
-const allRecent = transactions.slice(0, 30);
 ---
 
 <Layout title="Transactions">
@@ -43,212 +21,48 @@ const allRecent = transactions.slice(0, 30);
     </div>
   </div>
 
+  <!-- Pre-Season Notice -->
+  <div class="glass-card-accent rounded-xl p-12 text-center mb-8">
+    <div class="text-5xl mb-4">🔄</div>
+    <h2 class="text-xl font-bold text-amber-400 mb-2">No transactions yet</h2>
+    <p class="text-zinc-400">Pre-season.</p>
+    <p class="text-xs text-zinc-600 mt-1">Transaction data will appear once the season starts.</p>
+  </div>
+
   <!-- Stats Overview -->
   <div class="grid gap-3 sm:grid-cols-3 mb-8 stagger-children">
     <div class="glass-card rounded-xl p-5 text-center">
-      <div class="text-3xl font-extrabold text-amber-400">{transactions.length}</div>
+      <div class="text-3xl font-extrabold text-amber-400">0</div>
       <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">Total Transactions</div>
     </div>
     <div class="glass-card rounded-xl p-5 text-center">
-      <div class="text-3xl font-extrabold text-blue-400">{trades.length}</div>
+      <div class="text-3xl font-extrabold text-blue-400">0</div>
       <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">Trades</div>
     </div>
     <div class="glass-card rounded-xl p-5 text-center">
-      <div class="text-3xl font-extrabold text-emerald-400">{waivers.length}</div>
+      <div class="text-3xl font-extrabold text-emerald-400">0</div>
       <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">Waiver/FA Moves</div>
     </div>
   </div>
 
-  <!-- Tabs -->
-  <div class="mb-6 flex flex-wrap gap-2" id="txn-tabs">
-    <button data-tab="all" class="active-tab rounded-lg px-4 py-2 text-sm font-medium transition-all bg-amber-500/15 text-amber-400 border border-amber-500/30">All Activity</button>
-    <button data-tab="trades" class="rounded-lg px-4 py-2 text-sm font-medium transition-all bg-zinc-800/50 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/50">Trades</button>
-    <button data-tab="waivers" class="rounded-lg px-4 py-2 text-sm font-medium transition-all bg-zinc-800/50 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/50">Waiver/FA</button>
+  <!-- Team List -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">👥</div>
+      <h2 class="text-lg font-bold text-amber-400">League Teams</h2>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {teams.map(t => (
+        <div class="glass-card rounded-xl p-4 flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${t.primaryColor}, ${t.secondaryColor})`}>
+            {t.shortName}
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-zinc-100">{t.name}</div>
+            <div class="text-[10px] text-zinc-500">{t.owner}</div>
+          </div>
+        </div>
+      ))}
+    </div>
   </div>
-
-  <!-- All Recent Transactions -->
-  <div id="txn-all" class="txn-section">
-    {allRecent.length > 0 ? (
-      <div class="space-y-3 stagger-children">
-        {allRecent.map(txn => {
-          const rosterId = txn.roster_ids[0];
-          const ownerId = rosterMap.get(rosterId) || "";
-          const ownerName = userMap.get(ownerId) || `Team ${rosterId}`;
-          const isTrade = txn.type === "trade";
-          const isAdd = txn.type === "free_agent" || txn.type === "waiver";
-          const date = new Date(txn.created);
-          const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-          
-          return (
-            <div class="glass-card rounded-xl p-4">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  {isTrade ? (
-                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/15 text-xs">🔄</span>
-                  ) : (
-                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 text-xs">📥</span>
-                  )}
-                  <span class="text-sm font-semibold text-zinc-100">
-                    {isTrade ? "Trade" : isAdd ? "Waiver/FA Add" : "Transaction"}
-                  </span>
-                  <span class="text-xs text-zinc-600">{dateStr}</span>
-                </div>
-                <span class="text-xs text-zinc-500">{ownerName}</span>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                {txn.adds && Object.entries(txn.adds).slice(0, 3).map(([playerId]) => (
-                  <span class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400 border border-emerald-500/20">
-                    + {playerId.slice(0, 8)}...
-                  </span>
-                ))}
-                {txn.drops && Object.entries(txn.drops).slice(0, 3).map(([playerId]) => (
-                  <span class="inline-flex items-center gap-1 rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400 border border-red-500/20">
-                    - {playerId.slice(0, 8)}...
-                  </span>
-                ))}
-                {!txn.adds && !txn.drops && (
-                  <span class="text-xs text-zinc-500">Transaction details pending</span>
-                )}
-              </div>
-              {isTrade && txn.roster_ids.length > 1 && (
-                <div class="mt-2 flex items-center gap-2 text-xs text-zinc-500">
-                  <span>Multi-team trade</span>
-                  <span>·</span>
-                  <span>{txn.roster_ids.length} teams involved</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    ) : (
-      <div class="glass-card rounded-xl p-12 text-center">
-        <div class="text-4xl mb-3">🔄</div>
-        <p class="text-zinc-400">No transactions data available yet.</p>
-        <p class="text-xs text-zinc-600 mt-1">Transaction data will appear once the season starts and Sleeper API data is synced.</p>
-      </div>
-    )}
-  </div>
-
-  <!-- Trades Section -->
-  <div id="txn-trades" class="txn-section hidden">
-    {trades.length > 0 ? (
-      <div class="space-y-3 stagger-children">
-        {trades.map(txn => {
-          const date = new Date(txn.created);
-          const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-          const teamNames = txn.roster_ids.map(rid => {
-            const oid = rosterMap.get(rid) || "";
-            return userMap.get(oid) || `Team ${rid}`;
-          });
-          
-          return (
-            <div class="glass-card rounded-xl p-5">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/15 text-sm">🔄</span>
-                <div>
-                  <span class="text-sm font-bold text-zinc-100">Trade</span>
-                  <span class="text-xs text-zinc-600 ml-2">{dateStr}</span>
-                </div>
-              </div>
-              <div class="flex flex-wrap items-center gap-3">
-                {teamNames.map((name, i) => (
-                  <>
-                    <span class="text-sm font-semibold text-amber-400">{name}</span>
-                    {i < teamNames.length - 1 && (
-                      <span class="text-xs text-zinc-600 font-bold">⟷</span>
-                    )}
-                  </>
-                ))}
-              </div>
-              <div class="mt-3 flex flex-wrap gap-2">
-                {txn.adds && Object.entries(txn.adds).map(([playerId]) => (
-                  <span class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400 border border-emerald-500/20">
-                    + {playerId.slice(0, 8)}...
-                  </span>
-                ))}
-                {txn.drops && Object.entries(txn.drops).map(([playerId]) => (
-                  <span class="inline-flex items-center gap-1 rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400 border border-red-500/20">
-                    - {playerId.slice(0, 8)}...
-                  </span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    ) : (
-      <div class="glass-card rounded-xl p-12 text-center">
-        <div class="text-4xl mb-3">🔄</div>
-        <p class="text-zinc-400">No trades recorded yet this season.</p>
-      </div>
-    )}
-  </div>
-
-  <!-- Waivers Section -->
-  <div id="txn-waivers" class="txn-section hidden">
-    {waivers.length > 0 ? (
-      <div class="space-y-2 stagger-children">
-        {waivers.map(txn => {
-          const rosterId = txn.roster_ids[0];
-          const ownerId = rosterMap.get(rosterId) || "";
-          const ownerName = userMap.get(ownerId) || `Team ${rosterId}`;
-          const date = new Date(txn.created);
-          const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-          
-          return (
-            <div class="glass-card rounded-lg p-3 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span class="text-xs text-zinc-500">{dateStr}</span>
-                <span class="text-sm font-medium text-zinc-200">{ownerName}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                {txn.adds && Object.entries(txn.adds).map(([playerId]) => (
-                  <span class="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
-                    + {playerId.slice(0, 8)}...
-                  </span>
-                ))}
-                {txn.drops && Object.entries(txn.drops).map(([playerId]) => (
-                  <span class="inline-flex items-center gap-1 rounded bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-400">
-                    - {playerId.slice(0, 8)}...
-                  </span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    ) : (
-      <div class="glass-card rounded-xl p-12 text-center">
-        <div class="text-4xl mb-3">📥</div>
-        <p class="text-zinc-400">No waiver activity yet.</p>
-      </div>
-    )}
-  </div>
-
-  <script>
-    const tabs = document.querySelectorAll('#txn-tabs button');
-    const sections = {
-      all: document.getElementById('txn-all'),
-      trades: document.getElementById('txn-trades'),
-      waivers: document.getElementById('txn-waivers'),
-    };
-
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabs.forEach(b => {
-          b.classList.remove('active-tab', 'bg-amber-500/15', 'text-amber-400', 'border-amber-500/30');
-          b.classList.add('bg-zinc-800/50', 'text-zinc-400', 'border-zinc-700/30');
-        });
-        btn.classList.remove('bg-zinc-800/50', 'text-zinc-400', 'border-zinc-700/30');
-        btn.classList.add('active-tab', 'bg-amber-500/15', 'text-amber-400', 'border-amber-500/30');
-
-        Object.entries(sections).forEach(([key, el]) => {
-          if (el) {
-            el.classList.toggle('hidden', key !== btn.dataset.tab);
-          }
-        });
-      });
-    });
-  </script>
 </Layout>
