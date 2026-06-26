@@ -1,28 +1,40 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { players, getEspnHeadshotUrl, getPositionColor } from "../../data/players";
-import { getNFLTeam } from "../../data/nfl-teams";
+import {
+  fetchAllPlayersWithValues,
+  getValueLabel,
+  getValueColor,
+  getValueBg,
+  getEspnHeadshotUrl,
+  getNflTeamLogo,
+  getProfileKey,
+} from "../../data/leaguelogs";
 
-// Group players by position
-const byPosition: Record<string, typeof players> = {};
-for (const p of players) {
+// Fetch all players with values at build time
+const allPlayers = await fetchAllPlayersWithValues();
+
+// Group by position
+const byPosition: Record<string, typeof allPlayers> = {};
+for (const p of allPlayers) {
   if (!byPosition[p.position]) byPosition[p.position] = [];
   byPosition[p.position].push(p);
 }
 
+// Sort each position by overall rank
 for (const pos of Object.keys(byPosition)) {
-  byPosition[pos].sort((a, b) => (a.adp || 999) - (b.adp || 999));
+  byPosition[pos].sort((a, b) => a.overallRank - b.overallRank);
 }
 
-const positions = ["QB", "RB", "WR", "TE", "K", "DEF"];
+const positions = ["QB", "RB", "WR", "TE"];
 const positionColors: Record<string, string> = {
   QB: "from-blue-500 to-indigo-500",
   RB: "from-emerald-500 to-teal-500",
   WR: "from-amber-500 to-orange-500",
   TE: "from-purple-500 to-pink-500",
-  K: "from-red-500 to-rose-500",
-  DEF: "from-zinc-500 to-zinc-600",
 };
+
+const totalPlayers = allPlayers.length;
+const profileKey = getProfileKey();
 ---
 
 <Layout title="Player Values">
@@ -36,7 +48,7 @@ const positionColors: Record<string, string> = {
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
               <span class="gradient-text">Player Values</span>
             </h1>
-            <p class="text-zinc-400 text-sm mt-0.5">Market-driven player valuations · ADP · Tier rankings</p>
+            <p class="text-zinc-400 text-sm mt-0.5">Market-driven valuations · {totalPlayers} players · Updated every 6h</p>
           </div>
         </div>
       </div>
@@ -68,29 +80,29 @@ const positionColors: Record<string, string> = {
           <span class="text-xs text-zinc-600">({byPosition[pos].length} players)</span>
         </div>
         <div class="glass-card-static rounded-xl overflow-x-auto">
-          <table class="premium-table">
+          <table class="premium-table w-full">
             <thead>
               <tr>
-                <th>Player</th>
+                <th class="text-left">Player</th>
                 <th class="text-center">Team</th>
-                <th class="text-center">Bye</th>
+                <th class="text-center">Rank</th>
+                <th class="text-center">Pos Rank</th>
+                <th class="text-right">Value</th>
                 <th class="text-center">Tier</th>
-                <th class="text-right">ADP</th>
-                <th class="text-center">Value</th>
               </tr>
             </thead>
             <tbody>
-              {byPosition[pos].map(p => {
-                const nfl = getNFLTeam(p.team);
-                const valueScore = p.tier ? Math.max(0, 5 - p.tier) * 20 + (p.adp ? Math.max(0, 200 - p.adp) / 10 : 0) : 0;
-                const valueLabel = valueScore >= 80 ? "Elite" : valueScore >= 60 ? "High" : valueScore >= 40 ? "Mid" : valueScore >= 20 ? "Low" : "Depth";
-                const valueColor = valueScore >= 80 ? "text-amber-400" : valueScore >= 60 ? "text-emerald-400" : valueScore >= 40 ? "text-blue-400" : valueScore >= 20 ? "text-zinc-400" : "text-zinc-600";
+              {byPosition[pos].slice(0, 50).map(p => {
+                const headshot = getEspnHeadshotUrl(p.espnId);
+                const teamLogo = getNflTeamLogo(p.team);
+                const valueLabel = getValueLabel(p.value);
+                const valueColor = getValueColor(p.value);
                 return (
                   <tr class="hover:bg-zinc-800/30 transition-colors">
                     <td>
                       <div class="flex items-center gap-2.5">
-                        {p.espnId > 0 ? (
-                          <img src={getEspnHeadshotUrl(p.espnId)} alt={p.name} class="h-8 w-8 rounded-lg object-cover" loading="lazy" onerror="this.style.display='none'" />
+                        {headshot ? (
+                          <img src={headshot} alt={p.name} class="h-8 w-8 rounded-lg object-cover bg-zinc-800" loading="lazy" onerror="this.style.display='none'" />
                         ) : (
                           <div class="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">?</div>
                         )}
@@ -101,28 +113,20 @@ const positionColors: Record<string, string> = {
                       </div>
                     </td>
                     <td class="text-center">
-                      {nfl ? (
-                        <span class="text-xs font-mono text-zinc-400">{nfl.shortName}</span>
-                      ) : (
-                        <span class="text-xs text-zinc-600">{p.team}</span>
-                      )}
+                      <div class="flex items-center justify-center gap-1.5">
+                        <img src={teamLogo} alt={p.team} class="h-5 w-5 object-contain" loading="lazy" onerror="this.style.display='none'" />
+                        <span class="text-xs font-mono text-zinc-400">{p.team}</span>
+                      </div>
                     </td>
-                    <td class="text-center font-mono text-xs text-zinc-500">{p.byeWeek || "—"}</td>
-                    <td class="text-center">
-                      {p.tier ? (
-                        <span class="inline-flex items-center justify-center h-6 w-6 rounded text-xs font-bold" class:list={[
-                          p.tier === 1 ? 'bg-amber-500/20 text-amber-400' :
-                          p.tier === 2 ? 'bg-emerald-500/20 text-emerald-400' :
-                          p.tier === 3 ? 'bg-blue-500/20 text-blue-400' :
-                          'bg-zinc-800 text-zinc-500'
-                        ]}>{p.tier}</span>
-                      ) : (
-                        <span class="text-xs text-zinc-600">—</span>
-                      )}
+                    <td class="text-center font-mono text-xs text-zinc-400">#{p.overallRank}</td>
+                    <td class="text-center font-mono text-xs text-zinc-500">#{p.positionRank}</td>
+                    <td class="text-right">
+                      <span class="font-mono text-sm font-semibold text-zinc-200">{p.value.toFixed(1)}</span>
                     </td>
-                    <td class="text-right font-mono text-sm text-zinc-300">{p.adp?.toFixed(1) || "—"}</td>
                     <td class="text-center">
-                      <span class={`text-xs font-semibold ${valueColor}`}>{valueLabel}</span>
+                      <span class={`inline-block rounded-lg px-2 py-0.5 text-[10px] font-semibold border ${getValueBg(p.value)} ${valueColor}`}>
+                        {valueLabel}
+                      </span>
                     </td>
                   </tr>
                 );
