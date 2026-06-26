@@ -12,6 +12,7 @@ export interface Team {
   pointsAgainst: number;
   streak: string;
   xHandle: string;
+  nflTeam?: string; // NFL team abbreviation (e.g. "SF", "KC")
 }
 
 // Placeholder teams — update with real Tinez league teams

@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getTeamById, teams } from "../../data/teams";
+import { getNFLTeam } from "../../data/nfl-teams";
 export async function getStaticPaths() {
   return teams.map(team => ({
     params: { id: String(team.id) },
@@ -9,6 +10,7 @@ export async function getStaticPaths() {
 }
 const { team } = Astro.props;
 const record = `${team.wins}-${team.losses}-${team.ties}`;
+const nfl = team.nflTeam ? getNFLTeam(team.nflTeam) : undefined;
 ---
 
 <Layout title={`${team.name} | Teams`}>
@@ -42,13 +44,26 @@ const record = `${team.wins}-${team.losses}-${team.ties}`;
       </div>
     </div>
 
-    {team.xHandle && (
+    {nfl && (
       <div class="mt-6">
-        <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">X Feed</h2>
-        <div class="rounded-xl border border-zinc-800 p-4 text-center text-sm text-zinc-500">
-          <p>X/Twitter feed for <span class="text-amber-400">@{team.xHandle}</span> will appear here.</p>
-          <p class="mt-1 text-xs">Embed via Twitter widget</p>
-        </div>
+        <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">NFL Team Feed</h2>
+        <a
+          href={`https://x.com/${nfl.xHandle}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 hover:border-zinc-700 transition-all group"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-bold text-white" style={`background: ${nfl.primaryColor}`}>
+            {nfl.shortName}
+          </div>
+          <div>
+            <div class="font-medium group-hover:text-sky-400 transition-colors">{nfl.name}</div>
+            <div class="text-xs text-zinc-500">@{nfl.xHandle}</div>
+          </div>
+          <svg class="ml-auto h-4 w-4 shrink-0 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
       </div>
     )}
   </div>
