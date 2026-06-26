@@ -1,31 +1,15 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { teams } from "../data/teams";
-import { LEAGUE_CONFIG } from "../data/sleeper-api";
 
-// TINEZ is on Yahoo, not Sleeper. Power rankings use historical data.
-// When the 2026 season starts, we'll wire up Yahoo API for live data.
+// TINEZ is on Yahoo (ID# 103379). The 2026 season hasn't started yet.
+// All 14 teams are confirmed, draft is pending. Power rankings will
+// update live once the season begins.
 
-// Build power rankings from historical team data
+// Pre-season: all teams start at baseline 50
 const rankings = [...teams]
-  .map(t => {
-    const totalGames = t.wins + t.losses + t.ties;
-    const winPct = totalGames > 0 ? t.wins / totalGames : 0;
-    const avgPF = totalGames > 0 ? t.pointsFor / totalGames : 0;
-    const avgPA = totalGames > 0 ? t.pointsAgainst / totalGames : 0;
-    
-    // Power score: weighted combination
-    const powerScore = Math.round(
-      winPct * 50 +
-      Math.min(avgPF / 20, 30) +
-      (1 - Math.min(avgPA / 20, 1)) * 10 +
-      10 // baseline activity
-    );
-    
-    return { ...t, powerScore, totalGames };
-  })
-  .sort((a, b) => b.powerScore - a.powerScore)
-  .map((t, i) => ({ ...t, rank: i + 1 }));
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map((t, i) => ({ ...t, powerScore: 50, rank: i + 1 }));
 ---
 
 <Layout title="Power Rankings">
@@ -61,7 +45,24 @@ const rankings = [...teams]
         <li><strong class="text-zinc-200">Activity (10%)</strong> — Waiver moves, trades, engagement</li>
       </ul>
       <p class="mt-2">The score is 0-100. <strong class="text-emerald-400">80+</strong> = Elite contender, <strong class="text-amber-400">60-79</strong> = Playoff team, <strong class="text-orange-400">40-59</strong> = Middle of pack, <strong class="text-red-400">Below 40</strong> = Rebuilding.</p>
-      <p class="text-zinc-600 mt-2">⚠️ TINEZ is on <strong class="text-zinc-300">Yahoo</strong>, not Sleeper. Once Yahoo API credentials arrive, these will update live each week. For now, scores are based on all-time historical data.</p>
+      <div class="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-lg">📋</span>
+          <h3 class="text-sm font-semibold text-amber-300">Pre-Season — All Teams Start at 50</h3>
+        </div>
+        <p class="text-zinc-500">The 2026 TINEZ season hasn't started yet. All 14 teams are confirmed, but the draft hasn't happened. Every team starts with a baseline score of 50. Once the season kicks off, power rankings will update live each week based on real results.</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <span class="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-400">
+            <span class="text-emerald-400">●</span> 14 teams confirmed
+          </span>
+          <span class="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-400">
+            <span class="text-amber-400">●</span> Draft pending
+          </span>
+          <span class="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-400">
+            <span class="text-blue-400">●</span> 75 days until kickoff
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -5,23 +5,10 @@ import { getNflTeamLogoUrl } from "../data/players";
 import { fetchTrendingWithDetails, getPositionEmoji, getPlayerHeadshotUrl } from "../data/sleeper-api";
 const standings = getStandings();
 
-// Build power rankings from historical team data (TINEZ is on Yahoo, not Sleeper)
+// Pre-season: all teams start at baseline 50
 const powerRankings = [...teams]
-  .map(t => {
-    const totalGames = t.wins + t.losses + t.ties;
-    const winPct = totalGames > 0 ? t.wins / totalGames : 0;
-    const avgPF = totalGames > 0 ? t.pointsFor / totalGames : 0;
-    const avgPA = totalGames > 0 ? t.pointsAgainst / totalGames : 0;
-    const powerScore = Math.round(
-      winPct * 50 +
-      Math.min(avgPF / 20, 30) +
-      (1 - Math.min(avgPA / 20, 1)) * 10 +
-      10
-    );
-    return { teamName: t.name, owner: t.owner, wins: t.wins, losses: t.losses, ties: t.ties, pointsFor: t.pointsFor, pointsAgainst: t.pointsAgainst, powerScore, totalMoves: 0, waiverBudgetUsed: 0, trend: "stable" as const, trendAmount: 0, rank: 0 };
-  })
-  .sort((a, b) => b.powerScore - a.powerScore)
-  .map((r, i) => ({ ...r, rank: i + 1 }));
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map((t, i) => ({ teamName: t.name, owner: t.owner, wins: t.wins, losses: t.losses, ties: t.ties, pointsFor: t.pointsFor, pointsAgainst: t.pointsAgainst, powerScore: 50, totalMoves: 0, waiverBudgetUsed: 0, trend: "stable" as const, trendAmount: 0, rank: i + 1 }));
 
 let trendingAdds: Awaited<ReturnType<typeof fetchTrendingWithDetails>> = [];
 try {
