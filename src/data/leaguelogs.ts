@@ -149,6 +149,7 @@ export async function fetchPlayerValues(): Promise<LeagueLogsMarketItem[]> {
   const url = `${API_BASE}/market/${TINEZ_PROFILE_KEY}`;
   const data = await fetchApi<LeagueLogsMarketItem>(url, []);
   setCache(cacheKey, data);
+  setLastRefreshTimestamp(new Date().toISOString());
   return data;
 }
 
@@ -159,6 +160,7 @@ export async function fetchPlayerMetadata(): Promise<LeagueLogsPlayerMeta[]> {
   const url = `${API_BASE}/players`;
   const data = await fetchApi<LeagueLogsPlayerMeta>(url, []);
   setCache(cacheKey, data);
+  setLastRefreshTimestamp(new Date().toISOString());
   return data;
 }
 
@@ -291,4 +293,28 @@ export function getNflTeamLogo(teamAbbr: string): string {
 
 export function getAttributionBlock(): string {
   return 'Data provided by <a href="https://leaguelogs.com" target="_blank" rel="noopener">LeagueLogs</a>';
+}
+
+// ---------------------------------------------------------------------------
+// Build timestamp tracking
+// ---------------------------------------------------------------------------
+
+let _lastRefreshTimestamp: string | null = null;
+
+export function setLastRefreshTimestamp(ts: string): void {
+  _lastRefreshTimestamp = ts;
+}
+
+export function getLastRefreshTimestamp(): string {
+  return _lastRefreshTimestamp || new Date().toISOString();
+}
+
+export function getTimeSinceRefresh(): string {
+  const now = Date.now();
+  const then = new Date(getLastRefreshTimestamp()).getTime();
+  const diff = now - then;
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  if (hours > 0) return `${hours}h ${minutes}m ago`;
+  return `${minutes}m ago`;
 }

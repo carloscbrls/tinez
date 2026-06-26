@@ -7,6 +7,8 @@ import {
   getValueBg,
   getEspnHeadshotUrl,
   getNflTeamLogo,
+  getTimeSinceRefresh,
+  getLastRefreshTimestamp,
 } from "../../data/leaguelogs";
 
 const allPlayers = await fetchAllPlayersWithValues();
@@ -50,6 +52,7 @@ const INITIAL_ROWS = 20;
           <div class="flex items-center gap-2 shrink-0">
             <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span class="text-[10px] md:text-[11px] text-zinc-500 font-mono">LIVE</span>
+            <span class="text-[9px] md:text-[10px] text-zinc-600 font-mono hidden sm:inline">Updated {getTimeSinceRefresh()}</span>
           </div>
         </div>
       </div>

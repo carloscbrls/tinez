@@ -69,6 +69,10 @@ const nfcTeams = uniqueTeams.filter(t => t.conf === "NFC").sort((a, b) => a.name
             <p class="text-zinc-400 text-xs md:text-base"><span class="text-zinc-300 font-semibold">{uniqueTeams.length}</span> teams · 2026 season</p>
           </div>
           <div class="flex items-center gap-2 md:gap-3 shrink-0">
+            <div class="flex items-center gap-1.5">
+              <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-[9px] md:text-[10px] text-zinc-500 font-mono">LIVE</span>
+            </div>
             <div class="flex items-center gap-1">
               <span class="h-2 w-2 rounded-full bg-blue-400"></span>
               <span class="text-[9px] md:text-[10px] text-zinc-500 font-semibold">AFC</span>

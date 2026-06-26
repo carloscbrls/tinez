@@ -1,0 +1,25 @@
+name: Daily Rebuild
+
+on:
+  schedule:
+    # 6:00 AM PT (13:00 UTC) and 6:00 PM PT (01:00 UTC)
+    - cron: '0 13 * * *'
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual rebuild'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Netlify rebuild
+        run: |
+          curl -X POST "https://api.netlify.com/build_hooks/6a3e4a58f0fc67408161ed5d"
+      - name: Log result
+        run: |
+          echo "Rebuild triggered at $(date -u)"
+          echo "Hook: 6a3e4a58f0fc67408161ed5d"
