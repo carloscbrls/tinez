@@ -1,0 +1,148 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { leagueScoring, getCustomRules, scoringSummary } from "../data/scoring";
+const customRules = getCustomRules();
+---
+
+<Layout title="Scoring">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">S</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Scoring</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Full Scoring Breakdown</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Summary -->
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-8 stagger-children">
+    <div class="glass-card rounded-xl p-4 text-center">
+      <div class="text-2xl font-extrabold text-amber-400">0.5 PPR</div>
+      <div class="text-xs text-zinc-500 mt-1">Points Per Reception</div>
+    </div>
+    <div class="glass-card rounded-xl p-4 text-center">
+      <div class="text-2xl font-extrabold text-emerald-400">6</div>
+      <div class="text-xs text-zinc-500 mt-1">Passing TD (pts)</div>
+    </div>
+    <div class="glass-card rounded-xl p-4 text-center">
+      <div class="text-2xl font-extrabold text-red-400">-3</div>
+      <div class="text-xs text-zinc-500 mt-1">Interception (pts)</div>
+    </div>
+    <div class="glass-card rounded-xl p-4 text-center">
+      <div class="text-2xl font-extrabold text-zinc-100">25</div>
+      <div class="text-xs text-zinc-500 mt-1">Return Yards/pt</div>
+    </div>
+  </div>
+
+  <!-- Custom Rules Alert -->
+  <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mb-8">
+    <div class="flex items-start gap-3">
+      <span class="text-lg mt-0.5">⚡</span>
+      <div>
+        <h3 class="text-sm font-semibold text-amber-400">{customRules.length} Custom Scoring Rules</h3>
+        <p class="text-xs text-zinc-500 mt-1">These rules differ from Yahoo default settings. TINEZ LEAGUE is a high-scoring, defense-heavy format.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scoring by Position Group -->
+  {leagueScoring.map(group => (
+    <div class="mb-8">
+      <div class="flex items-center gap-2 mb-4">
+        <h2 class="text-lg font-bold text-zinc-100">{group.position}</h2>
+        <span class="rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs text-zinc-400">{group.rules.length} rules</span>
+      </div>
+      <div class="glass-card rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-zinc-700/50 bg-zinc-800/30">
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">Category</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 hidden sm:table-cell">Description</th>
+              <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500">Points</th>
+              <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-zinc-500 w-20">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {group.rules.map(rule => (
+              <tr class="border-b border-zinc-800/30 hover:bg-zinc-800/20 transition-colors">
+                <td class="px-4 py-3 font-medium text-zinc-200">{rule.category}</td>
+                <td class="px-4 py-3 text-zinc-500 text-xs hidden sm:table-cell">{rule.description}</td>
+                <td class="px-4 py-3 text-right font-bold font-mono" class:list={[rule.points.startsWith('-') ? 'text-red-400' : rule.points.startsWith('+') ? 'text-emerald-400' : 'text-zinc-100']}>{rule.points}</td>
+                <td class="px-4 py-3 text-center">
+                  {rule.isCustom ? (
+                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                      Custom
+                    </span>
+                  ) : (
+                    <span class="text-[10px] text-zinc-600">Default</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ))}
+
+  <!-- Key Differences from Yahoo Default -->
+  <div class="glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">⚡</div>
+      <h2 class="text-lg font-bold text-amber-400">Key Differences from Yahoo Default</h2>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="rounded-lg bg-zinc-800/20 p-4">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium text-zinc-200">Passing TDs</span>
+          <span class="text-sm font-bold text-emerald-400">6 pts</span>
+        </div>
+        <p class="text-xs text-zinc-500">Yahoo default is 4 pts. QBs are premium in this league.</p>
+      </div>
+      <div class="rounded-lg bg-zinc-800/20 p-4">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium text-zinc-200">Interceptions</span>
+          <span class="text-sm font-bold text-red-400">-3 pts</span>
+        </div>
+        <p class="text-xs text-zinc-500">Yahoo default is -1. Turnovers are heavily penalized.</p>
+      </div>
+      <div class="rounded-lg bg-zinc-800/20 p-4">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium text-zinc-200">Sacks (QB)</span>
+          <span class="text-sm font-bold text-red-400">-2 pts</span>
+        </div>
+        <p class="text-xs text-zinc-500">Yahoo default is 0. QB rushing matters more.</p>
+      </div>
+      <div class="rounded-lg bg-zinc-800/20 p-4">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium text-zinc-200">Return Yards</span>
+          <span class="text-sm font-bold text-emerald-400">25 yds/pt</span>
+        </div>
+        <p class="text-xs text-zinc-500">Yahoo default is 0. Return specialists have value.</p>
+      </div>
+      <div class="rounded-lg bg-zinc-800/20 p-4">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium text-zinc-200">Solo Tackles</span>
+          <span class="text-sm font-bold text-emerald-400">1.5 pts</span>
+        </div>
+        <p class="text-xs text-zinc-500">Yahoo default is 1. IDP scoring is boosted.</p>
+      </div>
+      <div class="rounded-lg bg-zinc-800/20 p-4">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium text-zinc-200">Sacks (Def)</span>
+          <span class="text-sm font-bold text-emerald-400">3 pts</span>
+        </div>
+        <p class="text-xs text-zinc-500">Yahoo default is 2. Pass rushers are premium.</p>
+      </div>
+    </div>
+  </div>
+</Layout>

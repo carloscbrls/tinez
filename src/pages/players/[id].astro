@@ -2,6 +2,8 @@
 import Layout from "../../layouts/Layout.astro";
 import { players, getPlayerById, getEspnHeadshotUrl, getNflTeamLogoUrl, getPositionColor } from "../../data/players";
 import { getNFLTeam } from "../../data/nfl-teams";
+import { getScoringForPosition, scoringSummary } from "../../data/scoring";
+
 export async function getStaticPaths() {
   return players.map(p => ({
     params: { id: String(p.id) },
@@ -11,6 +13,12 @@ export async function getStaticPaths() {
 const { player } = Astro.props;
 const nflTeam = getNFLTeam(player.team);
 const posColor = getPositionColor(player.position);
+const playerScoring = getScoringForPosition("Offense");
+const kickerScoring = getScoringForPosition("Kickers");
+const defScoring = getScoringForPosition("Defensive Players");
+const isDef = player.position === "DST";
+const isK = player.position === "K";
+const relevantScoring = isDef ? defScoring : isK ? kickerScoring : playerScoring;
 ---
 
 <Layout title={`${player.name} | Players`}>
@@ -112,6 +120,40 @@ const posColor = getPositionColor(player.position);
       <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-3">
         <span class="text-sm text-zinc-500">Bye Week</span>
         <span class="text-sm font-semibold text-zinc-200">{player.byeWeek || "—"}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TINEZ LEAGUE Scoring -->
+  <div class="mt-8">
+    <div class="glass-card rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📊</div>
+        <h2 class="text-lg font-bold text-amber-400">TINEZ LEAGUE Scoring</h2>
+        <span class="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-400">0.5 PPR</span>
+      </div>
+      <p class="text-sm text-zinc-500 mb-4">How {player.name} scores points in the TINEZ LEAGUE (League ID #103379)</p>
+      <div class="grid gap-2 sm:grid-cols-2">
+        {relevantScoring.map(rule => (
+          <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-2.5">
+            <div>
+              <span class="text-sm text-zinc-300">{rule.category}</span>
+              <span class="block text-xs text-zinc-600 mt-0.5">{rule.description}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold" class:list={[rule.points.startsWith('-') ? 'text-red-400' : 'text-emerald-400']}>{rule.points}</span>
+              {rule.isCustom && (
+                <span class="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">CUSTOM</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div class="mt-4 rounded-lg bg-amber-500/5 border border-amber-500/10 px-4 py-3">
+        <p class="text-xs text-zinc-500">
+          <span class="text-amber-400 font-medium">⚡ Custom scoring:</span> TINEZ LEAGUE uses 6-pt passing TDs, -3 INTs, 0.5 PPR, return yards, and defensive player scoring (1.5 solo tackles, 3 sacks, 3 INTs).
+          <a href="/rules" class="text-amber-400 hover:text-amber-300 underline ml-1">View full rules →</a>
+        </p>
       </div>
     </div>
   </div>
