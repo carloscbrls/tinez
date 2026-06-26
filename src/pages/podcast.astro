@@ -1,0 +1,320 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { fetchRosters, fetchUsers, fetchAllMatchups, fetchAllPlayers, fetchAllTransactions, LEAGUE_CONFIG } from "../data/sleeper-api";
+import { getEspnHeadshotUrl } from "../data/players";
+
+const [rosters, users, matchupsByWeek, allPlayers, transactions] = await Promise.all([
+  fetchRosters(),
+  fetchUsers(),
+  fetchAllMatchups(1, 18),
+  fetchAllPlayers(),
+  fetchAllTransactions(1, 18),
+]);
+
+const userMap = new Map(users.map(u => [u.user_id, u]));
+const teamNameMap = new Map(rosters.map(r => {
+  const user = userMap.get(r.owner_id);
+  return [r.roster_id, user?.metadata?.team_name || user?.display_name || `Team ${r.roster_id}`];
+}));
+
+// Build standings
+const standings = rosters
+  .map(r => ({
+    rosterId: r.roster_id,
+    name: teamNameMap.get(r.roster_id) || `Team ${r.roster_id}`,
+    wins: r.settings.wins,
+    losses: r.settings.losses,
+    pf: r.settings.fpts,
+    pa: r.settings.fpts_decimal ? r.settings.fpts_decimal : 0,
+  }))
+  .sort((a, b) => b.wins - a.wins || b.pf - a.pf);
+
+const recordMap = new Map(standings.map(s => [s.rosterId, `${s.wins}-${s.losses}`]));
+
+// Process each week into podcast episodes
+interface PodcastEpisode {
+  week: number;
+  title: string;
+  intro: string;
+  matchups: {
+    team1: string;
+    team2: string;
+    t1Record: string;
+    t2Record: string;
+    t1Points: number;
+    t2Points: number;
+    winner: string;
+    loser: string;
+    spread: number;
+    total: number;
+    narrative: string;
+    t1TopPlayers: string[];
+    t2TopPlayers: string[];
+  }[];
+  topScore: { team: string; points: number; opponent: string };
+  blowout: { team: string; spread: number; opponent: string };
+  closeGame: { team: string; spread: number; opponent: string };
+  leagueLeader: string;
+  leagueLeaderRecord: string;
+  totalTransactions: number;
+  outro: string;
+}
+
+const episodes: PodcastEpisode[] = [];
+
+for (const [week, m] of matchupsByWeek) {
+  if (week > 18) continue;
+  
+  const grouped = new Map<number, any[]>();
+  for (const matchup of m) {
+    if (!grouped.has(matchup.matchup_id)) grouped.set(matchup.matchup_id, []);
+    grouped.get(matchup.matchup_id)!.push(matchup);
+  }
+
+  const matchups = Array.from(grouped.values())
+    .filter(g => g.length >= 2)
+    .map(g => {
+      const [t1, t2] = g.sort((a, b) => b.points - a.points);
+      const t1Name = teamNameMap.get(t1.roster_id) || `Team ${t1.roster_id}`;
+      const t2Name = teamNameMap.get(t2.roster_id) || `Team ${t2.roster_id}`;
+      const spread = Math.abs(t1.points - t2.points);
+      
+      // Get top 3 players for each team
+      const t1Top = (t1.starters || []).slice(0, 3).map((pid: string) => allPlayers[pid]).filter(Boolean);
+      const t2Top = (t2.starters || []).slice(0, 3).map((pid: string) => allPlayers[pid]).filter(Boolean);
+      
+      // Generate narrative
+      let narrative = "";
+      if (spread > 50) {
+        narrative = `Absolute domination by ${t1Name}. ${t1Name} crushed ${t2Name} by ${spread.toFixed(1)} points in a complete blowout.`;
+      } else if (spread > 25) {
+        narrative = `${t1Name} controlled this one from start to finish, winning comfortably by ${spread.toFixed(1)} points.`;
+      } else if (spread < 5) {
+        narrative = `A nail-biter! ${t1Name} barely edged out ${t2Name} by just ${spread.toFixed(1)} points. This one came down to the wire.`;
+      } else {
+        narrative = `${t1Name} took down ${t2Name} with a solid ${spread.toFixed(1)} point victory.`;
+      }
+
+      return {
+        team1: t1Name,
+        team2: t2Name,
+        t1Record: recordMap.get(t1.roster_id) || "0-0",
+        t2Record: recordMap.get(t2.roster_id) || "0-0",
+        t1Points: t1.points,
+        t2Points: t2.points,
+        winner: t1Name,
+        loser: t2Name,
+        spread,
+        total: t1.points + t2.points,
+        narrative,
+        t1TopPlayers: t1Top.map((p: any) => p.full_name || p.first_name + " " + p.last_name),
+        t2TopPlayers: t2Top.map((p: any) => p.full_name || p.first_name + " " + p.last_name),
+      };
+    });
+
+  if (matchups.length === 0) continue;
+
+  const topScore = [...matchups].sort((a, b) => b.t1Points - a.t1Points)[0];
+  const blowout = [...matchups].sort((a, b) => b.spread - a.spread)[0];
+  const closeGame = [...matchups].sort((a, b) => a.spread - b.spread)[0];
+  const weekTxns = transactions.filter(t => parseInt(t.week || "0") === week).length;
+
+  const leader = standings[0];
+  const weekNames = ["First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth", "Eleventh", "Twelfth", "Thirteenth", "Fourteenth", "Fifteenth", "Sixteenth", "Seventeenth", "Eighteenth"];
+
+  episodes.push({
+    week,
+    title: `Week ${week} — ${weekNames[week - 1] || ""} Week of the TINEZ Season`,
+    intro: `Welcome to the TINEZ LEAGUE Week ${week} recap podcast. ${matchups.length} matchups on tap this week. The ${leader.name} currently leads the league with a ${leader.wins}-${leader.losses} record. Let's break down all the action.`,
+    matchups,
+    topScore: { team: topScore.winner, points: topScore.t1Points, opponent: topScore.loser },
+    blowout: { team: blowout.winner, spread: blowout.spread, opponent: blowout.loser },
+    closeGame: { team: closeGame.winner, spread: closeGame.spread, opponent: closeGame.loser },
+    leagueLeader: leader.name,
+    leagueLeaderRecord: `${leader.wins}-${leader.losses}`,
+    totalTransactions: weekTxns,
+    outro: `That wraps up Week ${week} of the TINEZ LEAGUE season. ${leader.name} remains on top at ${leader.wins}-${leader.losses}. ${weekTxns > 0 ? `${weekTxns} transactions shook up rosters this week.` : ""} We'll see you next week for more fantasy football action. This is the TINEZ LEAGUE podcast.`,
+  });
+}
+
+// Sort by week descending
+episodes.sort((a, b) => b.week - a.week);
+const latestEpisode = episodes[0];
+---
+
+<Layout title="Podcast">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">🎙️</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">TINEZ Podcast</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">Weekly Matchup Recaps · Auto-Generated Audio</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Latest Episode Hero -->
+  {latestEpisode && (
+    <div class="glass-card-accent rounded-xl p-6 mb-8">
+      <div class="flex items-start gap-4">
+        <div class="flex-shrink-0">
+          <div class="h-20 w-20 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-3xl shadow-lg shadow-amber-500/20">
+            🎙️
+          </div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-medium text-amber-400">Latest Episode</span>
+            <span class="text-[10px] text-zinc-600">Week {latestEpisode.week}</span>
+          </div>
+          <h2 class="text-xl font-bold text-zinc-100 mb-1">{latestEpisode.title}</h2>
+          <p class="text-sm text-zinc-500 mb-3">{latestEpisode.intro}</p>
+          <div class="flex items-center gap-4 text-xs text-zinc-600">
+            <span>{latestEpisode.matchups.length} matchups</span>
+            <span>🔥 {latestEpisode.topScore.team} scored {latestEpisode.topScore.points.toFixed(1)}</span>
+            <span>📊 {latestEpisode.totalTransactions} transactions</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+
+  <!-- Episode List -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📻</div>
+      <h2 class="text-lg font-bold text-amber-400">All Episodes</h2>
+      <span class="text-xs text-zinc-600">{episodes.length} episodes</span>
+    </div>
+
+    <div class="space-y-4">
+      {episodes.map(ep => (
+        <div id={`episode-${ep.week}`} class="glass-card rounded-xl overflow-hidden">
+          <div class="p-5">
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0">
+                <div class="h-14 w-14 rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center text-xl">
+                  🎙️
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xs font-bold text-amber-400">Week {ep.week}</span>
+                  <span class="text-[10px] text-zinc-600">{ep.matchups.length} matchups</span>
+                </div>
+                <h3 class="text-base font-bold text-zinc-100 mb-1">{ep.title}</h3>
+                <p class="text-xs text-zinc-500 mb-3 line-clamp-2">{ep.intro}</p>
+
+                <!-- Matchup Cards -->
+                <div class="grid gap-2 sm:grid-cols-2 mb-3">
+                  {ep.matchups.slice(0, 4).map(m => (
+                    <div class="bg-zinc-800/30 rounded-lg p-2.5">
+                      <div class="flex items-center justify-between text-xs">
+                        <span class="font-semibold text-emerald-400 truncate">{m.winner}</span>
+                        <span class="font-mono font-bold text-zinc-300">{m.t1Points.toFixed(1)}</span>
+                      </div>
+                      <div class="flex items-center justify-between text-xs mt-0.5">
+                        <span class="text-zinc-500 truncate">{m.loser}</span>
+                        <span class="font-mono text-zinc-500">{m.t2Points.toFixed(1)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <!-- Highlights -->
+                <div class="flex flex-wrap gap-2 text-[10px]">
+                  <span class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-400">
+                    🔥 Top Score: {ep.topScore.team} ({ep.topScore.points.toFixed(1)})
+                  </span>
+                  <span class="rounded-full bg-red-500/10 px-2 py-0.5 text-red-400">
+                    💀 Blowout: {ep.blowout.team} by {ep.blowout.spread.toFixed(1)}
+                  </span>
+                  <span class="rounded-full bg-blue-500/10 px-2 py-0.5 text-blue-400">
+                    ⚖️ Close: {ep.closeGame.team} by {ep.closeGame.spread.toFixed(1)}
+                  </span>
+                  {ep.totalTransactions > 0 && (
+                    <span class="rounded-full bg-purple-500/10 px-2 py-0.5 text-purple-400">
+                      📊 {ep.totalTransactions} transactions
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Full Script (collapsible) -->
+          <details class="border-t border-zinc-800/30">
+            <summary class="px-5 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 cursor-pointer transition-colors flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              Read Full Script
+            </summary>
+            <div class="px-5 pb-5">
+              <div class="bg-zinc-800/30 rounded-lg p-4 text-xs text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono">
+{`🎙️ TINEZ LEAGUE PODCAST — WEEK ${ep.week}
+
+[INTRO]
+${ep.intro}
+
+[STANDINGS CHECK]
+The ${ep.leagueLeader} leads the league at ${ep.leagueLeaderRecord}.
+
+[MATCHUP BREAKDOWN]
+${ep.matchups.map((m, i) => `Matchup ${i + 1}: ${m.team1} (${m.t1Record}) vs ${m.team2} (${m.t2Record})
+${m.narrative}
+Final: ${m.team1} ${m.t1Points.toFixed(1)} — ${m.team2} ${m.t2Points.toFixed(1)}
+Total points: ${m.total.toFixed(1)}
+${m.t1TopPlayers.length > 0 ? `Top performers for ${m.team1}: ${m.t1TopPlayers.join(", ")}` : ""}
+${m.t2TopPlayers.length > 0 ? `Top performers for ${m.team2}: ${m.t2TopPlayers.join(", ")}` : ""}
+`).join("\n")}
+
+[HIGHLIGHTS]
+🔥 Top Score of the Week: ${ep.topScore.team} with ${ep.topScore.points.toFixed(1)} points
+💀 Biggest Blowout: ${ep.blowout.team} won by ${ep.blowout.spread.toFixed(1)} points
+⚖️ Closest Game: ${ep.closeGame.team} won by just ${ep.closeGame.spread.toFixed(1)} points
+${ep.totalTransactions > 0 ? `📊 ${ep.totalTransactions} transactions this week` : ""}
+
+[OUTRO]
+${ep.outro}`}
+              </div>
+            </div>
+          </details>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- About -->
+  <div class="glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">🎙️</span>
+      <h2 class="text-lg font-bold text-zinc-100">About the TINEZ Podcast</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-amber-400 mb-2">How It Works</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• Each week's matchups are analyzed from Sleeper data</li>
+          <li>• A full podcast script is auto-generated with narratives</li>
+          <li>• Top performers, blowouts, and close games highlighted</li>
+          <li>• Audio generation coming soon for each episode</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2">Episode Format</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• <strong class="text-zinc-200">Intro</strong> — Week overview and league leader</li>
+          <li>• <strong class="text-zinc-200">Matchups</strong> — Every game broken down</li>
+          <li>• <strong class="text-zinc-200">Highlights</strong> — Top score, blowout, close game</li>
+          <li>• <strong class="text-zinc-200">Outro</strong> — Standings update and preview</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</Layout>
