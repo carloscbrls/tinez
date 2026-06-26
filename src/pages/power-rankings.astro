@@ -1,0 +1,224 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { buildPowerRankings, getPositionEmoji } from "../data/sleeper-api";
+import { teams } from "../data/teams";
+
+let rankings: Awaited<ReturnType<typeof buildPowerRankings>> = [];
+
+try {
+  rankings = await buildPowerRankings();
+} catch {
+  // Fall back to standings-based rankings
+  const sorted = [...teams].sort((a, b) => {
+    const aPct = a.wins + a.ties * 0.5;
+    const bPct = b.wins + b.ties * 0.5;
+    if (bPct !== aPct) return bPct - aPct;
+    return b.pointsFor - a.pointsFor;
+  });
+  rankings = sorted.map((t, i) => ({
+    rank: i + 1,
+    teamName: t.name,
+    owner: t.owner,
+    wins: t.wins,
+    losses: t.losses,
+    ties: t.ties,
+    pointsFor: t.pointsFor,
+    pointsAgainst: t.pointsAgainst,
+    totalMoves: 0,
+    waiverBudgetUsed: 0,
+    powerScore: Math.round((t.wins / Math.max(t.wins + t.losses + t.ties, 1)) * 100),
+    trend: "stable" as const,
+    trendAmount: 0,
+  }));
+}
+---
+
+<Layout title="Power Rankings">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">⚡</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Power Rankings</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Algorithmic team rankings based on performance metrics</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="glass-card rounded-xl p-5 mb-8">
+    <div class="flex items-center gap-2 mb-3">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📊</div>
+      <h2 class="text-sm font-semibold text-amber-400">How Power Score is Calculated</h2>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-4 text-xs">
+      <div class="rounded-lg bg-zinc-800/20 p-3 text-center">
+        <div class="text-lg font-bold text-amber-400">50%</div>
+        <div class="text-zinc-500 mt-1">Win Percentage</div>
+      </div>
+      <div class="rounded-lg bg-zinc-800/20 p-3 text-center">
+        <div class="text-lg font-bold text-emerald-400">30%</div>
+        <div class="text-zinc-500 mt-1">Points For (Avg)</div>
+      </div>
+      <div class="rounded-lg bg-zinc-800/20 p-3 text-center">
+        <div class="text-lg font-bold text-red-400">10%</div>
+        <div class="text-zinc-500 mt-1">Points Against (Lower = Better)</div>
+      </div>
+      <div class="rounded-lg bg-zinc-800/20 p-3 text-center">
+        <div class="text-lg font-bold text-blue-400">10%</div>
+        <div class="text-zinc-500 mt-1">Transaction Activity</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rankings List -->
+  <div class="space-y-3 stagger-children">
+    {rankings.map((r, i) => {
+      const isTop3 = i < 3;
+      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+      const team = teams.find(t => t.name === r.teamName || t.owner === r.owner);
+      
+      return (
+        <div class="glass-card rounded-xl p-4 group hover:bg-zinc-800/40 transition-all">
+          <div class="flex items-center gap-4">
+            <!-- Rank -->
+            <div class="w-10 text-center shrink-0">
+              {medal ? (
+                <span class="text-xl">{medal}</span>
+              ) : (
+                <span class="text-lg font-bold font-mono text-zinc-500">{r.rank}</span>
+              )}
+            </div>
+
+            <!-- Team Info -->
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              {team ? (
+                <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${team.primaryColor}, ${team.secondaryColor})`}>
+                  {team.shortName}
+                </div>
+              ) : (
+                <div class="h-10 w-10 rounded-xl bg-zinc-800 flex items-center justify-center text-sm font-bold text-zinc-400 shrink-0">
+                  ?
+                </div>
+              )}
+              <div class="min-w-0">
+                <div class="font-semibold text-sm text-zinc-100 truncate">{r.teamName}</div>
+                <div class="text-xs text-zinc-500">{r.owner}</div>
+              </div>
+            </div>
+
+            <!-- Record -->
+            <div class="text-center hidden sm:block">
+              <div class="text-sm font-semibold text-zinc-200">{r.wins}-{r.losses}-{r.ties}</div>
+              <div class="text-xs text-zinc-600">Record</div>
+            </div>
+
+            <!-- Points -->
+            <div class="text-center hidden md:block">
+              <div class="text-sm font-semibold text-emerald-400">{r.pointsFor.toFixed(1)}</div>
+              <div class="text-xs text-zinc-600">PF</div>
+            </div>
+
+            <!-- Power Score -->
+            <div class="text-center">
+              <div class="flex items-center gap-1">
+                <div class="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold" class:list={[
+                  r.powerScore >= 80 ? 'bg-emerald-500/20 text-emerald-400' :
+                  r.powerScore >= 60 ? 'bg-amber-500/20 text-amber-400' :
+                  r.powerScore >= 40 ? 'bg-orange-500/20 text-orange-400' :
+                  'bg-red-500/20 text-red-400'
+                ]}>
+                  {r.powerScore}
+                </div>
+              </div>
+              <div class="text-xs text-zinc-600 mt-0.5">Power</div>
+            </div>
+
+            <!-- Trend -->
+            <div class="text-center hidden lg:block">
+              {r.trend === "up" ? (
+                <span class="text-emerald-400 text-sm">↑{r.trendAmount}</span>
+              ) : r.trend === "down" ? (
+                <span class="text-red-400 text-sm">↓{r.trendAmount}</span>
+              ) : (
+                <span class="text-zinc-500 text-sm">→</span>
+              )}
+            </div>
+          </div>
+
+          <!-- Stats Bar -->
+          <div class="mt-3 flex items-center gap-4 text-xs text-zinc-600">
+            <span>Moves: {r.totalMoves}</span>
+            <span>Waiver $: ${r.waiverBudgetUsed}</span>
+            <span>PA: {r.pointsAgainst.toFixed(1)}</span>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  <!-- Tier Breakdown -->
+  <div class="mt-8">
+    <h2 class="text-lg font-bold text-zinc-100 mb-4">Tier Breakdown</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-sm">👑</span>
+          <h3 class="font-bold text-emerald-400">Elite</h3>
+        </div>
+        <div class="text-2xl font-extrabold text-zinc-100">{rankings.filter(r => r.powerScore >= 80).length}</div>
+        <div class="text-xs text-zinc-500 mt-1">Power Score 80+</div>
+        <div class="mt-2 space-y-1">
+          {rankings.filter(r => r.powerScore >= 80).map(r => (
+            <div class="text-xs text-zinc-400">{r.teamName}</div>
+          ))}
+        </div>
+      </div>
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-sm">⚔️</span>
+          <h3 class="font-bold text-amber-400">Contender</h3>
+        </div>
+        <div class="text-2xl font-extrabold text-zinc-100">{rankings.filter(r => r.powerScore >= 60 && r.powerScore < 80).length}</div>
+        <div class="text-xs text-zinc-500 mt-1">Power Score 60-79</div>
+        <div class="mt-2 space-y-1">
+          {rankings.filter(r => r.powerScore >= 60 && r.powerScore < 80).map(r => (
+            <div class="text-xs text-zinc-400">{r.teamName}</div>
+          ))}
+        </div>
+      </div>
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/15 text-sm">📈</span>
+          <h3 class="font-bold text-orange-400">Playoff Hunt</h3>
+        </div>
+        <div class="text-2xl font-extrabold text-zinc-100">{rankings.filter(r => r.powerScore >= 40 && r.powerScore < 60).length}</div>
+        <div class="text-xs text-zinc-500 mt-1">Power Score 40-59</div>
+        <div class="mt-2 space-y-1">
+          {rankings.filter(r => r.powerScore >= 40 && r.powerScore < 60).map(r => (
+            <div class="text-xs text-zinc-400">{r.teamName}</div>
+          ))}
+        </div>
+      </div>
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/15 text-sm">💀</span>
+          <h3 class="font-bold text-red-400">Rebuilding</h3>
+        </div>
+        <div class="text-2xl font-extrabold text-zinc-100">{rankings.filter(r => r.powerScore < 40).length}</div>
+        <div class="text-xs text-zinc-500 mt-1">Power Score Below 40</div>
+        <div class="mt-2 space-y-1">
+          {rankings.filter(r => r.powerScore < 40).map(r => (
+            <div class="text-xs text-zinc-400">{r.teamName}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

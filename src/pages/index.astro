@@ -2,7 +2,36 @@
 import Layout from "../layouts/Layout.astro";
 import { getStandings, teams } from "../data/teams";
 import { getNflTeamLogoUrl } from "../data/players";
+import { buildPowerRankings, fetchTrendingWithDetails, getPositionEmoji, getPlayerHeadshotUrl } from "../data/sleeper-api";
 const standings = getStandings();
+
+// Try to fetch live data, fall back gracefully
+let powerRankings: Awaited<ReturnType<typeof buildPowerRankings>> = [];
+let trendingAdds: Awaited<ReturnType<typeof fetchTrendingWithDetails>> = [];
+
+try {
+  [powerRankings, trendingAdds] = await Promise.all([
+    buildPowerRankings(),
+    fetchTrendingWithDetails("add", 24, 5),
+  ]);
+} catch {
+  // Fall back to standings-based rankings
+  powerRankings = standings.map((t, i) => ({
+    rank: i + 1,
+    teamName: t.name,
+    owner: t.owner,
+    wins: t.wins,
+    losses: t.losses,
+    ties: t.ties,
+    pointsFor: t.pointsFor,
+    pointsAgainst: t.pointsAgainst,
+    totalMoves: 0,
+    waiverBudgetUsed: 0,
+    powerScore: Math.round((t.wins / Math.max(t.wins + t.losses + t.ties, 1)) * 100),
+    trend: "stable" as const,
+    trendAmount: 0,
+  }));
+}
 ---
 
 <Layout title="TINEZ LEAGUE">
@@ -14,7 +43,7 @@ const standings = getStandings();
       <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
           <div class="flex items-center gap-3 mb-3">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-xl font-bold text-white shadow-lg shadow-amber-500/20">T</div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-xl font-bold text-white shadow-lg shadow-amber-500/20 animate-pulse-glow">T</div>
             <div>
               <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
                 <span class="gradient-text">TINEZ LEAGUE</span>
@@ -61,7 +90,7 @@ const standings = getStandings();
           <div class="text-3xl font-extrabold gradient-text">14</div>
           <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">Teams</div>
         </div>
-        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-xl">🏆</div>
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-xl animate-glow-pulse">🏆</div>
       </div>
     </div>
     <div class="glass-card rounded-xl p-5">
@@ -89,6 +118,113 @@ const standings = getStandings();
           <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">PPR Scoring</div>
         </div>
         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-xl">📊</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Power Rankings Widget + Trending Widget -->
+  <div class="mb-10 grid gap-6 lg:grid-cols-3 stagger-children">
+    <!-- Power Rankings -->
+    <div class="lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-zinc-100">⚡ Power Rankings</h2>
+        <a href="/power-rankings" class="text-xs text-amber-400 hover:text-amber-300 transition-colors">View full →</a>
+      </div>
+      <div class="glass-card-static rounded-xl overflow-hidden">
+        <table class="premium-table">
+          <thead>
+            <tr>
+              <th class="w-8">#</th>
+              <th>Team</th>
+              <th class="text-center">W</th>
+              <th class="text-center">L</th>
+              <th class="text-right">PF</th>
+              <th class="text-center">Power</th>
+            </tr>
+          </thead>
+          <tbody>
+            {powerRankings.slice(0, 7).map((r, i) => {
+              const team = teams.find(t => t.name === r.teamName || t.owner === r.owner);
+              return (
+                <tr class="hover:bg-zinc-800/30 transition-colors cursor-pointer" onclick={`window.location='/teams/${team?.id || 1}'`}>
+                  <td class="text-zinc-500 font-mono text-xs">
+                    {i === 0 ? <span class="text-amber-400">🥇</span> : i === 1 ? <span class="text-zinc-300">🥈</span> : i === 2 ? <span class="text-amber-600">🥉</span> : i + 1}
+                  </td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      {team ? (
+                        <div class="h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${team.primaryColor}, ${team.secondaryColor})`}>
+                          {team.shortName}
+                        </div>
+                      ) : (
+                        <div class="h-7 w-7 rounded-lg bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-400 shrink-0">?</div>
+                      )}
+                      <div>
+                        <div class="text-sm font-semibold text-zinc-100">{r.teamName}</div>
+                        <div class="text-[10px] text-zinc-500">{r.owner}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-center font-mono text-sm font-semibold">{r.wins}</td>
+                  <td class="text-center font-mono text-sm">{r.losses}</td>
+                  <td class="text-right font-mono text-sm font-semibold text-emerald-400">{r.pointsFor.toFixed(1)}</td>
+                  <td class="text-center">
+                    <span class="inline-flex items-center justify-center h-7 w-7 rounded-lg text-xs font-bold" class:list={[
+                      r.powerScore >= 80 ? 'bg-emerald-500/20 text-emerald-400' :
+                      r.powerScore >= 60 ? 'bg-amber-500/20 text-amber-400' :
+                      r.powerScore >= 40 ? 'bg-orange-500/20 text-orange-400' :
+                      'bg-red-500/20 text-red-400'
+                    ]}>{r.powerScore}</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Trending Adds Widget -->
+    <div>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-zinc-100">🔥 Trending Adds</h2>
+        <a href="/trending" class="text-xs text-amber-400 hover:text-amber-300 transition-colors">View all →</a>
+      </div>
+      <div class="space-y-2">
+        {trendingAdds.length > 0 ? (
+          trendingAdds.map((t, i) => {
+            const p = t.player!;
+            const headshot = getPlayerHeadshotUrl(p);
+            return (
+              <div class="glass-card rounded-lg p-3 flex items-center gap-3">
+                <span class="w-5 text-right text-xs font-mono text-zinc-600 shrink-0">{i + 1}</span>
+                <div class="h-9 w-9 rounded-lg bg-zinc-800/50 overflow-hidden shrink-0">
+                  {headshot ? (
+                    <img src={headshot} alt={p.full_name} class="h-full w-full object-cover" loading="lazy" onerror="this.style.display='none'" />
+                  ) : (
+                    <div class="h-full w-full flex items-center justify-center text-sm">{getPositionEmoji(p.position)}</div>
+                  )}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="text-sm font-semibold text-zinc-100 truncate">{p.full_name}</div>
+                  <div class="flex items-center gap-1.5 text-xs text-zinc-500">
+                    <span>{p.team}</span>
+                    <span>·</span>
+                    <span class="position-badge" class:list={[`position-badge-${p.position.toLowerCase()}`]}>{p.position}</span>
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-sm font-bold text-emerald-400">{t.count.toLocaleString()}</div>
+                  <div class="text-[10px] text-zinc-600">adds</div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div class="glass-card rounded-xl p-6 text-center">
+            <p class="text-xs text-zinc-500">Trending data will appear once the season starts.</p>
+          </div>
+        )}
       </div>
     </div>
   </div>
@@ -125,7 +261,7 @@ const standings = getStandings();
                 </td>
                 <td>
                   <a href={`/teams/${team.id}`} class="flex items-center gap-3 group">
-                    <div class="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${team.primaryColor}, ${team.secondaryColor})`}>
+                    <div class="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 animate-team-logo" style={`background: linear-gradient(135deg, ${team.primaryColor}, ${team.secondaryColor})`}>
                       {team.shortName}
                     </div>
                     <div>
@@ -174,7 +310,7 @@ const standings = getStandings();
         <div class="glass-card rounded-xl p-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-              <div class="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${m.team1.primaryColor}, ${m.team1.secondaryColor})`}>
+              <div class="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 animate-team-logo" style={`background: linear-gradient(135deg, ${m.team1.primaryColor}, ${m.team1.secondaryColor})`}>
                 {m.team1.shortName}
               </div>
               <div>
@@ -191,7 +327,7 @@ const standings = getStandings();
           </div>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-              <div class="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${m.team2.primaryColor}, ${m.team2.secondaryColor})`}>
+              <div class="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 animate-team-logo" style={`background: linear-gradient(135deg, ${m.team2.primaryColor}, ${m.team2.secondaryColor})`}>
                 {m.team2.shortName}
               </div>
               <div>
@@ -203,6 +339,41 @@ const standings = getStandings();
           </div>
         </div>
       ))}
+    </div>
+  </div>
+
+  <!-- Quick Links Section -->
+  <div class="mb-8">
+    <h2 class="text-lg font-bold text-zinc-100 mb-4">Quick Navigation</h2>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+      <a href="/transactions" class="glass-card rounded-xl p-4 flex items-center gap-3 group">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 text-lg">🔄</span>
+        <div>
+          <div class="font-semibold text-sm text-zinc-100 group-hover:text-amber-400 transition-colors">Transactions</div>
+          <div class="text-xs text-zinc-500">Waivers & trades</div>
+        </div>
+      </a>
+      <a href="/trending" class="glass-card rounded-xl p-4 flex items-center gap-3 group">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-lg">📈</span>
+        <div>
+          <div class="font-semibold text-sm text-zinc-100 group-hover:text-amber-400 transition-colors">Trending</div>
+          <div class="text-xs text-zinc-500">Most added/dropped</div>
+        </div>
+      </a>
+      <a href="/power-rankings" class="glass-card rounded-xl p-4 flex items-center gap-3 group">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10 text-lg">⚡</span>
+        <div>
+          <div class="font-semibold text-sm text-zinc-100 group-hover:text-amber-400 transition-colors">Power Rankings</div>
+          <div class="text-xs text-zinc-500">Team power scores</div>
+        </div>
+      </a>
+      <a href="/records" class="glass-card rounded-xl p-4 flex items-center gap-3 group">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-lg">📜</span>
+        <div>
+          <div class="font-semibold text-sm text-zinc-100 group-hover:text-amber-400 transition-colors">Records</div>
+          <div class="text-xs text-zinc-500">All-time achievements</div>
+        </div>
+      </a>
     </div>
   </div>
 </Layout>

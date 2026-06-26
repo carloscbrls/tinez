@@ -52,6 +52,36 @@
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 4px rgba(251, 191, 36, 0.3)); }
+  50% { filter: brightness(1.2) drop-shadow(0 0 8px rgba(251, 191, 36, 0.5)); }
+}
+
+@keyframes team-logo-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes ripple {
+  0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+  100% { box-shadow: 0 0 0 12px rgba(251, 191, 36, 0); }
+}
+
 .animate-gradient {
   background-size: 200% 200%;
   animation: gradient-shift 8s ease infinite;
@@ -77,6 +107,45 @@
 
 .animate-scale-in {
   animation: scale-in 0.3s ease-out forwards;
+}
+
+.animate-ticker {
+  animation: ticker-scroll 30s linear infinite;
+}
+
+.animate-skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-team-logo {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-team-logo:hover {
+  animation: team-logo-pulse 0.6s ease-in-out;
+  filter: brightness(1.1) drop-shadow(0 0 12px rgba(251, 191, 36, 0.4));
+}
+
+.animate-ripple {
+  animation: ripple 1s ease-out;
+}
+
+/* Ticker container */
+.ticker-container {
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+.ticker-content {
+  animation: ticker-scroll 30s linear infinite;
+}
+
+.ticker-content:hover {
+  animation-play-state: paused;
 }
 
 /* Glass card base */
@@ -248,3 +317,84 @@ a, button {
 .stagger-children > *:nth-child(14) { animation-delay: 0.7s; }
 .stagger-children > *:nth-child(15) { animation-delay: 0.75s; }
 .stagger-children > *:nth-child(16) { animation-delay: 0.8s; }
+
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(90deg, rgba(39, 39, 42, 0.3), rgba(63, 63, 70, 0.3), rgba(39, 39, 42, 0.3));
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+.skeleton-text {
+  height: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-heading {
+  height: 1.25rem;
+  width: 60%;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-card {
+  height: 6rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid rgba(251, 191, 36, 0.5);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Image loading placeholder */
+img {
+  color: transparent;
+}
+
+img[loading="lazy"] {
+  background: rgba(39, 39, 42, 0.3);
+}
+
+/* Team logo hover glow */
+.team-logo-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.team-logo-glow:hover {
+  filter: brightness(1.15) drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+  transform: scale(1.05);
+}
+
+/* Animated stat counter base */
+.stat-value {
+  display: inline-block;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Micro-interaction: button press */
+.btn-press:active {
+  transform: scale(0.95);
+}
+
+/* Card border gradient on hover */
+.card-border-gradient {
+  position: relative;
+}
+
+.card-border-gradient::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), transparent, rgba(251, 191, 36, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.card-border-gradient:hover::before {
+  opacity: 1;
+}

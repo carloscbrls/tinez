@@ -1,0 +1,177 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { fetchTrendingWithDetails, getPositionEmoji, getInjuryBadge, getPlayerHeadshotUrl } from "../data/sleeper-api";
+
+let adds: Awaited<ReturnType<typeof fetchTrendingWithDetails>> = [];
+let drops: Awaited<ReturnType<typeof fetchTrendingWithDetails>> = [];
+
+try {
+  [adds, drops] = await Promise.all([
+    fetchTrendingWithDetails("add", 168, 50),
+    fetchTrendingWithDetails("drop", 168, 50),
+  ]);
+} catch {
+  // Fall back to empty
+}
+---
+
+<Layout title="Trending Players">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">📈</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Trending Players</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">Most added and dropped players across Sleeper leagues</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Time filter -->
+  <div class="mb-6 flex flex-wrap gap-2">
+    <a href="/trending" class="rounded-lg px-4 py-2 text-sm font-medium bg-amber-500/15 text-amber-400 border border-amber-500/30">7 Days</a>
+    <a href="/trending?range=24h" class="rounded-lg px-4 py-2 text-sm font-medium bg-zinc-800/50 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/50">24 Hours</a>
+  </div>
+
+  <div class="grid gap-8 lg:grid-cols-2 stagger-children">
+    <!-- Trending Adds -->
+    <div>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-zinc-100">🔥 Most Added</h2>
+        <span class="text-xs text-zinc-500 bg-zinc-800/30 px-2 py-1 rounded-md">7 days</span>
+      </div>
+      {adds.length > 0 ? (
+        <div class="space-y-2">
+          {adds.map((t, i) => {
+            const p = t.player!;
+            const badge = getInjuryBadge(p.injury_status);
+            const headshot = getPlayerHeadshotUrl(p);
+            return (
+              <div class="glass-card rounded-lg p-3 flex items-center gap-3 group hover:bg-zinc-800/40 transition-all">
+                <span class="w-6 text-right text-xs font-mono text-zinc-600 shrink-0">{i + 1}</span>
+                <div class="h-10 w-10 rounded-lg bg-zinc-800/50 overflow-hidden shrink-0">
+                  {headshot ? (
+                    <img src={headshot} alt={p.full_name} class="h-full w-full object-cover" loading="lazy" onerror="this.style.display='none'" />
+                  ) : (
+                    <div class="h-full w-full flex items-center justify-center text-sm">{getPositionEmoji(p.position)}</div>
+                  )}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="truncate font-semibold text-sm text-zinc-100">{p.full_name}</span>
+                    <span class="shrink-0 rounded bg-zinc-800/50 px-1.5 py-0.5 text-xs font-mono text-zinc-400 border border-zinc-700/30">{p.position}</span>
+                    <span class="shrink-0 text-xs text-zinc-500">{p.team}</span>
+                    {badge && (
+                      <span class={`shrink-0 rounded px-1.5 py-0.5 text-xs ${badge.color}`}>{badge.label}</span>
+                    )}
+                  </div>
+                  <div class="flex items-center gap-2 mt-0.5 text-xs text-zinc-600">
+                    {p.years_exp > 0 && <span>Year {p.years_exp}</span>}
+                    {p.college && <span>· {p.college}</span>}
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-lg font-bold text-emerald-400">{t.count.toLocaleString()}</div>
+                  <div class="text-xs text-zinc-600">adds</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div class="glass-card rounded-xl p-8 text-center">
+          <p class="text-zinc-500">No trending data available.</p>
+        </div>
+      )}
+    </div>
+
+    <!-- Trending Drops -->
+    <div>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-zinc-100">❄️ Most Dropped</h2>
+        <span class="text-xs text-zinc-500 bg-zinc-800/30 px-2 py-1 rounded-md">7 days</span>
+      </div>
+      {drops.length > 0 ? (
+        <div class="space-y-2">
+          {drops.map((t, i) => {
+            const p = t.player!;
+            const badge = getInjuryBadge(p.injury_status);
+            const headshot = getPlayerHeadshotUrl(p);
+            return (
+              <div class="glass-card rounded-lg p-3 flex items-center gap-3 group hover:bg-zinc-800/40 transition-all">
+                <span class="w-6 text-right text-xs font-mono text-zinc-600 shrink-0">{i + 1}</span>
+                <div class="h-10 w-10 rounded-lg bg-zinc-800/50 overflow-hidden shrink-0">
+                  {headshot ? (
+                    <img src={headshot} alt={p.full_name} class="h-full w-full object-cover" loading="lazy" onerror="this.style.display='none'" />
+                  ) : (
+                    <div class="h-full w-full flex items-center justify-center text-sm">{getPositionEmoji(p.position)}</div>
+                  )}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="truncate font-semibold text-sm text-zinc-100">{p.full_name}</span>
+                    <span class="shrink-0 rounded bg-zinc-800/50 px-1.5 py-0.5 text-xs font-mono text-zinc-400 border border-zinc-700/30">{p.position}</span>
+                    <span class="shrink-0 text-xs text-zinc-500">{p.team}</span>
+                    {badge && (
+                      <span class={`shrink-0 rounded px-1.5 py-0.5 text-xs ${badge.color}`}>{badge.label}</span>
+                    )}
+                  </div>
+                  <div class="flex items-center gap-2 mt-0.5 text-xs text-zinc-600">
+                    {p.years_exp > 0 && <span>Year {p.years_exp}</span>}
+                    {p.college && <span>· {p.college}</span>}
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-lg font-bold text-red-400">{t.count.toLocaleString()}</div>
+                  <div class="text-xs text-zinc-600">drops</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div class="glass-card rounded-xl p-8 text-center">
+          <p class="text-zinc-500">No trending data available.</p>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <!-- Position Breakdown -->
+  <div class="mt-8">
+    <h2 class="text-lg font-bold text-zinc-100 mb-4">Position Breakdown</h2>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+      {["QB", "RB", "WR", "TE"].map(pos => {
+        const posAdds = adds.filter(t => t.player?.position === pos);
+        const posDrops = drops.filter(t => t.player?.position === pos);
+        return (
+          <div class="glass-card rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="position-badge" class:list={[`position-badge-${pos.toLowerCase()}`]}>{pos}</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-emerald-400">
+                <span class="font-bold">{posAdds.length}</span> adds
+              </span>
+              <span class="text-red-400">
+                <span class="font-bold">{posDrops.length}</span> drops
+              </span>
+            </div>
+            <div class="mt-2 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-red-500" style={`width: ${posAdds.length + posDrops.length > 0 ? (posAdds.length / (posAdds.length + posDrops.length)) * 100 : 50}%`}></div>
+            </div>
+            <div class="mt-2 text-xs text-zinc-600">
+              {posAdds.slice(0, 3).map(t => t.player?.full_name).filter(Boolean).join(", ")}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</Layout>
