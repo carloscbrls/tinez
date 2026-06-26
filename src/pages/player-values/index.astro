@@ -7,7 +7,6 @@ import {
   getValueBg,
   getEspnHeadshotUrl,
   getNflTeamLogo,
-  getProfileKey,
 } from "../../data/leaguelogs";
 
 const allPlayers = await fetchAllPlayersWithValues();
@@ -30,7 +29,7 @@ const positionMeta: Record<string, { icon: string; color: string; gradient: stri
 };
 
 const totalPlayers = allPlayers.length;
-const profileKey = getProfileKey();
+const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
 ---
 
 <Layout title="Player Values">
@@ -56,8 +55,54 @@ const profileKey = getProfileKey();
     </div>
   </div>
 
-  <!-- Value Legend - Compact card -->
-  <div class="mb-10 rounded-xl border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm p-5">
+  <!-- Top 10 Elite Showcase -->
+  {elitePlayers.length > 0 && (
+    <div class="mb-10">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-lg">👑</span>
+        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-widest">Elite Tier</h2>
+        <span class="text-[10px] text-zinc-600">Top {elitePlayers.length} players</span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        {elitePlayers.map(p => {
+          const headshot = getEspnHeadshotUrl(p.espnId);
+          const teamLogo = getNflTeamLogo(p.team);
+          return (
+            <div class="relative rounded-xl border border-amber-500/20 bg-gradient-to-b from-zinc-900 to-zinc-950 overflow-hidden group hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300">
+              <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full"></div>
+              <div class="p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-[10px] font-mono font-bold text-amber-400/80">#{p.overallRank}</span>
+                  <span class="text-[10px] font-mono text-zinc-600">{p.position} #{p.positionRank}</span>
+                </div>
+                <div class="flex flex-col items-center text-center">
+                  {headshot ? (
+                    <img src={headshot} alt={p.name} class="h-16 w-16 rounded-xl object-cover bg-zinc-800 ring-2 ring-amber-500/20 mb-2" loading="lazy" onerror="this.style.display='none'" />
+                  ) : (
+                    <div class="h-16 w-16 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 ring-2 ring-amber-500/20 flex items-center justify-center text-xl font-bold text-amber-400 mb-2">
+                      {p.name.charAt(0)}
+                    </div>
+                  )}
+                  <div class="text-sm font-bold text-zinc-100 truncate max-w-full">{p.name}</div>
+                  <div class="flex items-center gap-1 mt-1">
+                    <img src={teamLogo} alt={p.team} class="h-3.5 w-3.5 object-contain" loading="lazy" onerror="this.style.display='none'" />
+                    <span class="text-[10px] text-zinc-500">{p.team}</span>
+                  </div>
+                  <div class="mt-2 flex items-center gap-1.5">
+                    <span class="text-lg font-extrabold text-amber-400">{p.value.toFixed(1)}</span>
+                    <span class="text-[9px] text-zinc-600">value</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  )}
+
+  <!-- Value Legend -->
+  <div class="mb-8 rounded-xl border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm p-5">
     <div class="flex items-center gap-2 mb-4">
       <span class="text-sm">📊</span>
       <h2 class="text-xs font-bold text-zinc-400 uppercase tracking-widest">Value Tiers</h2>
@@ -86,20 +131,61 @@ const profileKey = getProfileKey();
     </div>
   </div>
 
+  <!-- Search + Filter Bar -->
+  <div class="mb-6 flex flex-col sm:flex-row gap-3">
+    <div class="relative flex-1">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="player-search" placeholder="Search players by name, team, or position..." class="w-full rounded-lg border border-zinc-800 bg-zinc-900/80 pl-10 pr-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all" />
+    </div>
+    <div class="flex gap-2">
+      <select id="position-filter" class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-amber-500/40 transition-all">
+        <option value="all">All Positions</option>
+        <option value="QB">QB</option>
+        <option value="RB">RB</option>
+        <option value="WR">WR</option>
+        <option value="TE">TE</option>
+      </select>
+      <select id="tier-filter" class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-amber-500/40 transition-all">
+        <option value="all">All Tiers</option>
+        <option value="Elite">Elite (80+)</option>
+        <option value="High">High (60-79)</option>
+        <option value="Mid">Mid (40-59)</option>
+        <option value="Low">Low (20-39)</option>
+        <option value="Depth">Depth (0-19)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Sticky Position Jump Nav -->
+  <div id="position-nav" class="sticky top-14 z-40 -mx-4 px-4 py-2 bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-800/40 mb-6 flex items-center gap-1 overflow-x-auto">
+    {positions.filter(p => byPosition[p]?.length).map(pos => {
+      const meta = positionMeta[pos];
+      return (
+        <a href={`#section-${pos}`} class="position-jump flex items-center gap-1.5 shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all" data-pos={pos}>
+          <span>{meta.icon}</span>
+          <span>{pos}</span>
+          <span class="text-[9px] text-zinc-600 font-mono">({byPosition[pos].length})</span>
+        </a>
+      );
+    })}
+    <span class="text-zinc-700 mx-1">|</span>
+    <span id="result-count" class="text-[10px] text-zinc-600 font-mono whitespace-nowrap">{totalPlayers} players</span>
+  </div>
+
   <!-- Position Sections -->
   <div class="space-y-10">
     {positions.filter(p => byPosition[p]?.length).map(pos => {
       const meta = positionMeta[pos];
-      const players = byPosition[pos].slice(0, 50);
+      const players = byPosition[pos];
       return (
-        <section>
+        <section id={`section-${pos}`} class="position-section" data-position={pos}>
           <!-- Section Header -->
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
               <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/80 text-sm">{meta.icon}</div>
               <div>
                 <h2 class="text-lg font-bold text-zinc-100">{pos}s</h2>
-                <p class="text-[11px] text-zinc-500">{meta.desc} · {players.length} ranked</p>
+                <p class="text-[11px] text-zinc-500">{meta.desc} · <span class="position-count">{players.length}</span> ranked</p>
               </div>
             </div>
             <div class="hidden sm:flex items-center gap-1.5 text-[10px] text-zinc-600">
@@ -112,14 +198,24 @@ const profileKey = getProfileKey();
           <!-- Table -->
           <div class="rounded-xl border border-zinc-800/40 bg-zinc-900/30 overflow-hidden">
             <div class="overflow-x-auto">
-              <table class="w-full">
+              <table class="player-table w-full" data-position={pos}>
                 <thead>
                   <tr class="border-b border-zinc-800/40">
-                    <th class="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Player</th>
-                    <th class="text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Team</th>
-                    <th class="text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Rank</th>
-                    <th class="text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Pos</th>
-                    <th class="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Value</th>
+                    <th class="sortable text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="name">
+                      Player <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    </th>
+                    <th class="sortable text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="team">
+                      Team <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    </th>
+                    <th class="sortable text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="rank">
+                      Rank <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    </th>
+                    <th class="sortable text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="posrank">
+                      Pos <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    </th>
+                    <th class="sortable text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="value">
+                      Value <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    </th>
                     <th class="text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Tier</th>
                   </tr>
                 </thead>
@@ -131,7 +227,7 @@ const profileKey = getProfileKey();
                     const valueColor = getValueColor(p.value);
                     const isEven = i % 2 === 0;
                     return (
-                      <tr class={`transition-colors hover:bg-zinc-800/30 ${isEven ? 'bg-zinc-900/20' : 'bg-transparent'}`}>
+                      <tr class="player-row transition-colors hover:bg-zinc-800/30 relative group cursor-default" data-name={p.name.toLowerCase()} data-team={p.team.toLowerCase()} data-position={p.position} data-value={p.value} data-rank={p.overallRank} data-posrank={p.positionRank} class:list={[isEven ? 'bg-zinc-900/20' : 'bg-transparent']}>
                         <td class="px-4 py-2.5">
                           <div class="flex items-center gap-3">
                             <div class="relative shrink-0">
@@ -146,6 +242,40 @@ const profileKey = getProfileKey();
                             <div class="min-w-0">
                               <div class="text-sm font-semibold text-zinc-100 truncate max-w-[160px] md:max-w-[200px]">{p.name}</div>
                               <div class="text-[10px] text-zinc-600 font-mono">#{p.overallRank} overall</div>
+                            </div>
+                          </div>
+                          <!-- Hover tooltip -->
+                          <div class="absolute left-0 top-full mt-1 z-50 hidden group-hover:lg:block w-64 rounded-xl border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 p-4 pointer-events-none">
+                            <div class="flex items-center gap-3 mb-3">
+                              {headshot ? (
+                                <img src={headshot} alt={p.name} class="h-12 w-12 rounded-xl object-cover bg-zinc-800 ring-2 ring-zinc-700/50" />
+                              ) : (
+                                <div class="h-12 w-12 rounded-xl bg-zinc-800 ring-2 ring-zinc-700/50 flex items-center justify-center text-lg font-bold text-zinc-500">{p.name.charAt(0)}</div>
+                              )}
+                              <div>
+                                <div class="text-sm font-bold text-zinc-100">{p.name}</div>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                  <img src={teamLogo} alt={p.team} class="h-4 w-4 object-contain" />
+                                  <span class="text-[10px] text-zinc-500">{p.team} · {p.position}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                              <div class="rounded-lg bg-zinc-800/50 p-2">
+                                <div class="text-lg font-bold text-amber-400">{p.value.toFixed(1)}</div>
+                                <div class="text-[9px] text-zinc-500">Value</div>
+                              </div>
+                              <div class="rounded-lg bg-zinc-800/50 p-2">
+                                <div class="text-lg font-bold text-zinc-200">#{p.overallRank}</div>
+                                <div class="text-[9px] text-zinc-500">Overall</div>
+                              </div>
+                              <div class="rounded-lg bg-zinc-800/50 p-2">
+                                <div class="text-lg font-bold text-zinc-200">#{p.positionRank}</div>
+                                <div class="text-[9px] text-zinc-500">Pos Rank</div>
+                              </div>
+                            </div>
+                            <div class="mt-2 text-center">
+                              <span class={`inline-block rounded-md px-2 py-0.5 text-[10px] font-semibold border ${getValueBg(p.value)} ${valueColor}`}>{valueLabel}</span>
                             </div>
                           </div>
                         </td>
@@ -204,3 +334,106 @@ const profileKey = getProfileKey();
     </a>
   </div>
 </Layout>
+
+<script>
+(function() {
+  // ─── Search + Filter ───
+  const searchInput = document.getElementById('player-search');
+  const posFilter = document.getElementById('position-filter');
+  const tierFilter = document.getElementById('tier-filter');
+  const resultCount = document.getElementById('result-count');
+  const sections = document.querySelectorAll('.position-section');
+  const allRows = document.querySelectorAll('.player-row');
+
+  function getTier(value) {
+    if (value >= 80) return 'Elite';
+    if (value >= 60) return 'High';
+    if (value >= 40) return 'Mid';
+    if (value >= 20) return 'Low';
+    return 'Depth';
+  }
+
+  function filterPlayers() {
+    const query = searchInput.value.toLowerCase().trim();
+    const posVal = posFilter.value;
+    const tierVal = tierFilter.value;
+    let visibleCount = 0;
+
+    allRows.forEach(row => {
+      const name = row.dataset.name;
+      const team = row.dataset.team;
+      const pos = row.dataset.position;
+      const value = parseFloat(row.dataset.value);
+      const tier = getTier(value);
+
+      const matchesSearch = !query || name.includes(query) || team.includes(query) || pos.toLowerCase().includes(query);
+      const matchesPos = posVal === 'all' || pos === posVal;
+      const matchesTier = tierVal === 'all' || tier === tierVal;
+
+      const visible = matchesSearch && matchesPos && matchesTier;
+      row.style.display = visible ? '' : 'none';
+      if (visible) visibleCount++;
+    });
+
+    // Show/hide sections
+    sections.forEach(section => {
+      const pos = section.dataset.position;
+      const hasVisible = Array.from(section.querySelectorAll('.player-row')).some(r => r.style.display !== 'none');
+      section.style.display = hasVisible ? '' : 'none';
+    });
+
+    resultCount.textContent = visibleCount + ' players';
+  }
+
+  searchInput.addEventListener('input', filterPlayers);
+  posFilter.addEventListener('change', filterPlayers);
+  tierFilter.addEventListener('change', filterPlayers);
+
+  // ─── Sortable Columns ───
+  document.querySelectorAll('.sortable').forEach(header => {
+    header.addEventListener('click', () => {
+      const table = header.closest('table');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('.player-row'));
+      const sortKey = header.dataset.sort;
+      const isAsc = header.dataset.dir !== 'asc';
+
+      // Reset arrows
+      table.querySelectorAll('.sortable').forEach(h => {
+        h.dataset.dir = '';
+        h.querySelector('.sort-arrow').textContent = '↕';
+      });
+      header.dataset.dir = isAsc ? 'asc' : 'desc';
+      header.querySelector('.sort-arrow').textContent = isAsc ? '↑' : '↓';
+
+      rows.sort((a, b) => {
+        let va, vb;
+        switch (sortKey) {
+          case 'name': va = a.dataset.name; vb = b.dataset.name; return isAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+          case 'team': va = a.dataset.team; vb = b.dataset.team; return isAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+          case 'rank': va = parseInt(a.dataset.rank); vb = parseInt(b.dataset.rank); return isAsc ? va - vb : vb - va;
+          case 'posrank': va = parseInt(a.dataset.posrank); vb = parseInt(b.dataset.posrank); return isAsc ? va - vb : vb - va;
+          case 'value': va = parseFloat(a.dataset.value); vb = parseFloat(b.dataset.value); return isAsc ? vb - va : va - vb;
+          default: return 0;
+        }
+      });
+
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+
+  // ─── Smooth scroll for position jump nav ───
+  document.querySelectorAll('.position-jump').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Highlight briefly
+        target.querySelector('h2')?.classList.add('text-amber-400');
+        setTimeout(() => target.querySelector('h2')?.classList.remove('text-amber-400'), 1000);
+      }
+    });
+  });
+})();
+</script>
