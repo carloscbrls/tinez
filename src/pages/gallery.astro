@@ -1,0 +1,96 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { seasonImages, getImagesByYear, getYearsWithImages } from "../data/season-images";
+const years = getYearsWithImages();
+const latestYear = years[0];
+const latestImages = getImagesByYear(latestYear);
+---
+
+<Layout title="Gallery">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">📸</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Gallery</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Season Photos & Memories</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Year Selector -->
+  <div class="flex flex-wrap gap-2 mb-6">
+    {years.map(year => (
+      <a href={`/gallery/${year}`} class="rounded-lg px-4 py-2 text-sm font-medium transition-all" class:list={[year === latestYear ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-zinc-800/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-700/30']}>
+        {year} Season
+      </a>
+    ))}
+  </div>
+
+  <!-- 2025 Season Recap -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">🏆</div>
+      <h2 class="text-lg font-bold text-amber-400">{latestYear} Season Highlights</h2>
+    </div>
+
+    <!-- Champion Banner -->
+    <div class="glass-card rounded-xl overflow-hidden mb-6">
+      <div class="bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-amber-500/20 p-8 text-center">
+        <div class="text-6xl mb-3">🏆</div>
+        <h3 class="text-2xl font-extrabold gradient-text">2025 Champion</h3>
+        <p class="text-lg font-semibold text-zinc-100 mt-1">Best Pacheco Hoe</p>
+        <p class="text-sm text-zinc-500">jayyphilly</p>
+        <div class="flex justify-center gap-6 mt-4">
+          <div class="text-center">
+            <div class="text-xs text-zinc-500 uppercase tracking-wider">Runner-Up</div>
+            <div class="text-sm font-semibold text-zinc-200">The Red Hare & Golden Dragon</div>
+            <div class="text-xs text-zinc-600">darnell</div>
+          </div>
+          <div class="w-px bg-zinc-700/50"></div>
+          <div class="text-center">
+            <div class="text-xs text-zinc-500 uppercase tracking-wider">Third Place</div>
+            <div class="text-sm font-semibold text-zinc-200">LaFlamaBlanca</div>
+            <div class="text-xs text-zinc-600">scooter</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Photo Grid -->
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
+      {latestImages.map(img => (
+        <div class="glass-card rounded-xl overflow-hidden group">
+          <div class="aspect-[4/3] bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+            <span class="text-6xl opacity-30 group-hover:opacity-50 transition-opacity">
+              {img.type === "champion" ? "🏆" : img.type === "draft" ? "📋" : img.type === "team" ? "👥" : "📸"}
+            </span>
+            <div class="absolute bottom-0 left-0 right-0 p-4 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+              <div class="text-sm font-bold text-white">{img.title}</div>
+              <div class="text-xs text-zinc-300 mt-1">{img.description}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Add Your Photos Section -->
+  <div class="glass-card rounded-xl p-6 text-center">
+    <div class="text-4xl mb-3">📤</div>
+    <h2 class="text-lg font-bold text-zinc-100 mb-2">Add Your Own Photos</h2>
+    <p class="text-sm text-zinc-500 max-w-md mx-auto mb-4">Have photos from draft day, championship celebrations, or league events? Send them to the commissioner to add to the gallery.</p>
+    <div class="flex justify-center gap-2 text-xs text-zinc-600">
+      <span>📧 carloscbrls@gmail.com</span>
+      <span>·</span>
+      <span>📱 (209) 423-6633</span>
+    </div>
+  </div>
+</Layout>
