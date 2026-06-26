@@ -54,11 +54,39 @@ import Layout from "../layouts/Layout.astro";
         </div>
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Draft Type</dt>
-          <dd class="text-zinc-200">Offline Draft</dd>
+          <dd class="text-zinc-200">Offline Draft (Random Generator)</dd>
+        </div>
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
+          <dt class="text-zinc-500">Draft Day Theme</dt>
+          <dd class="text-zinc-200">Champion chooses</dd>
+        </div>
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
+          <dt class="text-zinc-500">Draft Stream</dt>
+          <dd class="text-zinc-200">Live on YouTube</dd>
         </div>
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Keeper League</dt>
-          <dd class="text-zinc-200"><span class="inline-flex items-center gap-1 text-emerald-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Yes</span></dd>
+          <dd class="text-zinc-200"><span class="inline-flex items-center gap-1 text-emerald-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 Off + 1 Def</span></dd>
+        </div>
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
+          <dt class="text-zinc-500">Entry Fee</dt>
+          <dd class="text-zinc-200 font-semibold text-amber-400">$175/team</dd>
+        </div>
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
+          <dt class="text-zinc-500">Total Prize Pool</dt>
+          <dd class="text-zinc-200 font-semibold text-emerald-400">$2,450</dd>
+        </div>
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
+          <dt class="text-zinc-500">1st Place</dt>
+          <dd class="text-zinc-200 font-semibold text-amber-400">$1,435</dd>
+        </div>
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
+          <dt class="text-zinc-500">2nd Place</dt>
+          <dd class="text-zinc-200 font-semibold">$175</dd>
+        </div>
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
+          <dt class="text-zinc-500">Weekly Winners (Weeks 11-14)</dt>
+          <dd class="text-zinc-200 font-semibold text-emerald-400">$30 each</dd>
         </div>
       </dl>
     </div>
@@ -137,7 +165,7 @@ import Layout from "../layouts/Layout.astro";
       <dl class="space-y-3 text-sm">
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Max Acquisitions (Season)</dt>
-          <dd class="text-zinc-200 font-semibold">60</dd>
+          <dd class="text-zinc-200 font-semibold">50</dd>
         </div>
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Max Acquisitions (Week)</dt>
@@ -148,8 +176,12 @@ import Layout from "../layouts/Layout.astro";
           <dd class="text-zinc-200">No max</dd>
         </div>
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
-          <dt class="text-zinc-500">Trade End Date</dt>
-          <dd class="text-zinc-200">Nov 28, 2026</dd>
+          <dt class="text-zinc-500">Trade Deadline</dt>
+          <dd class="text-zinc-200 font-semibold">Week 10</dd>
+        </div>
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
+          <dt class="text-zinc-500">Trade Acceptance Window</dt>
+          <dd class="text-zinc-200">24 hrs before kickoff</dd>
         </div>
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Trade Review</dt>
@@ -161,7 +193,11 @@ import Layout from "../layouts/Layout.astro";
         </div>
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Waiver Type</dt>
-          <dd class="text-zinc-200">Continual rolling list</dd>
+          <dd class="text-zinc-200">Free Agency only (no waivers)</dd>
+        </div>
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
+          <dt class="text-zinc-500">Emergency Exception</dt>
+          <dd class="text-zinc-200">2/3 vote required</dd>
         </div>
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Post-Draft Players</dt>
@@ -194,8 +230,8 @@ import Layout from "../layouts/Layout.astro";
           <dd class="text-zinc-200">Division winners top seeds</dd>
         </div>
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
-          <dt class="text-zinc-500">Tie-Breaker</dt>
-          <dd class="text-zinc-200">Best record vs opponent wins</dd>
+          <dt class="text-zinc-500">Tie-Breakers</dt>
+          <dd class="text-zinc-200">Win% → PF → H2H → Coin Flip</dd>
         </div>
         <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Reseeding</dt>
@@ -252,10 +288,15 @@ import Layout from "../layouts/Layout.astro";
   </div>
 
   <!-- Full Scoring Link -->
-  <div class="mt-6 text-center">
+  <div class="mt-6 flex flex-wrap justify-center gap-3">
     <a href="/scoring" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 px-6 py-3 text-sm font-medium text-amber-400 hover:from-amber-500/20 hover:to-orange-500/20 transition-all">
       <span>📊</span>
       View Full Scoring Breakdown
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </a>
+    <a href="/constitution" class="inline-flex items-center gap-2 rounded-xl bg-zinc-800/50 border border-zinc-700/30 px-6 py-3 text-sm font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-all">
+      <span>📜</span>
+      View Full Constitution
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
     </a>
   </div>
