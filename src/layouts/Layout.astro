@@ -108,6 +108,7 @@ const { title, description } = Astro.props;
                 <a href="/scoring" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Scoring</a>
                 <a href="/finances" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Finances</a>
                 <a href="/payouts" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Payouts</a>
+                <a href="/countdown" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Countdown</a>
               </div>
             </div>
           </div>
@@ -122,13 +123,14 @@ const { title, description } = Astro.props;
               <div class="p-2 space-y-0.5">
                 <a href="/standings" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Standings</a>
                 <a href="/matchups" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Matchups</a>
-                <a href="/rivalries" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Rivalries</a>
-                <a href="/simulator" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Simulator</a>
                 <a href="/power-rankings" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Power Rankings</a>
                 <a href="/playoffs" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Playoffs</a>
                 <a href="/trade-analyzer" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Trade Analyzer</a>
+                <a href="/rivalries" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Rivalries</a>
+                <a href="/simulator" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Simulator</a>
                 <a href="/records" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Records</a>
                 <a href="/history" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">History</a>
+                <a href="/compare" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Compare Teams</a>
               </div>
             </div>
           </div>
@@ -151,15 +153,27 @@ const { title, description } = Astro.props;
             </div>
           </div>
 
+          <!-- Media Dropdown -->
+          <div class="relative group">
+            <button class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all flex items-center gap-1">
+              Media
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-180 transition-transform"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="absolute top-full left-0 mt-1 w-48 rounded-xl bg-zinc-950/95 backdrop-blur-xl border border-zinc-800/60 shadow-2xl shadow-black/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-1 group-hover:translate-y-0">
+              <div class="p-2 space-y-0.5">
+                <a href="/podcast" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Podcast</a>
+                <a href="/recaps" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Recaps</a>
+                <a href="/mini-games" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Mini Games</a>
+                <a href="/gallery" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Gallery</a>
+                <a href="/x-feed" class="block rounded-lg px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">X Feed</a>
+              </div>
+            </div>
+          </div>
+
           <a href="/draft" class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Draft</a>
           <a href="/keepers" class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Keepers</a>
-          <a href="/mini-games" class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Mini Games</a>
-          <a href="/recaps" class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Recaps</a>
-          <a href="/gallery" class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Gallery</a>
           <a href="/schedules" class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Schedules</a>
           <a href="/resources" class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Resources</a>
-          <a href="/x-feed" class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">X Feed</a>
-          <a href="/podcast" class="rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Podcast</a>
         </div>
 
         <!-- Mobile menu button -->
@@ -174,25 +188,21 @@ const { title, description } = Astro.props;
           <div class="text-xs font-semibold uppercase tracking-wider text-zinc-600 px-3 py-1.5">Main</div>
           <a href="/" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Home</a>
           <a href="/teams" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Teams</a>
-          <a href="/matchups" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Matchups</a>
-          <a href="/rivalries" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Rivalries</a>
-          <a href="/simulator" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Simulator</a>
           <a href="/standings" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Standings</a>
+          <a href="/matchups" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Matchups</a>
           <a href="/draft" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Draft</a>
           <a href="/keepers" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Keepers</a>
-          <a href="/mini-games" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Mini Games</a>
-          <a href="/recaps" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Recaps</a>
-          <a href="/gallery" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Gallery</a>
+          <a href="/schedules" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Schedules</a>
           
-          <div class="text-xs font-semibold uppercase tracking-wider text-zinc-600 px-3 py-1.5 mt-1">League</div>
-          <a href="/rules" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Rules</a>
-          <a href="/constitution" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Constitution</a>
-          <a href="/scoring" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Scoring</a>
-          <a href="/payouts" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Payouts</a>
-          <a href="/history" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">History</a>
-          <a href="/records" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Records</a>
+          <div class="text-xs font-semibold uppercase tracking-wider text-zinc-600 px-3 py-1.5 mt-1">Stats</div>
           <a href="/power-rankings" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Power Rankings</a>
+          <a href="/playoffs" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Playoffs</a>
           <a href="/trade-analyzer" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Trade Analyzer</a>
+          <a href="/rivalries" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Rivalries</a>
+          <a href="/simulator" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Simulator</a>
+          <a href="/records" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Records</a>
+          <a href="/history" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">History</a>
+          <a href="/compare" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Compare Teams</a>
           
           <div class="text-xs font-semibold uppercase tracking-wider text-zinc-600 px-3 py-1.5 mt-1">Players</div>
           <a href="/players" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Player Database</a>
@@ -202,11 +212,21 @@ const { title, description } = Astro.props;
           <a href="/transactions" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Transactions</a>
           <a href="/news" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">News Hub</a>
           
-          <div class="text-xs font-semibold uppercase tracking-wider text-zinc-600 px-3 py-1.5 mt-1">More</div>
-          <a href="/schedules" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Schedules</a>
-          <a href="/resources" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Resources</a>
-          <a href="/x-feed" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">X Feed</a>
+          <div class="text-xs font-semibold uppercase tracking-wider text-zinc-600 px-3 py-1.5 mt-1">Media</div>
           <a href="/podcast" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Podcast</a>
+          <a href="/recaps" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Recaps</a>
+          <a href="/mini-games" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Mini Games</a>
+          <a href="/gallery" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Gallery</a>
+          <a href="/x-feed" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">X Feed</a>
+          
+          <div class="text-xs font-semibold uppercase tracking-wider text-zinc-600 px-3 py-1.5 mt-1">League</div>
+          <a href="/rules" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Rules</a>
+          <a href="/constitution" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Constitution</a>
+          <a href="/scoring" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Scoring</a>
+          <a href="/finances" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Finances</a>
+          <a href="/countdown" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Countdown</a>
+          <a href="/payouts" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Payouts</a>
+          <a href="/resources" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Resources</a>
         </div>
       </div>
     </nav>
@@ -254,6 +274,8 @@ const { title, description } = Astro.props;
               <a href="/power-rankings" class="text-xs text-zinc-500 hover:text-amber-400 transition-colors">Power Rankings</a>
               <a href="/trade-analyzer" class="text-xs text-zinc-500 hover:text-amber-400 transition-colors">Trade Analyzer</a>
               <a href="/records" class="text-xs text-zinc-500 hover:text-amber-400 transition-colors">Records</a>
+              <a href="/compare" class="text-xs text-zinc-500 hover:text-amber-400 transition-colors">Compare</a>
+              <a href="/countdown" class="text-xs text-zinc-500 hover:text-amber-400 transition-colors">Countdown</a>
             </div>
           </div>
 

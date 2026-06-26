@@ -1,0 +1,166 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { LEAGUE_CONFIG } from "../data/sleeper-api";
+import { teams } from "../data/teams";
+
+// NFL 2026 season key dates
+const nflDates = {
+  seasonStart: new Date("2026-09-10T20:20:00-04:00"), // Thursday Night Football opener
+  draft: new Date("2026-08-25T18:00:00-07:00"), // TBD - typical late August
+  preseason: new Date("2026-08-06T19:00:00-04:00"), // Hall of Fame Game
+  waiverDeadline: new Date("2026-11-24T23:59:00-05:00"), // Week 12
+  tradeDeadline: new Date("2026-11-24T23:59:00-05:00"), // Week 12
+  playoffs: new Date("2026-12-08T20:00:00-05:00"), // Week 15
+  championship: new Date("2026-12-27T20:00:00-05:00"), // Week 17
+};
+
+const now = new Date();
+
+function daysUntil(date: Date): number {
+  const diff = date.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
+function formatCountdown(date: Date): { days: number; hours: number; minutes: number } {
+  const diff = Math.max(0, date.getTime() - now.getTime());
+  return {
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+  };
+}
+
+const seasonCountdown = formatCountdown(nflDates.seasonStart);
+const draftCountdown = formatCountdown(nflDates.draft);
+const seasonDays = daysUntil(nflDates.seasonStart);
+const draftDays = daysUntil(nflDates.draft);
+
+// Current champion info
+const champion = teams.find(t => t.id === 12); // Best Pacheco Hoe
+const runnerUp = teams.find(t => t.id === 2); // The Red Hare & Golden Dragon
+---
+
+<Layout title="Countdown">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">⏰</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Season Countdown</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · 2026 Season</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Countdown -->
+  <div class="glass-card-accent rounded-xl p-8 mb-8 text-center">
+    <div class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-4">2026 Season Kicks Off</div>
+    <div class="grid grid-cols-3 gap-4 max-w-md mx-auto mb-4">
+      <div class="bg-zinc-900/60 rounded-xl p-4">
+        <div class="text-4xl md:text-5xl font-extrabold text-zinc-100 tabular-nums">{seasonCountdown.days}</div>
+        <div class="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Days</div>
+      </div>
+      <div class="bg-zinc-900/60 rounded-xl p-4">
+        <div class="text-4xl md:text-5xl font-extrabold text-zinc-100 tabular-nums">{seasonCountdown.hours}</div>
+        <div class="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Hours</div>
+      </div>
+      <div class="bg-zinc-900/60 rounded-xl p-4">
+        <div class="text-4xl md:text-5xl font-extrabold text-zinc-100 tabular-nums">{seasonCountdown.minutes}</div>
+        <div class="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Minutes</div>
+      </div>
+    </div>
+    <div class="text-sm text-zinc-500">
+      Thursday, September 10, 2026 · 8:20 PM ET
+    </div>
+  </div>
+
+  <!-- Key Dates -->
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+    <div class="glass-card rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-lg">📋</span>
+        <h3 class="text-sm font-bold text-amber-400">Draft Day</h3>
+      </div>
+      <div class="text-2xl font-extrabold text-zinc-100 tabular-nums">{draftCountdown.days}</div>
+      <div class="text-xs text-zinc-500">days away</div>
+      <div class="mt-2 text-xs text-zinc-600">August 25, 2026 · 6:00 PM PT</div>
+    </div>
+    <div class="glass-card rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-lg">🏈</span>
+        <h3 class="text-sm font-bold text-emerald-400">Preseason</h3>
+      </div>
+      <div class="text-2xl font-extrabold text-zinc-100 tabular-nums">{daysUntil(nflDates.preseason)}</div>
+      <div class="text-xs text-zinc-500">days until Hall of Fame Game</div>
+      <div class="mt-2 text-xs text-zinc-600">August 6, 2026</div>
+    </div>
+    <div class="glass-card rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-lg">🏆</span>
+        <h3 class="text-sm font-bold text-purple-400">Championship</h3>
+      </div>
+      <div class="text-2xl font-extrabold text-zinc-100 tabular-nums">{daysUntil(nflDates.championship)}</div>
+      <div class="text-xs text-zinc-500">days until Super Bowl LX</div>
+      <div class="mt-2 text-xs text-zinc-600">Week 17 · December 27, 2026</div>
+    </div>
+  </div>
+
+  <!-- Season Timeline -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">📅</span>
+      <h2 class="text-lg font-bold text-zinc-100">2026 Season Timeline</h2>
+    </div>
+    <div class="space-y-0">
+      {[
+        { date: "August 6", event: "NFL Preseason Begins", desc: "Hall of Fame Game", icon: "🏈" },
+        { date: "August 25", event: "TINEZ Draft Day", desc: "14 teams, 18 rounds, 90 seconds per pick", icon: "📋" },
+        { date: "September 10", event: "NFL Regular Season Kicks Off", desc: "Thursday Night Football", icon: "🚀" },
+        { date: "September 10-14", event: "Week 1 Matchups", desc: "7 games across 14 teams", icon: "⚔️" },
+        { date: "November 24", event: "Trade Deadline", desc: "Week 12 · Last chance to trade", icon: "🔄" },
+        { date: "December 8", event: "Playoffs Begin", desc: "Top 6 teams · Seeds 1-2 get bye", icon: "🏆" },
+        { date: "December 27", event: "Super Bowl LX", desc: "Championship Week 17", icon: "👑" },
+      ].map((item, i) => (
+        <div class="flex gap-4 py-3 border-b border-zinc-800/30 last:border-0">
+          <div class="flex flex-col items-center">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800/50 text-sm">{item.icon}</div>
+            {i < 6 && <div class="w-px flex-1 bg-zinc-800/30 mt-1"></div>}
+          </div>
+          <div class="flex-1 pb-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-amber-400">{item.date}</span>
+            </div>
+            <div class="text-sm font-semibold text-zinc-200">{item.event}</div>
+            <div class="text-xs text-zinc-500">{item.desc}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Defending Champion -->
+  <div class="glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">👑</span>
+      <h2 class="text-lg font-bold text-zinc-100">Defending Champion</h2>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="flex-shrink-0">
+        <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">
+          🏆
+        </div>
+      </div>
+      <div>
+        <div class="text-lg font-bold text-zinc-100">{champion?.name || "Best Pacheco Hoe"}</div>
+        <div class="text-sm text-zinc-500">jayyphilly</div>
+        <div class="text-xs text-zinc-600 mt-1">2025 Champion · Can they repeat in 2026?</div>
+      </div>
+    </div>
+  </div>
+</Layout>
