@@ -23,13 +23,23 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   const path = rawPath.replace(/\/\.netlify\/functions\/yahoo-oauth/, "").replace(/\/api\/yahoo/, "");
   const params = event.queryStringParameters || {};
   const rawQuery = event.rawQuery || "";
+  const httpMethod = event.httpMethod;
+
+  // Store ALL request info for debugging
+  lastCallback = {
+    method: httpMethod,
+    rawPath,
+    path,
+    rawQuery,
+    params,
+    body: event.body,
+    isBase64Encoded: event.isBase64Encoded,
+    timestamp: new Date().toISOString(),
+  };
 
   // GET /api/yahoo/debug — show last callback data
   if (path === "/debug" || path === "/debug/") {
-    return respond(200, JSON.stringify({
-      lastCallback,
-      currentRequest: { rawPath, path, rawQuery, params },
-    }, null, 2), "application/json");
+    return respond(200, JSON.stringify({ lastCallback }, null, 2), "application/json");
   }
 
   // GET /api/yahoo/login — redirect to Yahoo OAuth
@@ -38,20 +48,24 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     return respond(302, "", "text/plain", authUrl);
   }
 
-  // GET /api/yahoo/callback — handle OAuth callback
+  // Handle callback — GET or POST
   if (path === "/callback" || path === "/callback/") {
-    // Store everything Yahoo sent us
-    lastCallback = { rawPath, path, rawQuery, params, timestamp: new Date().toISOString() };
-
     const code = params.code;
+
     if (!code) {
       return respond(400, JSON.stringify({
         error: "Missing authorization code",
-        ...lastCallback,
+        method: httpMethod,
+        rawPath,
+        path,
+        rawQuery,
+        params,
+        body: event.body,
+        timestamp: new Date().toISOString(),
       }), "application/json");
     }
 
-    const body = new URLSearchParams({
+    const tokenBody = new URLSearchParams({
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
       redirect_uri: REDIRECT_URI,
@@ -63,7 +77,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       const res = await fetch(TOKEN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
+        body: tokenBody.toString(),
       });
       const data: any = await res.json();
       accessToken = data.access_token;
