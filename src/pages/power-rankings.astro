@@ -1,36 +1,31 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { buildPowerRankings, getPositionEmoji } from "../data/sleeper-api";
 import { teams } from "../data/teams";
+import { LEAGUE_CONFIG } from "../data/sleeper-api";
 
-let rankings: Awaited<ReturnType<typeof buildPowerRankings>> = [];
+// TINEZ is on Yahoo, not Sleeper. Power rankings use historical data.
+// When the 2026 season starts, we'll wire up Yahoo API for live data.
 
-try {
-  rankings = await buildPowerRankings();
-} catch {
-  // Fall back to standings-based rankings
-  const sorted = [...teams].sort((a, b) => {
-    const aPct = a.wins + a.ties * 0.5;
-    const bPct = b.wins + b.ties * 0.5;
-    if (bPct !== aPct) return bPct - aPct;
-    return b.pointsFor - a.pointsFor;
-  });
-  rankings = sorted.map((t, i) => ({
-    rank: i + 1,
-    teamName: t.name,
-    owner: t.owner,
-    wins: t.wins,
-    losses: t.losses,
-    ties: t.ties,
-    pointsFor: t.pointsFor,
-    pointsAgainst: t.pointsAgainst,
-    totalMoves: 0,
-    waiverBudgetUsed: 0,
-    powerScore: Math.round((t.wins / Math.max(t.wins + t.losses + t.ties, 1)) * 100),
-    trend: "stable" as const,
-    trendAmount: 0,
-  }));
-}
+// Build power rankings from historical team data
+const rankings = [...teams]
+  .map(t => {
+    const totalGames = t.wins + t.losses + t.ties;
+    const winPct = totalGames > 0 ? t.wins / totalGames : 0;
+    const avgPF = totalGames > 0 ? t.pointsFor / totalGames : 0;
+    const avgPA = totalGames > 0 ? t.pointsAgainst / totalGames : 0;
+    
+    // Power score: weighted combination
+    const powerScore = Math.round(
+      winPct * 50 +
+      Math.min(avgPF / 20, 30) +
+      (1 - Math.min(avgPA / 20, 1)) * 10 +
+      10 // baseline activity
+    );
+    
+    return { ...t, powerScore, totalGames };
+  })
+  .sort((a, b) => b.powerScore - a.powerScore)
+  .map((t, i) => ({ ...t, rank: i + 1 }));
 ---
 
 <Layout title="Power Rankings">
@@ -44,36 +39,29 @@ try {
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
               <span class="gradient-text">Power Rankings</span>
             </h1>
-            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Algorithmic team rankings based on performance metrics</p>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Team strength ratings</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- How It Works -->
+  <!-- What This Is -->
   <div class="glass-card rounded-xl p-5 mb-8">
     <div class="flex items-center gap-2 mb-3">
-      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📊</div>
-      <h2 class="text-sm font-semibold text-amber-400">How Power Score is Calculated</h2>
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">💡</div>
+      <h2 class="text-sm font-semibold text-amber-400">What Are Power Rankings?</h2>
     </div>
-    <div class="grid gap-3 sm:grid-cols-4 text-xs">
-      <div class="rounded-lg bg-zinc-800/20 p-3 text-center">
-        <div class="text-lg font-bold text-amber-400">50%</div>
-        <div class="text-zinc-500 mt-1">Win Percentage</div>
-      </div>
-      <div class="rounded-lg bg-zinc-800/20 p-3 text-center">
-        <div class="text-lg font-bold text-emerald-400">30%</div>
-        <div class="text-zinc-500 mt-1">Points For (Avg)</div>
-      </div>
-      <div class="rounded-lg bg-zinc-800/20 p-3 text-center">
-        <div class="text-lg font-bold text-red-400">10%</div>
-        <div class="text-zinc-500 mt-1">Points Against (Lower = Better)</div>
-      </div>
-      <div class="rounded-lg bg-zinc-800/20 p-3 text-center">
-        <div class="text-lg font-bold text-blue-400">10%</div>
-        <div class="text-zinc-500 mt-1">Transaction Activity</div>
-      </div>
+    <div class="text-xs text-zinc-400 leading-relaxed space-y-2">
+      <p>Power Rankings rank every team from strongest to weakest using a formula that combines:</p>
+      <ul class="list-disc list-inside space-y-1">
+        <li><strong class="text-zinc-200">Win percentage (50%)</strong> — How often you win</li>
+        <li><strong class="text-zinc-200">Points scored (30%)</strong> — How much offense you generate</li>
+        <li><strong class="text-zinc-200">Points allowed (10%)</strong> — Lower is better (defense)</li>
+        <li><strong class="text-zinc-200">Activity (10%)</strong> — Waiver moves, trades, engagement</li>
+      </ul>
+      <p class="mt-2">The score is 0-100. <strong class="text-emerald-400">80+</strong> = Elite contender, <strong class="text-amber-400">60-79</strong> = Playoff team, <strong class="text-orange-400">40-59</strong> = Middle of pack, <strong class="text-red-400">Below 40</strong> = Rebuilding.</p>
+      <p class="text-zinc-600 mt-2">⚠️ TINEZ is on <strong class="text-zinc-300">Yahoo</strong>, not Sleeper. Once Yahoo API credentials arrive, these will update live each week. For now, scores are based on all-time historical data.</p>
     </div>
   </div>
 
@@ -82,7 +70,6 @@ try {
     {rankings.map((r, i) => {
       const isTop3 = i < 3;
       const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
-      const team = teams.find(t => t.name === r.teamName || t.owner === r.owner);
       
       return (
         <div class="glass-card rounded-xl p-4 group hover:bg-zinc-800/40 transition-all">
@@ -98,17 +85,11 @@ try {
 
             <!-- Team Info -->
             <div class="flex items-center gap-3 flex-1 min-w-0">
-              {team ? (
-                <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${team.primaryColor}, ${team.secondaryColor})`}>
-                  {team.shortName}
-                </div>
-              ) : (
-                <div class="h-10 w-10 rounded-xl bg-zinc-800 flex items-center justify-center text-sm font-bold text-zinc-400 shrink-0">
-                  ?
-                </div>
-              )}
+              <div class="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0" style={`background: linear-gradient(135deg, ${r.primaryColor}, ${r.secondaryColor})`}>
+                {r.shortName}
+              </div>
               <div class="min-w-0">
-                <div class="font-semibold text-sm text-zinc-100 truncate">{r.teamName}</div>
+                <div class="font-semibold text-sm text-zinc-100 truncate">{r.name}</div>
                 <div class="text-xs text-zinc-500">{r.owner}</div>
               </div>
             </div>
@@ -116,12 +97,12 @@ try {
             <!-- Record -->
             <div class="text-center hidden sm:block">
               <div class="text-sm font-semibold text-zinc-200">{r.wins}-{r.losses}-{r.ties}</div>
-              <div class="text-xs text-zinc-600">Record</div>
+              <div class="text-xs text-zinc-600">All-Time</div>
             </div>
 
             <!-- Points -->
             <div class="text-center hidden md:block">
-              <div class="text-sm font-semibold text-emerald-400">{r.pointsFor.toFixed(1)}</div>
+              <div class="text-sm font-semibold text-emerald-400">{r.pointsFor.toFixed(0)}</div>
               <div class="text-xs text-zinc-600">PF</div>
             </div>
 
@@ -139,24 +120,6 @@ try {
               </div>
               <div class="text-xs text-zinc-600 mt-0.5">Power</div>
             </div>
-
-            <!-- Trend -->
-            <div class="text-center hidden lg:block">
-              {r.trend === "up" ? (
-                <span class="text-emerald-400 text-sm">↑{r.trendAmount}</span>
-              ) : r.trend === "down" ? (
-                <span class="text-red-400 text-sm">↓{r.trendAmount}</span>
-              ) : (
-                <span class="text-zinc-500 text-sm">→</span>
-              )}
-            </div>
-          </div>
-
-          <!-- Stats Bar -->
-          <div class="mt-3 flex items-center gap-4 text-xs text-zinc-600">
-            <span>Moves: {r.totalMoves}</span>
-            <span>Waiver $: ${r.waiverBudgetUsed}</span>
-            <span>PA: {r.pointsAgainst.toFixed(1)}</span>
           </div>
         </div>
       );
@@ -176,7 +139,7 @@ try {
         <div class="text-xs text-zinc-500 mt-1">Power Score 80+</div>
         <div class="mt-2 space-y-1">
           {rankings.filter(r => r.powerScore >= 80).map(r => (
-            <div class="text-xs text-zinc-400">{r.teamName}</div>
+            <div class="text-xs text-zinc-400">{r.name}</div>
           ))}
         </div>
       </div>
@@ -189,7 +152,7 @@ try {
         <div class="text-xs text-zinc-500 mt-1">Power Score 60-79</div>
         <div class="mt-2 space-y-1">
           {rankings.filter(r => r.powerScore >= 60 && r.powerScore < 80).map(r => (
-            <div class="text-xs text-zinc-400">{r.teamName}</div>
+            <div class="text-xs text-zinc-400">{r.name}</div>
           ))}
         </div>
       </div>
@@ -202,7 +165,7 @@ try {
         <div class="text-xs text-zinc-500 mt-1">Power Score 40-59</div>
         <div class="mt-2 space-y-1">
           {rankings.filter(r => r.powerScore >= 40 && r.powerScore < 60).map(r => (
-            <div class="text-xs text-zinc-400">{r.teamName}</div>
+            <div class="text-xs text-zinc-400">{r.name}</div>
           ))}
         </div>
       </div>
@@ -215,7 +178,7 @@ try {
         <div class="text-xs text-zinc-500 mt-1">Power Score Below 40</div>
         <div class="mt-2 space-y-1">
           {rankings.filter(r => r.powerScore < 40).map(r => (
-            <div class="text-xs text-zinc-400">{r.teamName}</div>
+            <div class="text-xs text-zinc-400">{r.name}</div>
           ))}
         </div>
       </div>

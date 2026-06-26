@@ -37,6 +37,7 @@ export const LEAGUE_CONFIG = {
   draftId: "257270643320426496",
   season: 2025,
   name: "TINEZ LEAGUE",
+  platform: "Yahoo", // TINEZ is on Yahoo, not Sleeper
 };
 
 // In-memory cache

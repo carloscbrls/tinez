@@ -2,36 +2,31 @@
 import Layout from "../layouts/Layout.astro";
 import { getStandings, teams } from "../data/teams";
 import { getNflTeamLogoUrl } from "../data/players";
-import { buildPowerRankings, fetchTrendingWithDetails, getPositionEmoji, getPlayerHeadshotUrl } from "../data/sleeper-api";
+import { fetchTrendingWithDetails, getPositionEmoji, getPlayerHeadshotUrl } from "../data/sleeper-api";
 const standings = getStandings();
 
-// Try to fetch live data, fall back gracefully
-let powerRankings: Awaited<ReturnType<typeof buildPowerRankings>> = [];
-let trendingAdds: Awaited<ReturnType<typeof fetchTrendingWithDetails>> = [];
+// Build power rankings from historical team data (TINEZ is on Yahoo, not Sleeper)
+const powerRankings = [...teams]
+  .map(t => {
+    const totalGames = t.wins + t.losses + t.ties;
+    const winPct = totalGames > 0 ? t.wins / totalGames : 0;
+    const avgPF = totalGames > 0 ? t.pointsFor / totalGames : 0;
+    const avgPA = totalGames > 0 ? t.pointsAgainst / totalGames : 0;
+    const powerScore = Math.round(
+      winPct * 50 +
+      Math.min(avgPF / 20, 30) +
+      (1 - Math.min(avgPA / 20, 1)) * 10 +
+      10
+    );
+    return { teamName: t.name, owner: t.owner, wins: t.wins, losses: t.losses, ties: t.ties, pointsFor: t.pointsFor, pointsAgainst: t.pointsAgainst, powerScore, totalMoves: 0, waiverBudgetUsed: 0, trend: "stable" as const, trendAmount: 0, rank: 0 };
+  })
+  .sort((a, b) => b.powerScore - a.powerScore)
+  .map((r, i) => ({ ...r, rank: i + 1 }));
 
+let trendingAdds: Awaited<ReturnType<typeof fetchTrendingWithDetails>> = [];
 try {
-  [powerRankings, trendingAdds] = await Promise.all([
-    buildPowerRankings(),
-    fetchTrendingWithDetails("add", 24, 5),
-  ]);
-} catch {
-  // Fall back to standings-based rankings
-  powerRankings = standings.map((t, i) => ({
-    rank: i + 1,
-    teamName: t.name,
-    owner: t.owner,
-    wins: t.wins,
-    losses: t.losses,
-    ties: t.ties,
-    pointsFor: t.pointsFor,
-    pointsAgainst: t.pointsAgainst,
-    totalMoves: 0,
-    waiverBudgetUsed: 0,
-    powerScore: Math.round((t.wins / Math.max(t.wins + t.losses + t.ties, 1)) * 100),
-    trend: "stable" as const,
-    trendAmount: 0,
-  }));
-}
+  trendingAdds = await fetchTrendingWithDetails("add", 24, 5);
+} catch {}
 ---
 
 <Layout title="TINEZ LEAGUE">
