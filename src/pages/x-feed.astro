@@ -13,6 +13,16 @@ import { nflTeams } from "../data/nfl-teams";
     </div>
   </div>
 
+  <!-- Quick links -->
+  <div class="mb-6 flex flex-wrap gap-2">
+    <a href="/schedules" class="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 transition-colors">
+      📅 View Schedules
+    </a>
+    <a href="/podcasts" class="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 transition-colors">
+      🎙️ Fantasy Podcasts
+    </a>
+  </div>
+
   <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
     {nflTeams.map(team => (
       <a
@@ -38,15 +48,43 @@ import { nflTeams } from "../data/nfl-teams";
     ))}
   </div>
 
-  <div class="mt-8 rounded-xl border border-zinc-800 p-6">
-    <h2 class="mb-3 text-lg font-semibold">How to embed X feeds on team pages</h2>
-    <p class="text-sm text-zinc-400">
-      Each fantasy team can be assigned an NFL team. Their X feed will automatically show on their team page.
-      When you provide the 16 fantasy team names and which NFL team each one follows, I'll wire it up.
-    </p>
-    <div class="mt-4 grid gap-2 text-sm">
-      <p class="text-zinc-500">Example: <span class="text-zinc-300">"Team Taco" → @49ers</span></p>
-      <p class="text-zinc-500">Example: <span class="text-zinc-300">"Gridiron Gods" → @Chiefs</span></p>
+  <!-- Embedded X Timeline Widget Demo -->
+  <div class="mt-8">
+    <h2 class="mb-4 text-lg font-semibold">Featured Feeds</h2>
+    <div class="grid gap-4 md:grid-cols-2">
+      <!-- NFL Official -->
+      <div class="rounded-xl border border-zinc-800 p-4">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="text-lg">🏈</span>
+          <span class="font-medium">@NFL</span>
+        </div>
+        <a 
+          href="https://x.com/NFL" 
+          target="_blank"
+          rel="noopener noreferrer"
+          class="block rounded-lg bg-zinc-900 p-8 text-center text-sm text-zinc-500 hover:bg-zinc-800 transition-colors"
+        >
+          <p>Follow @NFL on X for official league news, highlights, and updates.</p>
+          <p class="mt-2 text-xs text-zinc-600">Click to open on X.com</p>
+        </a>
+      </div>
+
+      <!-- Fantasy Focus -->
+      <div class="rounded-xl border border-zinc-800 p-4">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="text-lg">🎯</span>
+          <span class="font-medium">@ESPNFantasy</span>
+        </div>
+        <a 
+          href="https://x.com/ESPNFantasy" 
+          target="_blank"
+          rel="noopener noreferrer"
+          class="block rounded-lg bg-zinc-900 p-8 text-center text-sm text-zinc-500 hover:bg-zinc-800 transition-colors"
+        >
+          <p>Follow @ESPNFantasy for expert advice, rankings, and breaking news.</p>
+          <p class="mt-2 text-xs text-zinc-600">Click to open on X.com</p>
+        </a>
+      </div>
     </div>
   </div>
 </Layout>
