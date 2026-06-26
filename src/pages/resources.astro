@@ -1,0 +1,138 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const sections = [
+  {
+    title: "Fantasy Tools",
+    icon: "🏆",
+    resources: [
+      { name: "FantasyPros", description: "ECR rankings, consensus ADP, start/sit tools", url: "https://www.fantasypros.com/nfl", icon: "📊" },
+      { name: "ESPN Fantasy", description: "Player news, projections, stats", url: "https://fantasy.espn.com/football/", icon: "📺" },
+      { name: "NFL Fantasy", description: "Official NFL fantasy tools", url: "https://fantasy.nfl.com", icon: "🏈" },
+      { name: "Rotoworld", description: "Player news, injury updates", url: "https://www.nbcsports.com/nfl", icon: "📰" },
+      { name: "FootballGuys", description: "Premium rankings, DFS tools", url: "https://www.footballguys.com", icon: "🧠" },
+      { name: "PFF Fantasy", description: "Advanced stats, grades", url: "https://www.pff.com/fantasy", icon: "📈" },
+      { name: "Fantasy Life", description: "News, rankings, community", url: "https://www.fantasylife.com", icon: "💬" },
+      { name: "The Fantasy Footballers", description: "Podcast, rankings, tools", url: "https://thefantasyfootballers.com", icon: "🎙️" },
+    ],
+  },
+  {
+    title: "Rankings & Projections",
+    icon: "📊",
+    resources: [
+      { name: "FantasyPros ECR", description: "Expert Consensus Rankings", url: "https://www.fantasypros.com/nfl/rankings", icon: "📋" },
+      { name: "FantasyPros ROS Rankings", description: "Rest of season rankings", url: "https://www.fantasypros.com/nfl/rankings/ros.php", icon: "📅" },
+      { name: "NumberFire", description: "Projections, analytics", url: "https://www.numberfire.com/nfl", icon: "🔥" },
+      { name: "FantasyData", description: "Advanced stats, projections", url: "https://fantasydata.com/nfl", icon: "📊" },
+      { name: "RotoWire", description: "Rankings, projections, news", url: "https://www.rotowire.com/football", icon: "📰" },
+    ],
+  },
+  {
+    title: "News & Analysis",
+    icon: "📰",
+    resources: [
+      { name: "ESPN NFL", description: "League news, scores", url: "https://www.espn.com/nfl", icon: "📺" },
+      { name: "NFL.com News", description: "Official NFL news", url: "https://www.nfl.com/news", icon: "🏈" },
+      { name: "Rotoworld NFL", description: "Breaking news, injuries", url: "https://www.nbcsports.com/nfl/news", icon: "⚡" },
+      { name: "Bleacher Report", description: "News, analysis", url: "https://bleacherreport.com/nfl", icon: "📱" },
+      { name: "The Athletic NFL", description: "In-depth analysis (subscription)", url: "https://theathletic.com/nfl", icon: "📝" },
+    ],
+  },
+  {
+    title: "Waiver Wire & Transactions",
+    icon: "📈",
+    resources: [
+      { name: "FantasyPros Waiver Wire", description: "Weekly pickups", url: "https://www.fantasypros.com/nfl/waiver-wire.php", icon: "🔍" },
+      { name: "CBS Sports Waiver Wire", description: "Waiver advice", url: "https://www.cbssports.com/fantasy/football/waiver-wire", icon: "📋" },
+      { name: "Yahoo Transactions", description: "League transactions", url: "https://football.fantasysports.yahoo.com/f1/103379/transactions", icon: "🔄" },
+    ],
+  },
+  {
+    title: "NFL Team Resources",
+    icon: "🏈",
+    resources: [
+      { name: "NFL.com", description: "Official league site", url: "https://www.nfl.com", icon: "🏆" },
+      { name: "ESPN NFL Scoreboard", description: "Live scores", url: "https://www.espn.com/nfl/scoreboard", icon: "📺" },
+      { name: "Pro Football Reference", description: "Stats, history", url: "https://www.pro-football-reference.com", icon: "📚" },
+      { name: "Spotrac", description: "Contracts, cap, depth charts", url: "https://www.spotrac.com/nfl", icon: "💰" },
+      { name: "OverTheCap", description: "Salary cap, contracts", url: "https://overthecap.com", icon: "📊" },
+    ],
+  },
+];
+---
+
+<Layout title="Resources">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">R</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Resources</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">Essential tools, rankings, and analysis for every Tinez manager</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {sections.map(section => (
+    <div class="mb-8">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-xl">{section.icon}</span>
+        <h2 class="text-lg font-bold text-zinc-100">{section.title}</h2>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 stagger-children">
+        {section.resources.map(r => (
+          <a
+            href={r.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="glass-card rounded-xl p-4 group"
+          >
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-lg border border-amber-500/10">
+                {r.icon}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="font-semibold text-sm text-zinc-100 group-hover:text-amber-400 transition-colors">{r.name}</div>
+                <div class="mt-1 text-xs text-zinc-500 leading-relaxed">{r.description}</div>
+                <div class="mt-2 flex items-center gap-1 text-xs text-zinc-600 group-hover:text-amber-400/70 transition-colors">
+                  <span>Open link</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                </div>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  ))}
+
+  <!-- Podcasts Section -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-xl">🎧</span>
+      <h2 class="text-lg font-bold text-zinc-100">Podcasts</h2>
+    </div>
+    <a
+      href="/podcasts"
+      class="glass-card-accent rounded-xl p-5 flex items-center gap-4 group"
+    >
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-2xl border border-violet-500/20">
+        🎙️
+      </div>
+      <div class="flex-1">
+        <div class="font-bold text-zinc-100 group-hover:text-amber-400 transition-colors">Fantasy & NFL Podcasts</div>
+        <p class="text-sm text-zinc-500 mt-0.5">Top fantasy football podcasts and team-specific shows</p>
+      </div>
+      <div class="flex items-center gap-1.5 text-sm text-amber-400">
+        <span>Browse</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </div>
+    </a>
+  </div>
+</Layout>
