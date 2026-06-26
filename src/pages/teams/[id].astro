@@ -55,18 +55,23 @@ const record = `${wins}-${losses}-${ties}`;
 const diff = pf - pa;
 const nfl = team.nflTeam ? getNFLTeam(team.nflTeam) : undefined;
 
-const positionOrder = ["QB", "RB", "WR", "TE", "K", "DEF", "BN"];
+const positionOrder = ["QB", "RB", "WR", "TE", "K", "DL", "LB", "DB", "DEF", "BN"];
 const positionColors: Record<string, string> = {
   QB: "from-blue-500 to-indigo-500",
   RB: "from-emerald-500 to-teal-500",
   WR: "from-amber-500 to-orange-500",
   TE: "from-purple-500 to-pink-500",
   K: "from-red-500 to-rose-500",
+  DL: "from-zinc-600 to-zinc-700",
+  LB: "from-zinc-500 to-zinc-600",
+  DB: "from-zinc-400 to-zinc-500",
   DEF: "from-zinc-500 to-zinc-600",
   BN: "from-zinc-700 to-zinc-800",
 };
 const positionEmojis: Record<string, string> = {
-  QB: "🎯", RB: "🏃", WR: "✈️", TE: "🦾", K: "🦵", DEF: "🛡️", BN: "📋",
+  QB: "🎯", RB: "🏃", WR: "✈️", TE: "🦾", K: "🦵",
+  DL: "💪", LB: "🛡️", DB: "⚡",
+  DEF: "🏈", BN: "📋",
 };
 ---
 
