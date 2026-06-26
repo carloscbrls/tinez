@@ -4,222 +4,248 @@ import Layout from "../layouts/Layout.astro";
 
 <Layout title="League Rules">
   <div class="mb-8">
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-600/20 via-orange-600/10 to-zinc-900 p-8 border border-amber-500/20">
-      <div class="relative z-10">
-        <h1 class="text-3xl font-bold tracking-tight">League Rules</h1>
-        <p class="mt-1 text-zinc-400">TINEZ LEAGUE · 2026 Season</p>
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">T</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">League Rules</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · 2026 Season</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="grid gap-6 lg:grid-cols-2">
+  <div class="grid gap-6 lg:grid-cols-2 stagger-children">
     <!-- League Basics -->
-    <div class="rounded-xl border border-zinc-800 p-5">
-      <h2 class="mb-3 text-lg font-semibold text-amber-400">League Basics</h2>
-      <dl class="space-y-2 text-sm">
-        <div class="flex justify-between">
+    <div class="glass-card rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📋</div>
+        <h2 class="text-lg font-bold text-amber-400">League Basics</h2>
+      </div>
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">League Name</dt>
-          <dd class="text-zinc-300">TINEZ LEAGUE</dd>
+          <dd class="text-zinc-200 font-semibold">TINEZ LEAGUE</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">League ID</dt>
-          <dd class="text-zinc-300">#103379</dd>
+          <dd class="text-zinc-200 font-mono">#103379</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Commissioner</dt>
-          <dd class="text-zinc-300">Carlitos (Frozen Fury)</dd>
+          <dd class="text-zinc-200 font-semibold">Carlitos (Frozen Fury)</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Scoring Type</dt>
-          <dd class="text-zinc-300">Head-to-Head</dd>
+          <dd class="text-zinc-200">Head-to-Head</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Max Teams</dt>
-          <dd class="text-zinc-300">14</dd>
+          <dd class="text-zinc-200">14</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Divisions</dt>
-          <dd class="text-zinc-300">2 Divisions</dd>
+          <dd class="text-zinc-200">2 Divisions</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Draft Type</dt>
-          <dd class="text-zinc-300">Offline Draft</dd>
+          <dd class="text-zinc-200">Offline Draft</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Keeper League</dt>
-          <dd class="text-zinc-300">Yes</dd>
+          <dd class="text-zinc-200"><span class="inline-flex items-center gap-1 text-emerald-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Yes</span></dd>
         </div>
       </dl>
     </div>
 
     <!-- Scoring -->
-    <div class="rounded-xl border border-zinc-800 p-5">
-      <h2 class="mb-3 text-lg font-semibold text-amber-400">Scoring</h2>
-      <dl class="space-y-2 text-sm">
-        <div class="flex justify-between">
+    <div class="glass-card rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📊</div>
+        <h2 class="text-lg font-bold text-amber-400">Scoring</h2>
+      </div>
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Fractional Points</dt>
-          <dd class="text-zinc-300">Yes</dd>
+          <dd class="text-zinc-200"><span class="text-emerald-400">✓</span></dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Negative Points</dt>
-          <dd class="text-zinc-300">Yes</dd>
+          <dd class="text-zinc-200"><span class="text-emerald-400">✓</span></dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Passing TD</dt>
-          <dd class="text-zinc-300">6 pts</dd>
+          <dd class="text-zinc-200 font-semibold">6 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Interceptions</dt>
-          <dd class="text-zinc-300">-3 pts</dd>
+          <dd class="text-zinc-200 font-semibold text-red-400">-3 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Receptions (PPR)</dt>
-          <dd class="text-zinc-300">0.5 pts</dd>
+          <dd class="text-zinc-200 font-semibold text-amber-400">0.5 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Rushing/Receiving TD</dt>
-          <dd class="text-zinc-300">6 pts</dd>
+          <dd class="text-zinc-200 font-semibold">6 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Return Yards</dt>
-          <dd class="text-zinc-300">25 yds/pt</dd>
+          <dd class="text-zinc-200">25 yds/pt</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">2-Point Conversion</dt>
-          <dd class="text-zinc-300">3 pts</dd>
+          <dd class="text-zinc-200 font-semibold">3 pts</dd>
         </div>
       </dl>
     </div>
 
     <!-- Roster -->
-    <div class="rounded-xl border border-zinc-800 p-5">
-      <h2 class="mb-3 text-lg font-semibold text-amber-400">Roster Positions</h2>
-      <div class="flex flex-wrap gap-2">
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">QB</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">WR ×3</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">RB ×2</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">TE</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">W/R/T</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">K</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">D</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">DB ×2</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">DL ×2</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">LB ×2</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">BN ×6</span>
-        <span class="rounded-lg bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">IR ×3</span>
+    <div class="glass-card rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">👥</div>
+        <h2 class="text-lg font-bold text-amber-400">Roster Positions</h2>
       </div>
-      <p class="mt-3 text-xs text-zinc-500">25 total roster spots · 16 starters · 6 bench · 3 IR</p>
+      <div class="flex flex-wrap gap-2">
+        <span class="position-badge position-badge-qb">QB</span>
+        <span class="position-badge position-badge-wr">WR ×3</span>
+        <span class="position-badge position-badge-rb">RB ×2</span>
+        <span class="position-badge position-badge-te">TE</span>
+        <span class="position-badge position-badge-wr">W/R/T</span>
+        <span class="position-badge position-badge-k">K</span>
+        <span class="position-badge position-badge-dst">D</span>
+        <span class="position-badge position-badge-dst">DB ×2</span>
+        <span class="position-badge position-badge-dst">DL ×2</span>
+        <span class="position-badge position-badge-dst">LB ×2</span>
+        <span class="rounded-lg bg-zinc-800/50 px-2.5 py-1 text-xs font-medium text-zinc-400 border border-zinc-700/30">BN ×6</span>
+        <span class="rounded-lg bg-zinc-800/50 px-2.5 py-1 text-xs font-medium text-zinc-400 border border-zinc-700/30">IR ×3</span>
+      </div>
+      <p class="mt-4 text-xs text-zinc-500">25 total roster spots · 16 starters · 6 bench · 3 IR</p>
     </div>
 
     <!-- Transactions -->
-    <div class="rounded-xl border border-zinc-800 p-5">
-      <h2 class="mb-3 text-lg font-semibold text-amber-400">Transactions</h2>
-      <dl class="space-y-2 text-sm">
-        <div class="flex justify-between">
+    <div class="glass-card rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">🔄</div>
+        <h2 class="text-lg font-bold text-amber-400">Transactions</h2>
+      </div>
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Max Acquisitions (Season)</dt>
-          <dd class="text-zinc-300">60</dd>
+          <dd class="text-zinc-200 font-semibold">60</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Max Acquisitions (Week)</dt>
-          <dd class="text-zinc-300">No max</dd>
+          <dd class="text-zinc-200">No max</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Max Trades (Season)</dt>
-          <dd class="text-zinc-300">No max</dd>
+          <dd class="text-zinc-200">No max</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Trade End Date</dt>
-          <dd class="text-zinc-300">Nov 28, 2026</dd>
+          <dd class="text-zinc-200">Nov 28, 2026</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Trade Review</dt>
-          <dd class="text-zinc-300">League Votes</dd>
+          <dd class="text-zinc-200">League Votes</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Trade Reject Time</dt>
-          <dd class="text-zinc-300">2 days</dd>
+          <dd class="text-zinc-200">2 days</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Waiver Type</dt>
-          <dd class="text-zinc-300">Continual rolling list</dd>
+          <dd class="text-zinc-200">Continual rolling list</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Post-Draft Players</dt>
-          <dd class="text-zinc-300">Free Agents</dd>
+          <dd class="text-zinc-200">Free Agents</dd>
         </div>
       </dl>
     </div>
 
     <!-- Playoffs -->
-    <div class="rounded-xl border border-zinc-800 p-5">
-      <h2 class="mb-3 text-lg font-semibold text-amber-400">Playoffs</h2>
-      <dl class="space-y-2 text-sm">
-        <div class="flex justify-between">
+    <div class="glass-card rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">🏆</div>
+        <h2 class="text-lg font-bold text-amber-400">Playoffs</h2>
+      </div>
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Teams</dt>
-          <dd class="text-zinc-300">8 teams</dd>
+          <dd class="text-zinc-200 font-semibold">8 teams</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Weeks</dt>
-          <dd class="text-zinc-300">15, 16, 17</dd>
+          <dd class="text-zinc-200">15, 16, 17</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Ends</dt>
-          <dd class="text-zinc-300">Monday, Jan 4</dd>
+          <dd class="text-zinc-200">Monday, Jan 4</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Seeding</dt>
-          <dd class="text-zinc-300">Division winners top seeds</dd>
+          <dd class="text-zinc-200">Division winners top seeds</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Tie-Breaker</dt>
-          <dd class="text-zinc-300">Best record vs opponent wins</dd>
+          <dd class="text-zinc-200">Best record vs opponent wins</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Reseeding</dt>
-          <dd class="text-zinc-300">No</dd>
+          <dd class="text-zinc-200">No</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Lock Eliminated Teams</dt>
-          <dd class="text-zinc-300">Yes</dd>
+          <dd class="text-zinc-200"><span class="text-emerald-400">✓</span></dd>
         </div>
       </dl>
     </div>
 
     <!-- Defensive Scoring -->
-    <div class="rounded-xl border border-zinc-800 p-5">
-      <h2 class="mb-3 text-lg font-semibold text-amber-400">Defensive Scoring</h2>
-      <dl class="space-y-2 text-sm">
-        <div class="flex justify-between">
+    <div class="glass-card rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">🛡️</div>
+        <h2 class="text-lg font-bold text-amber-400">Defensive Scoring</h2>
+      </div>
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Tackle Solo</dt>
-          <dd class="text-zinc-300">1.5 pts</dd>
+          <dd class="text-zinc-200 font-semibold">1.5 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Tackle Assist</dt>
-          <dd class="text-zinc-300">0.5 pts</dd>
+          <dd class="text-zinc-200">0.5 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Sack</dt>
-          <dd class="text-zinc-300">3 pts</dd>
+          <dd class="text-zinc-200 font-semibold">3 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Interception</dt>
-          <dd class="text-zinc-300">3 pts</dd>
+          <dd class="text-zinc-200 font-semibold">3 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Fumble Force/Recovery</dt>
-          <dd class="text-zinc-300">2 pts</dd>
+          <dd class="text-zinc-200">2 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Defensive TD</dt>
-          <dd class="text-zinc-300">6 pts</dd>
+          <dd class="text-zinc-200 font-semibold">6 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Safety</dt>
-          <dd class="text-zinc-300">3 pts</dd>
+          <dd class="text-zinc-200 font-semibold">3 pts</dd>
         </div>
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center rounded-lg bg-zinc-800/20 px-3 py-2">
           <dt class="text-zinc-500">Pass Defended</dt>
-          <dd class="text-zinc-300">1 pt</dd>
+          <dd class="text-zinc-200">1 pt</dd>
         </div>
       </dl>
     </div>

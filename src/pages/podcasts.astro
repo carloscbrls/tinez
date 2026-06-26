@@ -1,5 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { getNflTeamLogoUrl } from "../data/players";
+import { nflTeams } from "../data/nfl-teams";
 
 interface Podcast {
   name: string;
@@ -58,72 +60,51 @@ const fantasyPodcasts: Podcast[] = [
     platform: "Fantasy Footballers",
   },
 ];
-
-const nflTeamPodcasts = [
-  { team: "Arizona Cardinals", handle: "AZCardinals", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Atlanta Falcons", handle: "AtlantaFalcons", feed: "https://feeds.simplecast.com/4nAGX5dR" },
-  { team: "Baltimore Ravens", handle: "Ravens", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Buffalo Bills", handle: "BuffaloBills", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Carolina Panthers", handle: "Panthers", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Chicago Bears", handle: "ChicagoBears", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Cincinnati Bengals", handle: "Bengals", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Cleveland Browns", handle: "Browns", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Dallas Cowboys", handle: "dallascowboys", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Denver Broncos", handle: "Broncos", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Detroit Lions", handle: "Lions", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Green Bay Packers", handle: "packers", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Houston Texans", handle: "HoustonTexans", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Indianapolis Colts", handle: "Colts", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Jacksonville Jaguars", handle: "Jaguars", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Kansas City Chiefs", handle: "Chiefs", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Las Vegas Raiders", handle: "Raiders", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Los Angeles Chargers", handle: "chargers", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Los Angeles Rams", handle: "RamsNFL", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Miami Dolphins", handle: "MiamiDolphins", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Minnesota Vikings", handle: "Vikings", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "New England Patriots", handle: "Patriots", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "New Orleans Saints", handle: "Saints", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "New York Giants", handle: "Giants", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "New York Jets", handle: "nyjets", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Philadelphia Eagles", handle: "Eagles", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Pittsburgh Steelers", handle: "steelers", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "San Francisco 49ers", handle: "49ers", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Seattle Seahawks", handle: "Seahawks", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Tampa Bay Buccaneers", handle: "Buccaneers", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Tennessee Titans", handle: "Titans", feed: "https://feeds.simplecast.com/54nAGX5d" },
-  { team: "Washington Commanders", handle: "Commanders", feed: "https://feeds.simplecast.com/54nAGX5d" },
-];
 ---
 
 <Layout title="Fantasy Podcasts">
   <div class="mb-8">
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600/20 via-purple-600/10 to-zinc-900 p-8 border border-violet-500/20">
-      <div class="relative z-10">
-        <h1 class="text-3xl font-bold tracking-tight">Fantasy & NFL Podcasts</h1>
-        <p class="mt-1 text-zinc-400">Top fantasy football podcasts + team-specific shows</p>
+    <div class="relative overflow-hidden rounded-2xl border border-violet-500/20">
+      <div class="absolute inset-0 bg-gradient-to-br from-violet-600/10 via-purple-600/5 to-transparent animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 text-lg font-bold text-white shadow-lg shadow-violet-500/20">P</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Fantasy & NFL Podcasts</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">Top fantasy football podcasts + team-specific shows</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Fantasy Podcasts -->
   <div class="mb-8">
-    <h2 class="mb-4 text-xl font-semibold">🏆 Top Fantasy Football Podcasts</h2>
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">🎙️</span>
+      <h2 class="text-lg font-bold text-zinc-100">Top Fantasy Football Podcasts</h2>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
       {fantasyPodcasts.map(pod => (
         <a
           href={pod.url}
           target="_blank"
           rel="noopener noreferrer"
-          class="group rounded-xl border border-zinc-800 bg-zinc-900/30 p-4 hover:border-violet-500/30 hover:bg-zinc-900/50 transition-all"
+          class="glass-card rounded-xl p-5 group"
         >
           <div class="flex items-start gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-500/20 text-lg">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-lg border border-violet-500/20">
               🎙️
             </div>
             <div class="min-w-0">
-              <div class="font-medium text-sm group-hover:text-violet-400 transition-colors">{pod.name}</div>
-              <div class="mt-1 text-xs text-zinc-500 line-clamp-2">{pod.description}</div>
-              <div class="mt-2 text-xs text-zinc-600">{pod.platform}</div>
+              <div class="font-bold text-sm text-zinc-100 group-hover:text-violet-400 transition-colors">{pod.name}</div>
+              <div class="mt-1.5 text-xs text-zinc-500 line-clamp-2 leading-relaxed">{pod.description}</div>
+              <div class="mt-3 flex items-center gap-2">
+                <span class="text-xs text-zinc-600 bg-zinc-800/30 px-2 py-0.5 rounded-md">{pod.platform}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-600 group-hover:text-violet-400 transition-colors"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+              </div>
             </div>
           </div>
         </a>
@@ -132,15 +113,15 @@ const nflTeamPodcasts = [
   </div>
 
   <!-- League Podcast Placeholder -->
-  <div class="mb-8 rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-600/10 to-zinc-900 p-6">
+  <div class="mb-8 glass-card-accent rounded-xl p-6">
     <div class="flex items-center gap-3 mb-3">
-      <div class="text-2xl">🎧</div>
+      <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/15 text-2xl border border-amber-500/20">🎧</div>
       <div>
-        <h2 class="text-lg font-semibold text-amber-400">Tinez League Podcast</h2>
+        <h2 class="text-lg font-bold text-amber-400">Tinez League Podcast</h2>
         <p class="text-sm text-zinc-400">Coming soon · The #1 fantasy podcast for the Tinez League</p>
       </div>
     </div>
-    <p class="text-sm text-zinc-500">
+    <p class="text-sm text-zinc-500 leading-relaxed">
       When the league podcast launches, episodes will appear here with player spotlights, 
       weekly recaps, trade analysis, and championship predictions.
     </p>
@@ -148,20 +129,21 @@ const nflTeamPodcasts = [
 
   <!-- NFL Team Podcasts -->
   <div>
-    <h2 class="mb-4 text-xl font-semibold">🏈 NFL Team Podcasts</h2>
-    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-      {nflTeamPodcasts.map(pod => (
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">🏈</span>
+      <h2 class="text-lg font-bold text-zinc-100">NFL Team Podcasts</h2>
+    </div>
+    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+      {nflTeams.map(team => (
         <a
-          href={`https://x.com/${pod.handle}`}
+          href={`https://x.com/${team.xHandle}`}
           target="_blank"
           rel="noopener noreferrer"
-          class="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/30 p-2.5 hover:border-zinc-700 transition-all text-sm"
+          class="glass-card rounded-lg p-2.5 flex items-center gap-2.5 group"
         >
-          <span class="text-zinc-500">🎙️</span>
-          <span class="truncate font-medium">{pod.team}</span>
-          <svg class="ml-auto h-3 w-3 shrink-0 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
+          <img src={getNflTeamLogoUrl(team.shortName)} alt={team.name} class="h-6 w-6 object-contain shrink-0" loading="lazy" onerror="this.style.display='none'" />
+          <span class="truncate text-sm font-medium text-zinc-300 group-hover:text-amber-400 transition-colors">{team.name}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto shrink-0 text-zinc-600 group-hover:text-zinc-400 transition-colors"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
         </a>
       ))}
     </div>

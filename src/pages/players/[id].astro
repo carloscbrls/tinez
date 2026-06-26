@@ -1,0 +1,146 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { players, getPlayerById, getEspnHeadshotUrl, getNflTeamLogoUrl, getPositionColor } from "../../data/players";
+import { getNFLTeam } from "../../data/nfl-teams";
+export async function getStaticPaths() {
+  return players.map(p => ({
+    params: { id: String(p.id) },
+    props: { player: p },
+  }));
+}
+const { player } = Astro.props;
+const nflTeam = getNFLTeam(player.team);
+const posColor = getPositionColor(player.position);
+---
+
+<Layout title={`${player.name} | Players`}>
+  <a href="/players" class="mb-5 inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-all group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:-translate-x-0.5 transition-transform"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+    All Players
+  </a>
+
+  <!-- Player Hero -->
+  <div class="relative overflow-hidden rounded-2xl border mb-8" style={`border-color: ${posColor}40`}>
+    <div class="absolute inset-0 opacity-5" style={`background: linear-gradient(135deg, ${posColor}, transparent)`}></div>
+    <div class="relative z-10 p-6 md:p-8">
+      <div class="flex items-center gap-4 md:gap-6">
+        <!-- Headshot -->
+        <div class="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-zinc-800/50 overflow-hidden shrink-0 border-2" style={`border-color: ${posColor}40`}>
+          {player.espnId > 0 ? (
+            <img src={getEspnHeadshotUrl(player.espnId)} alt={player.name} class="h-full w-full object-cover" loading="lazy" onerror="this.style.display='none'" />
+          ) : (
+            <div class="h-full w-full flex items-center justify-center text-3xl font-bold" style={`color: ${posColor}`}>
+              {player.position === "DST" ? "🛡️" : "❓"}
+            </div>
+          )}
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-3 flex-wrap">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-zinc-100">{player.name}</h1>
+            <span class="position-badge" class:list={[`position-badge-${player.position.toLowerCase()}`]}>{player.position}</span>
+          </div>
+          <div class="flex items-center gap-3 mt-2">
+            {nflTeam ? (
+              <div class="flex items-center gap-2">
+                <img src={getNflTeamLogoUrl(nflTeam.shortName)} alt={nflTeam.name} class="h-6 w-6 object-contain" loading="lazy" onerror="this.style.display='none'" />
+                <span class="text-sm text-zinc-300 font-medium">{nflTeam.name}</span>
+              </div>
+            ) : (
+              <span class="text-sm text-zinc-400">{player.team}</span>
+            )}
+            {player.byeWeek && (
+              <>
+                <span class="text-zinc-600">·</span>
+                <span class="text-sm text-zinc-500">Bye: Week {player.byeWeek}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8 stagger-children">
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-3xl font-extrabold gradient-text">{player.position}</div>
+      <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">Position</div>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-3xl font-extrabold text-zinc-100">{player.team}</div>
+      <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">Team</div>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-3xl font-extrabold text-amber-400">{player.adp?.toFixed(1) || "—"}</div>
+      <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">ADP</div>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center">
+      <div class="text-3xl font-extrabold text-zinc-100">{player.byeWeek || "—"}</div>
+      <div class="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">Bye Week</div>
+    </div>
+  </div>
+
+  <!-- Player Details -->
+  <div class="glass-card-static rounded-xl p-6">
+    <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Player Details</h2>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-3">
+        <span class="text-sm text-zinc-500">Name</span>
+        <span class="text-sm font-semibold text-zinc-200">{player.name}</span>
+      </div>
+      <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-3">
+        <span class="text-sm text-zinc-500">Position</span>
+        <span class="position-badge" class:list={[`position-badge-${player.position.toLowerCase()}`]}>{player.position}</span>
+      </div>
+      <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-3">
+        <span class="text-sm text-zinc-500">Team</span>
+        <div class="flex items-center gap-2">
+          {nflTeam && (
+            <img src={getNflTeamLogoUrl(nflTeam.shortName)} alt={nflTeam.name} class="h-5 w-5 object-contain" loading="lazy" onerror="this.style.display='none'" />
+          )}
+          <span class="text-sm font-semibold text-zinc-200">{player.team}</span>
+        </div>
+      </div>
+      <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-3">
+        <span class="text-sm text-zinc-500">ESPN ID</span>
+        <span class="text-sm font-mono text-zinc-400">{player.espnId || "N/A"}</span>
+      </div>
+      <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-3">
+        <span class="text-sm text-zinc-500">ADP</span>
+        <span class="text-sm font-semibold text-amber-400">{player.adp?.toFixed(1) || "—"}</span>
+      </div>
+      <div class="flex items-center justify-between rounded-lg bg-zinc-800/20 px-4 py-3">
+        <span class="text-sm text-zinc-500">Bye Week</span>
+        <span class="text-sm font-semibold text-zinc-200">{player.byeWeek || "—"}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Players -->
+  <div class="mt-8">
+    <h2 class="text-lg font-bold text-zinc-100 mb-4">Other {player.position}s</h2>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 stagger-children">
+      {players
+        .filter(p => p.position === player.position && p.id !== player.id)
+        .slice(0, 8)
+        .map(p => (
+          <a href={`/players/${p.id}`} class="glass-card rounded-xl p-3 flex items-center gap-3 group">
+            <div class="h-12 w-12 rounded-lg bg-zinc-800/50 overflow-hidden shrink-0">
+              {p.espnId > 0 ? (
+                <img src={getEspnHeadshotUrl(p.espnId)} alt={p.name} class="h-full w-full object-cover" loading="lazy" onerror="this.style.display='none'" />
+              ) : (
+                <div class="h-full w-full flex items-center justify-center text-sm">❓</div>
+              )}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold text-sm text-zinc-100 group-hover:text-amber-400 transition-colors truncate">{p.name}</div>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="text-xs text-zinc-500">{p.team}</span>
+                {p.adp && <span class="text-xs text-zinc-600">· ADP {p.adp.toFixed(1)}</span>}
+              </div>
+            </div>
+          </a>
+        ))}
+    </div>
+  </div>
+</Layout>

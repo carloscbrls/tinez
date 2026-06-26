@@ -1,0 +1,123 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { players, getEspnHeadshotUrl, getNflTeamLogoUrl, getPositionColor } from "../../data/players";
+---
+
+<Layout title="Players">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">P</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Player Database</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">{players.length} fantasy-relevant players with headshots and stats</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Position Filter -->
+  <div class="mb-6 flex flex-wrap gap-2" id="position-filters">
+    <button data-pos="all" class="active-filter rounded-lg px-3.5 py-2 text-sm font-medium transition-all bg-amber-500/15 text-amber-400 border border-amber-500/30">All</button>
+    <button data-pos="QB" class="rounded-lg px-3.5 py-2 text-sm font-medium transition-all bg-zinc-800/50 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/50">QB</button>
+    <button data-pos="RB" class="rounded-lg px-3.5 py-2 text-sm font-medium transition-all bg-zinc-800/50 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/50">RB</button>
+    <button data-pos="WR" class="rounded-lg px-3.5 py-2 text-sm font-medium transition-all bg-zinc-800/50 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/50">WR</button>
+    <button data-pos="TE" class="rounded-lg px-3.5 py-2 text-sm font-medium transition-all bg-zinc-800/50 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/50">TE</button>
+    <button data-pos="K" class="rounded-lg px-3.5 py-2 text-sm font-medium transition-all bg-zinc-800/50 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/50">K</button>
+    <button data-pos="DST" class="rounded-lg px-3.5 py-2 text-sm font-medium transition-all bg-zinc-800/50 text-zinc-400 border border-zinc-700/30 hover:bg-zinc-700/50">DST</button>
+  </div>
+
+  <!-- Search -->
+  <div class="mb-6">
+    <div class="relative">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="player-search" placeholder="Search players..." class="w-full rounded-xl bg-zinc-900/50 border border-zinc-700/50 pl-10 pr-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500/30 focus:ring-1 focus:ring-amber-500/20 transition-all" />
+    </div>
+  </div>
+
+  <!-- Player Grid -->
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" id="player-grid">
+    {players.map(p => (
+      <a
+        href={`/players/${p.id}`}
+        class="player-card glass-card rounded-xl p-3.5 flex items-center gap-3 group"
+        data-pos={p.position}
+        data-name={p.name.toLowerCase()}
+      >
+        <div class="h-14 w-14 rounded-lg bg-zinc-800/50 overflow-hidden shrink-0">
+          {p.espnId > 0 ? (
+            <img src={getEspnHeadshotUrl(p.espnId)} alt={p.name} class="h-full w-full object-cover" loading="lazy" onerror="this.style.display='none'" />
+          ) : (
+            <div class="h-full w-full flex items-center justify-center text-lg font-bold" style={`color: ${getPositionColor(p.position)}`}>
+              {p.position === "DST" ? "🛡️" : "❓"}
+            </div>
+          )}
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="font-semibold text-sm text-zinc-100 group-hover:text-amber-400 transition-colors truncate">{p.name}</div>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="position-badge" class:list={[`position-badge-${p.position.toLowerCase()}`]}>{p.position}</span>
+            <span class="text-xs text-zinc-500">{p.team}</span>
+          </div>
+          {p.adp && (
+            <div class="mt-1 text-xs text-zinc-600">ADP: {p.adp.toFixed(1)}</div>
+          )}
+        </div>
+      </a>
+    ))}
+  </div>
+
+  <div id="no-results" class="hidden glass-card rounded-xl p-12 text-center mt-4">
+    <div class="text-4xl mb-3">🔍</div>
+    <p class="text-zinc-400">No players match your search.</p>
+    <p class="text-xs text-zinc-600 mt-1">Try a different position or search term.</p>
+  </div>
+
+  <script>
+    const filters = document.querySelectorAll('#position-filters button');
+    const searchInput = document.getElementById('player-search');
+    const cards = document.querySelectorAll('.player-card');
+    const noResults = document.getElementById('no-results');
+
+    function filterPlayers() {
+      const activePos = document.querySelector('#position-filters .active-filter')?.dataset.pos || 'all';
+      const query = (searchInput?.value || '').toLowerCase().trim();
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const pos = card.dataset.pos;
+        const name = card.dataset.name;
+        const posMatch = activePos === 'all' || pos === activePos;
+        const nameMatch = !query || name.includes(query);
+        const visible = posMatch && nameMatch;
+        card.style.display = visible ? '' : 'none';
+        if (visible) visibleCount++;
+      });
+
+      if (noResults) {
+        noResults.classList.toggle('hidden', visibleCount > 0);
+      }
+    }
+
+    filters.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filters.forEach(b => {
+          b.classList.remove('active-filter', 'bg-amber-500/15', 'text-amber-400', 'border-amber-500/30');
+          b.classList.add('bg-zinc-800/50', 'text-zinc-400', 'border-zinc-700/30');
+        });
+        btn.classList.remove('bg-zinc-800/50', 'text-zinc-400', 'border-zinc-700/30');
+        btn.classList.add('active-filter', 'bg-amber-500/15', 'text-amber-400', 'border-amber-500/30');
+        filterPlayers();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', filterPlayers);
+    }
+  </script>
+</Layout>

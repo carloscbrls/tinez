@@ -8,42 +8,112 @@ const { title, description } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title} | Tinez Fantasy Football</title>
-    <meta name="description" content={description || "Tinez Fantasy Football League - 16 team dedicated league website"} />
+    <meta name="description" content={description || "Tinez Fantasy Football League - 14 team dedicated league website"} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      html { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    </style>
   </head>
-  <body class="min-h-screen bg-zinc-950 text-zinc-100">
-    <nav class="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-50">
+  <body class="min-h-screen bg-[#09090b] text-zinc-100 antialiased">
+    <!-- Animated background orbs -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      <div class="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-amber-500/5 blur-[120px] animate-float"></div>
+      <div class="absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-orange-500/5 blur-[120px] animate-float" style="animation-delay: -3s"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-yellow-500/3 blur-[150px] animate-float" style="animation-delay: -1.5s"></div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="border-b border-zinc-800/60 bg-zinc-950/70 backdrop-blur-xl sticky top-0 z-50">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <a href="/" class="flex items-center gap-2 text-lg font-bold tracking-tight">
-          <span class="text-2xl">🏈</span>
-          <span class="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Tinez</span>
+        <a href="/" class="group flex items-center gap-2.5">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-sm font-bold text-white shadow-lg shadow-amber-500/20">T</span>
+          <span class="text-lg font-extrabold tracking-tight gradient-text">Tinez</span>
         </a>
-        <div class="flex items-center gap-4 text-sm">
-          <a href="/" class="text-zinc-400 hover:text-zinc-100 transition-colors">Standings</a>
-          <a href="/rules" class="text-zinc-400 hover:text-zinc-100 transition-colors">Rules</a>
-          <a href="/news" class="text-zinc-400 hover:text-zinc-100 transition-colors">News</a>
-          <a href="/schedules" class="text-zinc-400 hover:text-zinc-100 transition-colors">Schedules</a>
-          <a href="/teams" class="text-zinc-400 hover:text-zinc-100 transition-colors">Teams</a>
-          <a href="/draft" class="text-zinc-400 hover:text-zinc-100 transition-colors">Draft</a>
-          <a href="/x-feed" class="text-zinc-400 hover:text-zinc-100 transition-colors">X Feed</a>
-          <a href="/podcasts" class="text-zinc-400 hover:text-zinc-100 transition-colors">Podcasts</a>
+
+        <!-- Desktop nav -->
+        <div class="hidden md:flex items-center gap-1">
+          <a href="/" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Standings</a>
+          <a href="/players" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Players</a>
+          <a href="/teams" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Teams</a>
+          <a href="/rules" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Rules</a>
+          <a href="/news" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">News</a>
+          <a href="/schedules" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Schedules</a>
+          <a href="/draft" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Draft</a>
+          <a href="/x-feed" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">X Feed</a>
+          <a href="/podcasts" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Podcasts</a>
+        </div>
+
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-btn" class="md:hidden flex items-center justify-center h-9 w-9 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all" aria-label="Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Mobile nav -->
+      <div id="mobile-nav" class="md:hidden hidden border-t border-zinc-800/60 bg-zinc-950/95 backdrop-blur-xl px-4 py-3">
+        <div class="flex flex-col gap-1">
+          <a href="/" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Standings</a>
+          <a href="/players" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Players</a>
+          <a href="/teams" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Teams</a>
+          <a href="/rules" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Rules</a>
+          <a href="/news" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">News</a>
+          <a href="/schedules" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Schedules</a>
+          <a href="/draft" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Draft</a>
+          <a href="/x-feed" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">X Feed</a>
+          <a href="/podcasts" class="rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all">Podcasts</a>
         </div>
       </div>
     </nav>
-    <main class="mx-auto max-w-6xl px-4 py-6">
+
+    <main class="mx-auto max-w-6xl px-4 py-8 page-enter">
       <slot />
     </main>
-    <footer class="border-t border-zinc-800 py-6 text-center text-xs text-zinc-600">
-      TINEZ LEAGUE · 14 Teams · Keeper League · 0.5 PPR · Commissioner: Carlitos
+
+    <footer class="border-t border-zinc-800/40 mt-12">
+      <div class="mx-auto max-w-6xl px-4 py-8">
+        <div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+          <div class="flex items-center gap-2">
+            <span class="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-amber-400 to-orange-500 text-xs font-bold text-white">T</span>
+            <span class="text-sm font-semibold text-zinc-300">Tinez League</span>
+          </div>
+          <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-zinc-600">
+            <span>14 Teams</span>
+            <span>Keeper League</span>
+            <span>0.5 PPR</span>
+            <span>Commissioner: Carlitos</span>
+          </div>
+          <div class="text-xs text-zinc-700">
+            &copy; {new Date().getFullYear()} Tinez Fantasy Football
+          </div>
+        </div>
+      </div>
     </footer>
+
+    <script>
+      const btn = document.getElementById('mobile-menu-btn');
+      const nav = document.getElementById('mobile-nav');
+      if (btn && nav) {
+        btn.addEventListener('click', () => {
+          nav.classList.toggle('hidden');
+        });
+        // Close on link click
+        nav.querySelectorAll('a').forEach(a => {
+          a.addEventListener('click', () => nav.classList.add('hidden'));
+        });
+      }
+    </script>
   </body>
 </html>
 
 <style is:global>
   @import "tailwindcss";
+  @import "../styles/global.css";
 </style>

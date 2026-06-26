@@ -1,32 +1,63 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { teams } from "../../data/teams";
+import { getNflTeamLogoUrl } from "../../data/players";
+import { getNFLTeam } from "../../data/nfl-teams";
 ---
 
 <Layout title="Teams">
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold">Teams</h1>
-    <p class="mt-1 text-zinc-400">All 16 teams of the Tinez Fantasy Football League</p>
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">T</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">League Teams</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">All 14 teams of the Tinez Fantasy Football League</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    {teams.map(team => (
-      <a href={`/teams/${team.id}`} class="group rounded-xl border border-zinc-800 p-5 hover:border-zinc-700 transition-all hover:bg-zinc-900/50">
-        <div class="flex items-center gap-3">
-          <div class="h-12 w-12 rounded-xl flex items-center justify-center text-lg font-bold text-white" style={`background: ${team.primaryColor}`}>
-            {team.shortName}
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
+    {teams.map(team => {
+      const nfl = team.nflTeam ? getNFLTeam(team.nflTeam) : undefined;
+      return (
+        <a href={`/teams/${team.id}`} class="glass-card rounded-xl p-5 group">
+          <div class="flex items-center gap-3">
+            <div class="h-14 w-14 rounded-xl flex items-center justify-center text-lg font-bold text-white shrink-0 transition-transform group-hover:scale-110" style={`background: linear-gradient(135deg, ${team.primaryColor}, ${team.secondaryColor})`}>
+              {team.shortName}
+            </div>
+            <div class="min-w-0">
+              <div class="font-bold text-zinc-100 group-hover:text-amber-400 transition-colors truncate">{team.name}</div>
+              <div class="text-xs text-zinc-500">Owner: {team.owner}</div>
+            </div>
           </div>
-          <div>
-            <div class="font-semibold group-hover:text-amber-400 transition-colors">{team.name}</div>
-            <div class="text-xs text-zinc-500">{team.owner}</div>
+          <div class="mt-4 flex items-center justify-between">
+            <div class="flex items-center gap-3 text-xs">
+              <span class="inline-flex items-center gap-1 rounded-md bg-zinc-800/50 px-2 py-1 font-mono">
+                <span class="text-emerald-400 font-semibold">{team.wins}</span>
+                <span class="text-zinc-600">-</span>
+                <span class="text-red-400 font-semibold">{team.losses}</span>
+                <span class="text-zinc-600">-</span>
+                <span class="text-zinc-500">{team.ties}</span>
+              </span>
+              <span class="text-zinc-500 font-mono">{team.pointsFor.toFixed(1)} PF</span>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-600 group-hover:text-amber-400 transition-colors"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </div>
-        </div>
-        <div class="mt-3 flex items-center gap-3 text-xs text-zinc-500">
-          <span>{team.wins}-{team.losses}-{team.ties}</span>
-          <span>·</span>
-          <span>{team.pointsFor.toFixed(1)} PF</span>
-        </div>
-      </a>
-    ))}
+          {nfl && (
+            <div class="mt-3 pt-3 border-t border-zinc-800/40 flex items-center gap-2">
+              <img src={getNflTeamLogoUrl(nfl.shortName)} alt={nfl.name} class="h-5 w-5 object-contain" loading="lazy" onerror="this.style.display='none'" />
+              <span class="text-xs text-zinc-600">{nfl.name}</span>
+            </div>
+          )}
+        </a>
+      );
+    })}
   </div>
 </Layout>
