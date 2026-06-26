@@ -48,23 +48,11 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     return respond(302, "", "text/plain", authUrl);
   }
 
-  // Handle callback — GET or POST
-  if (path === "/callback" || path === "/callback/") {
-    const code = params.code;
+  // Handle ANY callback path — catch trailing slash, different paths, etc.
+  const code = params.code;
 
-    if (!code) {
-      return respond(400, JSON.stringify({
-        error: "Missing authorization code",
-        method: httpMethod,
-        rawPath,
-        path,
-        rawQuery,
-        params,
-        body: event.body,
-        timestamp: new Date().toISOString(),
-      }), "application/json");
-    }
-
+  if (code) {
+    // We have a code! Exchange it for a token
     const tokenBody = new URLSearchParams({
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
