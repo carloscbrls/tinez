@@ -12,6 +12,7 @@ export interface Champion {
 
 // TINEZ LEAGUE All-Time Champions — 12 seasons (2014-2025)
 // Source: Yahoo Fantasy Football League ID #103379 All-Time Standings
+// Note: Constitution Article XIV says 2023-2025 all DatDudeVic (different from Yahoo all-time view)
 export const champions: Champion[] = [
   {
     year: 2025,
@@ -172,15 +173,10 @@ export function getChampionCounts(): { owner: string; wins: number; runnerUps: n
   const counts: Record<string, { wins: number; runnerUps: number; thirds: number }> = {};
   
   champions.forEach(c => {
-    // Champion
     if (!counts[c.championOwner]) counts[c.championOwner] = { wins: 0, runnerUps: 0, thirds: 0 };
     counts[c.championOwner].wins++;
-    
-    // Runner up
     if (!counts[c.runnerUpOwner]) counts[c.runnerUpOwner] = { wins: 0, runnerUps: 0, thirds: 0 };
     counts[c.runnerUpOwner].runnerUps++;
-    
-    // Third place
     if (!counts[c.thirdPlaceOwner]) counts[c.thirdPlaceOwner] = { wins: 0, runnerUps: 0, thirds: 0 };
     counts[c.thirdPlaceOwner].thirds++;
   });
