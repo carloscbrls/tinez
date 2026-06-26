@@ -1,0 +1,208 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { fetchRosters, fetchUsers, fetchAllMatchups, fetchAllTransactions, LEAGUE_CONFIG } from "../data/sleeper-api";
+import { teams } from "../data/teams";
+
+const [rosters, users, matchupsByWeek, transactions] = await Promise.all([
+  fetchRosters(),
+  fetchUsers(),
+  fetchAllMatchups(1, 18),
+  fetchAllTransactions(1, 18),
+]);
+
+const userMap = new Map(users.map(u => [u.user_id, u]));
+const teamNameMap = new Map(rosters.map(r => {
+  const user = userMap.get(r.owner_id);
+  return [r.roster_id, user?.metadata?.team_name || user?.display_name || `Team ${r.roster_id}`];
+}));
+
+// Build standings
+const standings = rosters
+  .map(r => ({
+    rosterId: r.roster_id,
+    name: teamNameMap.get(r.roster_id) || `Team ${r.roster_id}`,
+    wins: r.settings.wins,
+    losses: r.settings.losses,
+    pf: r.settings.fpts,
+    pa: r.settings.fpts_decimal ? r.settings.fpts_decimal : 0,
+  }))
+  .sort((a, b) => b.wins - a.wins || b.pf - a.pf);
+
+// Process each week
+const weekRecaps: { week: number; matchups: any[]; topScore: any; blowout: any; closeGame: any; transactions: number }[] = [];
+
+for (const [week, m] of matchupsByWeek) {
+  if (week > 18) continue;
+  
+  const grouped = new Map<number, any[]>();
+  for (const matchup of m) {
+    if (!grouped.has(matchup.matchup_id)) grouped.set(matchup.matchup_id, []);
+    grouped.get(matchup.matchup_id)!.push(matchup);
+  }
+
+  const matchups = Array.from(grouped.values())
+    .filter(g => g.length >= 2)
+    .map(g => {
+      const [t1, t2] = g.sort((a, b) => b.points - a.points);
+      return {
+        winner: { name: teamNameMap.get(t1.roster_id) || `Team ${t1.roster_id}`, points: t1.points, rosterId: t1.roster_id },
+        loser: { name: teamNameMap.get(t2.roster_id) || `Team ${t2.roster_id}`, points: t2.points, rosterId: t2.roster_id },
+        spread: Math.abs(t1.points - t2.points),
+        total: t1.points + t2.points,
+      };
+    });
+
+  if (matchups.length === 0) continue;
+
+  const topScore = [...matchups].sort((a, b) => b.winner.points - a.winner.points)[0];
+  const blowout = [...matchups].sort((a, b) => b.spread - a.spread)[0];
+  const closeGame = [...matchups].sort((a, b) => a.spread - b.spread)[0];
+  const weekTxns = transactions.filter(t => {
+    const tWeek = parseInt(t.week || "0");
+    return tWeek === week;
+  }).length;
+
+  weekRecaps.push({ week, matchups, topScore, blowout, closeGame, transactions: weekTxns });
+}
+
+// Sort by week descending
+weekRecaps.sort((a, b) => b.week - a.week);
+const latestWeek = weekRecaps[0];
+---
+
+<Layout title="Recaps">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">📰</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Weekly Recaps</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · {LEAGUE_CONFIG.season} Season · Auto-Generated</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Week Navigation -->
+  <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+    {weekRecaps.map(w => (
+      <a href={`#week-${w.week}`} class="flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all" class:list={[
+        w.week === latestWeek?.week ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+        'bg-zinc-800/30 text-zinc-400 hover:bg-zinc-800/50 border border-zinc-800/30'
+      ]}>
+        Week {w.week}
+        {w.week === latestWeek?.week && <span class="ml-1">🔥</span>}
+      </a>
+    ))}
+  </div>
+
+  {weekRecaps.map(w => (
+    <div id={`week-${w.week}`} class="mb-8">
+      <!-- Week Header -->
+      <div class="glass-card-accent rounded-xl p-5 mb-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-zinc-100">Week {w.week} Recap</h2>
+            <p class="text-xs text-zinc-500">{w.matchups.length} matchups · {w.transactions} transactions</p>
+          </div>
+          <div class="flex gap-2">
+            <span class="rounded-full bg-zinc-800 px-2.5 py-0.5 text-[10px] text-zinc-400">Auto-generated</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Highlights -->
+      <div class="grid gap-3 sm:grid-cols-3 mb-4">
+        <div class="glass-card rounded-xl p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-lg">🔥</span>
+            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Top Score</span>
+          </div>
+          <div class="text-lg font-bold text-emerald-400">{w.topScore.winner.points.toFixed(1)}</div>
+          <div class="text-sm text-zinc-300">{w.topScore.winner.name}</div>
+          <div class="text-[10px] text-zinc-600">Defeated {w.topScore.loser.name} ({w.topScore.loser.points.toFixed(1)})</div>
+        </div>
+        <div class="glass-card rounded-xl p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-lg">💀</span>
+            <span class="text-xs font-bold text-red-400 uppercase tracking-wider">Biggest Blowout</span>
+          </div>
+          <div class="text-lg font-bold text-red-400">{w.blowout.spread.toFixed(1)}</div>
+          <div class="text-sm text-zinc-300">{w.blowout.winner.name}</div>
+          <div class="text-[10px] text-zinc-600">Over {w.blowout.loser.name}</div>
+        </div>
+        <div class="glass-card rounded-xl p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-lg">⚖️</span>
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Closest Game</span>
+          </div>
+          <div class="text-lg font-bold text-zinc-300">{w.closeGame.spread.toFixed(1)}</div>
+          <div class="text-sm text-zinc-300">{w.closeGame.winner.name}</div>
+          <div class="text-[10px] text-zinc-600">Over {w.closeGame.loser.name} ({w.closeGame.loser.points.toFixed(1)})</div>
+        </div>
+      </div>
+
+      <!-- All Matchups -->
+      <div class="glass-card-static rounded-xl overflow-x-auto">
+        <table class="premium-table">
+          <thead>
+            <tr>
+              <th>Winner</th>
+              <th class="text-center">Score</th>
+              <th></th>
+              <th class="text-center">Score</th>
+              <th>Loser</th>
+            </tr>
+          </thead>
+          <tbody>
+            {w.matchups.map(m => (
+              <tr class="hover:bg-zinc-800/30 transition-colors">
+                <td>
+                  <span class="text-sm font-semibold text-emerald-400">{m.winner.name}</span>
+                </td>
+                <td class="text-center font-mono text-sm font-bold text-emerald-400">{m.winner.points.toFixed(1)}</td>
+                <td class="text-center text-xs text-zinc-600">vs</td>
+                <td class="text-center font-mono text-sm text-zinc-500">{m.loser.points.toFixed(1)}</td>
+                <td class="text-right">
+                  <span class="text-sm text-zinc-400">{m.loser.name}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ))}
+
+  <!-- Season Summary -->
+  <div class="glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">📊</span>
+      <h2 class="text-lg font-bold text-zinc-100">Season Summary</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
+        <div class="text-2xl font-bold text-amber-400">{weekRecaps.length}</div>
+        <div class="text-xs text-zinc-500">Weeks Completed</div>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
+        <div class="text-2xl font-bold text-amber-400">{standings[0]?.name || "—"}</div>
+        <div class="text-xs text-zinc-500">Current Leader</div>
+        <div class="text-[10px] text-zinc-600">{standings[0]?.wins}-{standings[0]?.losses}</div>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
+        <div class="text-2xl font-bold text-amber-400">{standings[0]?.pf.toFixed(0) || "—"}</div>
+        <div class="text-xs text-zinc-500">Most Points For</div>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4 text-center">
+        <div class="text-2xl font-bold text-amber-400">{transactions.length}</div>
+        <div class="text-xs text-zinc-500">Total Transactions</div>
+      </div>
+    </div>
+  </div>
+</Layout>

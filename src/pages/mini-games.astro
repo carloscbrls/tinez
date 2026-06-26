@@ -1,0 +1,230 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { fetchRosters, fetchUsers, LEAGUE_CONFIG } from "../data/sleeper-api";
+
+const [rosters, users] = await Promise.all([
+  fetchRosters(),
+  fetchUsers(),
+]);
+
+const userMap = new Map(users.map(u => [u.user_id, u]));
+const teamCount = rosters.length;
+---
+
+<Layout title="Mini Games">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">🎮</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Mini Games</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Side Games & Challenges</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Survivor -->
+  <div class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 text-xl font-bold text-white shadow-lg shadow-red-500/20">S</div>
+      <div>
+        <h2 class="text-lg font-bold text-zinc-100">Survivor Pool</h2>
+        <p class="text-xs text-zinc-500">Pick one NFL team to win each week. Can't pick the same team twice. Last one standing wins.</p>
+      </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-amber-400 mb-2">How It Works</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• Each week, pick <strong class="text-zinc-200">1 NFL team</strong> to win their game</li>
+          <li>• You <strong class="text-red-400">cannot</strong> pick the same team twice all season</li>
+          <li>• If your pick loses, you're <strong class="text-red-400">eliminated</strong></li>
+          <li>• Last team standing wins the pot</li>
+          <li>• If multiple survive all 18 weeks, they split the pot</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2">Rules</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• <strong class="text-zinc-200">Buy-in:</strong> $20 per entry (optional)</li>
+          <li>• <strong class="text-zinc-200">Deadline:</strong> Before kickoff of first game each week</li>
+          <li>• <strong class="text-zinc-200">No re-picks:</strong> Once eliminated, you're out</li>
+          <li>• <strong class="text-zinc-200">Tiebreaker:</strong> Total points scored by your picks</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pick'em -->
+  <div class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-xl font-bold text-white shadow-lg shadow-blue-500/20">P</div>
+      <div>
+        <h2 class="text-lg font-bold text-zinc-100">Weekly Pick'em</h2>
+        <p class="text-xs text-zinc-500">Pick winners for every NFL game each week. Most correct picks wins.</p>
+      </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-amber-400 mb-2">How It Works</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• Pick the winner of <strong class="text-zinc-200">every NFL game</strong> each week</li>
+          <li>• <strong class="text-zinc-200">Straight up</strong> picks (no spread)</li>
+          <li>• <strong class="text-zinc-200">Confidence points</strong> optional: rank picks by confidence</li>
+          <li>• Most correct picks wins the week</li>
+          <li>• Season-long leaderboard for overall champion</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2">Scoring</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• <strong class="text-zinc-200">1 point</strong> per correct pick</li>
+          <li>• <strong class="text-zinc-200">Weekly winner:</strong> Most correct picks</li>
+          <li>• <strong class="text-zinc-200">Season winner:</strong> Most cumulative correct picks</li>
+          <li>• <strong class="text-zinc-200">Tiebreaker:</strong> Monday night game total score</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trivia -->
+  <div class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-xl font-bold text-white shadow-lg shadow-purple-500/20">T</div>
+      <div>
+        <h2 class="text-lg font-bold text-zinc-100">League Trivia</h2>
+        <p class="text-xs text-zinc-500">Test your knowledge of TINEZ LEAGUE history. Weekly questions about past seasons.</p>
+      </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-amber-400 mb-2">How It Works</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• <strong class="text-zinc-200">5 questions</strong> posted each week in the group chat</li>
+          <li>• Questions about league history, past champions, records</li>
+          <li>• First correct answer gets <strong class="text-zinc-200">3 points</strong></li>
+          <li>• Second correct gets <strong class="text-zinc-200">2 points</strong></li>
+          <li>• All others get <strong class="text-zinc-200">1 point</strong></li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2">Sample Questions</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• "Who has the most career wins in TINEZ history?"</li>
+          <li>• "Which team scored the most points in a single season?"</li>
+          <li>• "How many times has Carlitos won the championship?"</li>
+          <li>• "What was the highest scoring matchup ever?"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hot Potato -->
+  <div class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 text-xl font-bold text-white shadow-lg shadow-green-500/20">H</div>
+      <div>
+        <h2 class="text-lg font-bold text-zinc-100">Hot Potato</h2>
+        <p class="text-xs text-zinc-500">A player gets passed around the league. The team holding them at the end of the week gets penalized.</p>
+      </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-amber-400 mb-2">How It Works</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• A random <strong class="text-zinc-200">mediocre player</strong> is selected each week</li>
+          <li>• The player gets "passed" to another team each day</li>
+          <li>• The team holding the player at <strong class="text-zinc-200">Sunday kickoff</strong> gets a penalty</li>
+          <li>• Penalty: Player's points are <strong class="text-red-400">subtracted</strong> from your weekly score</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2">Penalty</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• The hot potato player's <strong class="text-zinc-200">actual weekly points</strong> are deducted</li>
+          <li>• If the player scores 0, no penalty</li>
+          <li>• If the player scores 15, you lose 15 points</li>
+          <li>• Adds chaos and strategy to waiver wire decisions</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hammer -->
+  <div class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-yellow-500 to-amber-500 text-xl font-bold text-white shadow-lg shadow-yellow-500/20">🔨</div>
+      <div>
+        <h2 class="text-lg font-bold text-zinc-100">The Hammer</h2>
+        <p class="text-xs text-zinc-500">Each team gets one "hammer" per season — double or nothing on a matchup.</p>
+      </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-amber-400 mb-2">How It Works</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• Each team gets <strong class="text-zinc-200">1 hammer</strong> per season</li>
+          <li>• Before any matchup, declare you're using the hammer</li>
+          <li>• If you <strong class="text-emerald-400">win</strong>: Counts as 2 wins</li>
+          <li>• If you <strong class="text-red-400">lose</strong>: Counts as 2 losses</li>
+          <li>• Must be declared before Sunday kickoff</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2">Strategy</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• Use it when you're <strong class="text-zinc-200">confident</strong> in your matchup</li>
+          <li>• Save it for a <strong class="text-zinc-200">must-win</strong> week</li>
+          <li>• Can be a game-changer for playoff positioning</li>
+          <li>• Risk: A bad week counts double against you</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- League Challenges -->
+  <div class="glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">🏅</span>
+      <h2 class="text-lg font-bold text-zinc-100">Season-Long Challenges</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <div class="text-2xl mb-1">🔥</div>
+        <h3 class="text-sm font-bold text-amber-400 mb-1">Longest Win Streak</h3>
+        <p class="text-xs text-zinc-500">Most consecutive wins in a single season. Bragging rights for the hottest team.</p>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <div class="text-2xl mb-1">💀</div>
+        <h3 class="text-sm font-bold text-red-400 mb-1">Biggest Blowout</h3>
+        <p class="text-xs text-zinc-500">Largest margin of victory in a single matchup. The winner gets bragging rights all season.</p>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <div class="text-2xl mb-1">📈</div>
+        <h3 class="text-sm font-bold text-emerald-400 mb-1">Biggest Comeback</h3>
+        <p class="text-xs text-zinc-500">Largest point deficit overcome to win. The ultimate Monday night miracle.</p>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <div class="text-2xl mb-1">🎯</div>
+        <h3 class="text-sm font-bold text-blue-400 mb-1">Highest Score</h3>
+        <p class="text-xs text-zinc-500">Most points in a single week. The weekly high score already pays $25.</p>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <div class="text-2xl mb-1">🔄</div>
+        <h3 class="text-sm font-bold text-purple-400 mb-1">Most Transactions</h3>
+        <p class="text-xs text-zinc-500">Most waiver claims and trades. The tinkerer's trophy.</p>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <div class="text-2xl mb-1">🍀</div>
+        <h3 class="text-sm font-bold text-zinc-400 mb-1">Luckiest Win</h3>
+        <p class="text-xs text-zinc-500">Lowest winning score of the season. Sometimes it's better to be lucky than good.</p>
+      </div>
+    </div>
+  </div>
+</Layout>
