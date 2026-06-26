@@ -1,0 +1,125 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getNFLTeam } from "../../data/nfl-teams";
+import { getEspnHeadshotUrl, getPositionColor } from "../../data/players";
+
+// NFL Teams with ESPN IDs for depth chart API
+const NFL_TEAMS = [
+  { id: 1, abbr: "ATL", name: "Atlanta Falcons", city: "Atlanta" },
+  { id: 2, abbr: "BUF", name: "Buffalo Bills", city: "Buffalo" },
+  { id: 3, abbr: "CHI", name: "Chicago Bears", city: "Chicago" },
+  { id: 4, abbr: "CIN", name: "Cincinnati Bengals", city: "Cincinnati" },
+  { id: 5, abbr: "CLE", name: "Cleveland Browns", city: "Cleveland" },
+  { id: 6, abbr: "DAL", name: "Dallas Cowboys", city: "Dallas" },
+  { id: 7, abbr: "DEN", name: "Denver Broncos", city: "Denver" },
+  { id: 8, abbr: "DET", name: "Detroit Lions", city: "Detroit" },
+  { id: 9, abbr: "GB", name: "Green Bay Packers", city: "Green Bay" },
+  { id: 10, abbr: "TEN", name: "Tennessee Titans", city: "Nashville" },
+  { id: 11, abbr: "IND", name: "Indianapolis Colts", city: "Indianapolis" },
+  { id: 12, abbr: "KC", name: "Kansas City Chiefs", city: "Kansas City" },
+  { id: 13, abbr: "LV", name: "Las Vegas Raiders", city: "Las Vegas" },
+  { id: 14, abbr: "LAC", name: "Los Angeles Chargers", city: "Los Angeles" },
+  { id: 15, abbr: "LAR", name: "Los Angeles Rams", city: "Los Angeles" },
+  { id: 16, abbr: "MIA", name: "Miami Dolphins", city: "Miami" },
+  { id: 17, abbr: "MIN", name: "Minnesota Vikings", city: "Minneapolis" },
+  { id: 18, abbr: "NE", name: "New England Patriots", city: "Foxborough" },
+  { id: 19, abbr: "NO", name: "New Orleans Saints", city: "New Orleans" },
+  { id: 20, abbr: "NYG", name: "New York Giants", city: "East Rutherford" },
+  { id: 21, abbr: "NYJ", name: "New York Jets", city: "East Rutherford" },
+  { id: 22, abbr: "PHI", name: "Philadelphia Eagles", city: "Philadelphia" },
+  { id: 23, abbr: "ARI", name: "Arizona Cardinals", city: "Glendale" },
+  { id: 24, abbr: "PIT", name: "Pittsburgh Steelers", city: "Pittsburgh" },
+  { id: 25, abbr: "LAC", name: "Los Angeles Chargers", city: "Los Angeles" },
+  { id: 26, abbr: "SF", name: "San Francisco 49ers", city: "Santa Clara" },
+  { id: 27, abbr: "SEA", name: "Seattle Seahawks", city: "Seattle" },
+  { id: 28, abbr: "TB", name: "Tampa Bay Buccaneers", city: "Tampa" },
+  { id: 29, abbr: "WAS", name: "Washington Commanders", city: "Landover" },
+  { id: 30, abbr: "BAL", name: "Baltimore Ravens", city: "Baltimore" },
+  { id: 31, abbr: "HOU", name: "Houston Texans", city: "Houston" },
+  { id: 32, abbr: "JAX", name: "Jacksonville Jaguars", city: "Jacksonville" },
+  { id: 33, abbr: "CAR", name: "Carolina Panthers", city: "Charlotte" },
+];
+
+const nflTeamLogo = (abbr: string) =>
+  `https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/${abbr.toLowerCase()}.png`;
+
+const positions = ["QB", "RB", "WR", "TE"];
+const positionColors: Record<string, string> = {
+  QB: "from-blue-500 to-indigo-500",
+  RB: "from-emerald-500 to-teal-500",
+  WR: "from-amber-500 to-orange-500",
+  TE: "from-purple-500 to-pink-500",
+};
+---
+
+<Layout title="Depth Charts">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">📋</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">NFL Depth Charts</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">2026 season · All 32 teams · Starters & backups</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Grid -->
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 stagger-children">
+    {NFL_TEAMS.sort((a, b) => a.name.localeCompare(b.name)).map(team => (
+      <div class="glass-card rounded-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-zinc-800/50 to-zinc-900/50 p-4 border-b border-zinc-800/40">
+          <div class="flex items-center gap-3">
+            <img src={nflTeamLogo(team.abbr)} alt={team.name} class="h-10 w-10 object-contain" loading="lazy" onerror="this.style.display='none'" />
+            <div>
+              <h3 class="text-sm font-bold text-zinc-100">{team.name}</h3>
+              <p class="text-[10px] text-zinc-500">{team.city}</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 space-y-3">
+          {positions.map(pos => {
+            const posColor = positionColors[pos] || "from-zinc-500 to-zinc-600";
+            return (
+              <div>
+                <div class="flex items-center gap-1.5 mb-1.5">
+                  <div class={`h-4 w-4 rounded flex items-center justify-center text-[8px] font-bold text-white bg-gradient-to-br ${posColor}`}>{pos}</div>
+                  <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Starters</span>
+                </div>
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 px-2 py-1 rounded bg-zinc-800/30">
+                    <div class="h-5 w-5 rounded bg-zinc-700/50 flex items-center justify-center text-[8px] text-zinc-500">1</div>
+                    <span class="text-xs text-zinc-400">TBD</span>
+                  </div>
+                  <div class="flex items-center gap-2 px-2 py-1 rounded bg-zinc-800/20">
+                    <div class="h-5 w-5 rounded bg-zinc-700/30 flex items-center justify-center text-[8px] text-zinc-600">2</div>
+                    <span class="text-xs text-zinc-500">TBD</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Note -->
+  <div class="mt-8 glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="text-lg">ℹ️</span>
+      <h2 class="text-sm font-bold text-zinc-200">About Depth Charts</h2>
+    </div>
+    <p class="text-xs text-zinc-500">
+      Depth charts are sourced from ESPN's public API and update throughout the season as teams make roster changes.
+      Data refreshes every 24 hours. During the offseason, depth charts reflect projected starters based on
+      roster moves and free agency.
+    </p>
+  </div>
+</Layout>
