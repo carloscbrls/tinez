@@ -13,7 +13,7 @@ export interface NFLGame {
 
 export async function fetchNFLSchedule(week: number = 1): Promise<NFLGame[]> {
   const res = await fetch(
-    `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2025&seasontype=2&week=${week}`
+    `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2026&seasontype=2&week=${week}`
   );
   if (!res.ok) throw new Error(`ESPN API error: ${res.status}`);
   const data = await res.json();
