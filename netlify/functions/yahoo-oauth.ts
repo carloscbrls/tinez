@@ -1,7 +1,7 @@
 import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
 
 const CLIENT_ID = "dj0yJmk9WHBRT3hndWh0NDAxJmQ9WVdrOWVEZExWbkZuY0hZbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PWVk";
-const CLIENT_SECRET = "6558133c494c1826bba17ece74da9df4ec289696";
+const CLIENT_SECRET = "***";
 const REDIRECT_URI = "https://tinez.netlify.app/api/yahoo/callback";
 const AUTH_URL = "https://api.login.yahoo.com/oauth2/request_auth";
 const TOKEN_URL = "https://api.login.yahoo.com/oauth2/get_token";
@@ -18,12 +18,25 @@ function respond(statusCode: number, body: string, contentType: string, location
 }
 
 export const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
-  const path = event.path.replace(/\/\.netlify\/functions\/yahoo-oauth/, "").replace(/\/api\/yahoo/, "");
+  const rawPath = event.path;
+  const path = rawPath.replace(/\/\.netlify\/functions\/yahoo-oauth/, "").replace(/\/api\/yahoo/, "");
   const params = event.queryStringParameters || {};
+  const rawQuery = event.rawQuery || "";
+
+  // GET /api/yahoo/debug — show what Yahoo sent us
+  if (path === "/debug" || path === "/debug/") {
+    return respond(200, JSON.stringify({
+      rawPath,
+      path,
+      rawQuery,
+      params,
+      headers: Object.fromEntries(event.headers.entries?.() || []),
+    }, null, 2), "application/json");
+  }
 
   // GET /api/yahoo/login — redirect to Yahoo OAuth
   if (path === "/login" || path === "/login/") {
-    const authUrl = `${AUTH_URL}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=fspt-r`;
+    const authUrl = `${AUTH_URL}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=fspt-r`;
     return respond(302, "", "text/plain", authUrl);
   }
 
@@ -31,7 +44,13 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   if (path === "/callback" || path === "/callback/") {
     const code = params.code;
     if (!code) {
-      return respond(400, "Missing authorization code", "text/plain");
+      return respond(400, JSON.stringify({
+        error: "Missing authorization code",
+        rawPath,
+        path,
+        rawQuery,
+        params,
+      }), "application/json");
     }
 
     const body = new URLSearchParams({
@@ -114,6 +133,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       leagues: "/api/yahoo/leagues",
       standings: "/api/yahoo/standings?league_key=...",
       status: "/api/yahoo/status",
+      debug: "/api/yahoo/debug",
     },
   }), "application/json");
 };
