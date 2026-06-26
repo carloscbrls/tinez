@@ -3,6 +3,11 @@
   publish = "dist"
 
 [[redirects]]
-  from = "/*"
-  to = "/404"
-  status = 404
+  from = "/api/yahoo/*"
+  to = "/.netlify/functions/yahoo-oauth/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/yahoo"
+  to = "/.netlify/functions/yahoo-oauth"
+  status = 200
