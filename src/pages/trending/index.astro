@@ -1,0 +1,209 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import {
+  getTrendingWithMeta,
+  getTrendingDropsWithMeta,
+  getEspnHeadshotUrl,
+  getNflTeamLogo,
+} from "../../data/sleeper-stats";
+import { getValueLabel, getValueColor, getValueBg } from "../../data/leaguelogs";
+
+const [trendingAdds, trendingDrops] = await Promise.all([
+  getTrendingWithMeta(30),
+  getTrendingDropsWithMeta(30),
+]);
+---
+
+<Layout title="Trending Players">
+  <!-- Hero -->
+  <div class="mb-6 md:mb-10">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/5 via-transparent to-transparent"></div>
+      <div class="relative z-10 p-5 md:p-10">
+        <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+          <div class="flex h-12 w-12 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-xl md:text-2xl shadow-lg shadow-amber-500/20">📈</div>
+          <div class="flex-1 min-w-0">
+            <h1 class="text-xl md:text-4xl font-extrabold tracking-tight mb-0.5 md:mb-1">
+              <span class="text-amber-300" style="background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Trending Players</span>
+            </h1>
+            <p class="text-zinc-400 text-xs md:text-base">Waiver wire intel · Most added & dropped · Updates every 30 min</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-[10px] md:text-[11px] text-zinc-500 font-mono">LIVE</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-1.5 md:gap-2 mb-4 md:mb-6 border-b border-zinc-800/40 pb-3 md:pb-4">
+    <button class="trend-tab active px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-[10px] md:text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" data-tab="adds">🔥 Most Added</button>
+    <button class="trend-tab px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-[10px] md:text-xs font-semibold text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30 border border-transparent" data-tab="drops">❄️ Most Dropped</button>
+  </div>
+
+  <!-- Most Added -->
+  <div class="trend-section" data-tab="adds">
+    <div class="flex items-center gap-2 mb-3 md:mb-4">
+      <span class="text-sm md:text-lg">🔥</span>
+      <h2 class="text-[10px] md:text-sm font-bold text-zinc-200 uppercase tracking-wider">Most Added</h2>
+      <span class="text-[9px] md:text-[10px] text-zinc-600">({trendingAdds.length} players)</span>
+    </div>
+    <div class="rounded-xl border border-zinc-800/40 bg-zinc-900/30 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-zinc-800/40">
+              <th class="text-left px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">#</th>
+              <th class="text-left px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Player</th>
+              <th class="text-center px-1 md:px-3 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Pos</th>
+              <th class="text-center px-1 md:px-3 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Team</th>
+              <th class="text-right px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Adds</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-800/20">
+            {trendingAdds.map((p, i) => {
+              const headshot = getEspnHeadshotUrl(p.espn_id);
+              const teamLogo = getNflTeamLogo(p.team);
+              const isEven = i % 2 === 0;
+              return (
+                <tr class={`transition-colors hover:bg-zinc-800/30 ${isEven ? 'bg-zinc-900/20' : 'bg-transparent'}`}>
+                  <td class="px-2 md:px-4 py-1.5 md:py-2.5">
+                    <span class="text-[10px] md:text-xs font-mono text-zinc-500">{i + 1}</span>
+                  </td>
+                  <td class="px-2 md:px-4 py-1.5 md:py-2.5">
+                    <div class="flex items-center gap-2 md:gap-3">
+                      {headshot ? (
+                        <img src={headshot} alt={p.name} class="h-7 w-7 md:h-9 md:w-9 rounded-lg object-cover bg-zinc-800 ring-1 ring-zinc-700/50" loading="lazy" onerror="this.style.display='none'" />
+                      ) : (
+                        <div class="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-zinc-800 ring-1 ring-zinc-700/50 flex items-center justify-center text-[10px] md:text-xs font-bold text-zinc-600">{p.name.charAt(0)}</div>
+                      )}
+                      <div class="min-w-0">
+                        <div class="text-[11px] md:text-sm font-semibold text-zinc-100 truncate max-w-[120px] md:max-w-[200px]">{p.name}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-1 md:px-3 py-1.5 md:py-2.5 text-center">
+                    <span class="text-[10px] md:text-xs font-mono text-zinc-400">{p.position}</span>
+                  </td>
+                  <td class="px-1 md:px-3 py-1.5 md:py-2.5 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                      <img src={teamLogo} alt={p.team} class="h-4 w-4 md:h-5 md:w-5 object-contain" loading="lazy" onerror="this.style.display='none'" />
+                      <span class="text-[10px] md:text-xs font-mono text-zinc-400 hidden sm:inline">{p.team}</span>
+                    </div>
+                  </td>
+                  <td class="px-2 md:px-4 py-1.5 md:py-2.5 text-right">
+                    <span class="text-[11px] md:text-sm font-mono font-bold text-emerald-400">+{p.trend_count.toLocaleString()}</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Most Dropped -->
+  <div class="trend-section hidden" data-tab="drops">
+    <div class="flex items-center gap-2 mb-3 md:mb-4">
+      <span class="text-sm md:text-lg">❄️</span>
+      <h2 class="text-[10px] md:text-sm font-bold text-zinc-200 uppercase tracking-wider">Most Dropped</h2>
+      <span class="text-[9px] md:text-[10px] text-zinc-600">({trendingDrops.length} players)</span>
+    </div>
+    <div class="rounded-xl border border-zinc-800/40 bg-zinc-900/30 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-zinc-800/40">
+              <th class="text-left px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">#</th>
+              <th class="text-left px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Player</th>
+              <th class="text-center px-1 md:px-3 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Pos</th>
+              <th class="text-center px-1 md:px-3 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Team</th>
+              <th class="text-right px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Drops</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-800/20">
+            {trendingDrops.map((p, i) => {
+              const headshot = getEspnHeadshotUrl(p.espn_id);
+              const teamLogo = getNflTeamLogo(p.team);
+              const isEven = i % 2 === 0;
+              return (
+                <tr class={`transition-colors hover:bg-zinc-800/30 ${isEven ? 'bg-zinc-900/20' : 'bg-transparent'}`}>
+                  <td class="px-2 md:px-4 py-1.5 md:py-2.5">
+                    <span class="text-[10px] md:text-xs font-mono text-zinc-500">{i + 1}</span>
+                  </td>
+                  <td class="px-2 md:px-4 py-1.5 md:py-2.5">
+                    <div class="flex items-center gap-2 md:gap-3">
+                      {headshot ? (
+                        <img src={headshot} alt={p.name} class="h-7 w-7 md:h-9 md:w-9 rounded-lg object-cover bg-zinc-800 ring-1 ring-zinc-700/50" loading="lazy" onerror="this.style.display='none'" />
+                      ) : (
+                        <div class="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-zinc-800 ring-1 ring-zinc-700/50 flex items-center justify-center text-[10px] md:text-xs font-bold text-zinc-600">{p.name.charAt(0)}</div>
+                      )}
+                      <div class="min-w-0">
+                        <div class="text-[11px] md:text-sm font-semibold text-zinc-100 truncate max-w-[120px] md:max-w-[200px]">{p.name}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-1 md:px-3 py-1.5 md:py-2.5 text-center">
+                    <span class="text-[10px] md:text-xs font-mono text-zinc-400">{p.position}</span>
+                  </td>
+                  <td class="px-1 md:px-3 py-1.5 md:py-2.5 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                      <img src={teamLogo} alt={p.team} class="h-4 w-4 md:h-5 md:w-5 object-contain" loading="lazy" onerror="this.style.display='none'" />
+                      <span class="text-[10px] md:text-xs font-mono text-zinc-400 hidden sm:inline">{p.team}</span>
+                    </div>
+                  </td>
+                  <td class="px-2 md:px-4 py-1.5 md:py-2.5 text-right">
+                    <span class="text-[11px] md:text-sm font-mono font-bold text-red-400">-{p.trend_count.toLocaleString()}</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="mt-6 md:mt-8 rounded-xl border border-zinc-800/40 bg-zinc-900/30 p-3 md:p-5">
+    <div class="flex items-start gap-2 md:gap-3">
+      <span class="text-base md:text-lg shrink-0 mt-0.5">ℹ️</span>
+      <div>
+        <h3 class="text-xs md:text-sm font-bold text-zinc-200 mb-0.5 md:mb-1">About Trending</h3>
+        <p class="text-[10px] md:text-xs text-zinc-500 leading-relaxed">
+          Data from Sleeper's public API, tracking real-time adds and drops across all Sleeper leagues.
+          Updates every 30 minutes. Use this to spot waiver wire targets and emerging players.
+        </p>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+(function() {
+  document.querySelectorAll('.trend-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.trend-tab').forEach(b => {
+        b.classList.remove('active', 'bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/20', 'bg-red-500/10', 'text-red-400', 'border-red-500/20');
+        b.classList.add('text-zinc-500', 'border-transparent');
+      });
+      const tab = btn.dataset.tab;
+      const isAdds = tab === 'adds';
+      btn.classList.add('active');
+      if (isAdds) {
+        btn.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/20');
+      } else {
+        btn.classList.add('bg-red-500/10', 'text-red-400', 'border-red-500/20');
+      }
+      btn.classList.remove('text-zinc-500', 'border-transparent');
+
+      document.querySelectorAll('.trend-section').forEach(section => {
+        section.classList.toggle('hidden', section.dataset.tab !== tab);
+      });
+    });
+  });
+})();
+</script>
