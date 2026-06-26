@@ -1,0 +1,190 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { fetchDraft, fetchDraftPicks, fetchAllPlayers, fetchUsers, LEAGUE_CONFIG } from "../data/sleeper-api";
+import { getEspnHeadshotUrl } from "../data/players";
+import { getNFLTeam } from "../data/nfl-teams";
+
+const [draft, picks, allPlayers, users] = await Promise.all([
+  fetchDraft(),
+  fetchDraftPicks(),
+  fetchAllPlayers(),
+  fetchUsers(),
+]);
+
+const userMap = new Map(users.map(u => [u.user_id, u]));
+
+// Group picks by owner
+const byOwner: Record<string, typeof picks> = {};
+for (const pick of picks) {
+  const owner = pick.picked_by_user_id;
+  if (!byOwner[owner]) byOwner[owner] = [];
+  byOwner[owner].push(pick);
+}
+
+// Build keeper analysis for each team
+const keeperData = Object.entries(byOwner)
+  .map(([userId, teamPicks]) => {
+    const user = userMap.get(userId);
+    const teamName = user?.metadata?.team_name || user?.display_name || "Unknown";
+    const owner = user?.display_name || "Unknown";
+    
+    // Find top 3 picks by ADP (likely keepers)
+    const topPicks = teamPicks
+      .filter(p => p.player_id)
+      .map(p => ({
+        ...p,
+        player: allPlayers[p.player_id!] || null,
+      }))
+      .filter(p => p.player)
+      .sort((a, b) => {
+        const aAdp = a.player?.fantasy_positions?.includes("QB") ? 0 : 1;
+        const bAdp = b.player?.fantasy_positions?.includes("QB") ? 0 : 1;
+        return aAdp - bAdp;
+      })
+      .slice(0, 5);
+
+    return {
+      teamName,
+      owner,
+      userId,
+      topPicks,
+      totalPicks: teamPicks.length,
+    };
+  })
+  .sort((a, b) => b.topPicks.length - a.topPicks.length);
+
+const positionColors: Record<string, string> = {
+  QB: "from-blue-500 to-indigo-500",
+  RB: "from-emerald-500 to-teal-500",
+  WR: "from-amber-500 to-orange-500",
+  TE: "from-purple-500 to-pink-500",
+  K: "from-red-500 to-rose-500",
+  DEF: "from-zinc-500 to-zinc-600",
+};
+---
+
+<Layout title="Keepers">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">🔄</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Keeper Tracker</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · {LEAGUE_CONFIG.season} Season · Keeper (1+1) Format</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keeper Rules -->
+  <div class="glass-card-accent rounded-xl p-5 mb-8">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-lg">📋</span>
+      <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">Keeper Rules</h2>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2 text-xs text-zinc-400">
+      <div class="flex items-start gap-2">
+        <span class="text-emerald-400 mt-0.5">•</span>
+        <span>Each team keeps <strong class="text-zinc-200">1 player + 1 rookie</strong> from previous season</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <span class="text-emerald-400 mt-0.5">•</span>
+        <span>Keepers cost <strong class="text-zinc-200">1 round higher</strong> than previous draft position</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <span class="text-emerald-400 mt-0.5">•</span>
+        <span>Undrafted players kept as <strong class="text-zinc-200">15th round</strong> pick</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <span class="text-emerald-400 mt-0.5">•</span>
+        <span>Rookies kept as <strong class="text-zinc-200">16th round</strong> pick (separate from main keeper)</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <span class="text-emerald-400 mt-0.5">•</span>
+        <span>Players kept <strong class="text-zinc-200">max 2 consecutive years</strong> before returning to pool</span>
+      </div>
+      <div class="flex items-start gap-2">
+        <span class="text-emerald-400 mt-0.5">•</span>
+        <span>Keeper deadline: <strong class="text-zinc-200">1 week before draft</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Keeper Cards -->
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
+    {keeperData.map(team => (
+      <div class="glass-card rounded-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/5 p-4 border-b border-zinc-800/40">
+          <h3 class="text-sm font-bold text-zinc-100">{team.teamName}</h3>
+          <p class="text-[10px] text-zinc-500">{team.owner} · {team.totalPicks} draft picks</p>
+        </div>
+        <div class="p-4 space-y-2">
+          {team.topPicks.length > 0 ? team.topPicks.map(pick => {
+            const player = pick.player!;
+            const espnId = player.espn_id || 0;
+            const nfl = player.team ? getNFLTeam(player.team) : null;
+            const keeperValue = pick.round <= 3 ? "Premium" : pick.round <= 7 ? "Value" : "Steal";
+            const valueColor = keeperValue === "Steal" ? "text-emerald-400" : keeperValue === "Value" ? "text-amber-400" : "text-zinc-400";
+            return (
+              <div class="flex items-center gap-2.5 p-2 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 transition-all">
+                {espnId > 0 ? (
+                  <img src={getEspnHeadshotUrl(espnId)} alt={player.full_name} class="h-8 w-8 rounded object-cover" loading="lazy" onerror="this.style.display='none'" />
+                ) : (
+                  <div class="h-8 w-8 rounded bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">?</div>
+                )}
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-semibold text-zinc-100 truncate">{player.full_name}</div>
+                  <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
+                    <span>{player.position || "?"}</span>
+                    <span>·</span>
+                    <span>{nfl?.shortName || player.team || "FA"}</span>
+                    <span>·</span>
+                    <span>Rd {pick.round}</span>
+                  </div>
+                </div>
+                <span class={`text-[10px] font-semibold ${valueColor}`}>{keeperValue}</span>
+              </div>
+            );
+          }) : (
+            <div class="text-center py-4">
+              <p class="text-xs text-zinc-600">No keeper data available</p>
+            </div>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Keeper Strategy Tips -->
+  <div class="mt-8 glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">💡</span>
+      <h2 class="text-lg font-bold text-zinc-100">Keeper Strategy</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2">Best Keeper Values</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• Late-round RBs who became starters (e.g., 12th round → 11th round cost)</li>
+          <li>• Breakout WRs drafted in double-digit rounds</li>
+          <li>• Rookies who outperformed their ADP</li>
+          <li>• Players returning from injury with discounted cost</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-red-400 mb-2">When NOT to Keep</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• First-round picks (no discount, same value in draft)</li>
+          <li>• Aging stars with declining production</li>
+          <li>• Players in timeshares or uncertain roles</li>
+          <li>• When you can get equal value in the same round</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</Layout>
