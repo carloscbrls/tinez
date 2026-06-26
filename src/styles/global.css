@@ -398,3 +398,22 @@ img[loading="lazy"] {
 .card-border-gradient:hover::before {
   opacity: 1;
 }
+
+/* ===== Scrollbar Hide (Safari + Chrome compatible) ===== */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== Safari-safe gradient text fallback ===== */
+@supports not (background-clip: text) {
+  .gradient-text,
+  .gradient-text-gold {
+    -webkit-text-fill-color: initial;
+    background: none;
+    color: #fbbf24;
+  }
+}

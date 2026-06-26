@@ -21,76 +21,102 @@ for (const pos of Object.keys(byPosition)) {
 }
 
 const positions = ["QB", "RB", "WR", "TE"];
-const positionMeta: Record<string, { icon: string; color: string; gradient: string; desc: string }> = {
-  QB: { icon: "🎯", color: "text-blue-400", gradient: "from-blue-500/10 to-indigo-500/5", desc: "Field generals" },
-  RB: { icon: "💨", color: "text-emerald-400", gradient: "from-emerald-500/10 to-teal-500/5", desc: "Workhorses" },
-  WR: { icon: "🔥", color: "text-amber-400", gradient: "from-amber-500/10 to-orange-500/5", desc: "Playmakers" },
-  TE: { icon: "🛡️", color: "text-purple-400", gradient: "from-purple-500/10 to-pink-500/5", desc: "Matchup nightmares" },
+const positionMeta: Record<string, { icon: string; color: string; desc: string }> = {
+  QB: { icon: "🎯", color: "text-blue-400", desc: "Field generals" },
+  RB: { icon: "💨", color: "text-emerald-400", desc: "Workhorses" },
+  WR: { icon: "🔥", color: "text-amber-400", desc: "Playmakers" },
+  TE: { icon: "🛡️", color: "text-purple-400", desc: "Matchup nightmares" },
 };
 
 const totalPlayers = allPlayers.length;
 const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
+const INITIAL_ROWS = 20;
 ---
 
 <Layout title="Player Values">
   <!-- Hero -->
-  <div class="mb-10">
+  <div class="mb-6 md:mb-10">
     <div class="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/5 via-transparent to-transparent"></div>
-      <div class="relative z-10 p-6 md:p-10">
-        <div class="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-2xl shadow-lg shadow-amber-500/20">💎</div>
+      <div class="relative z-10 p-5 md:p-10">
+        <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+          <div class="flex h-12 w-12 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-xl md:text-2xl shadow-lg shadow-amber-500/20">💎</div>
           <div class="flex-1 min-w-0">
-            <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight mb-1">
-              <span class="bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400 bg-clip-text text-transparent">Player Values</span>
+            <h1 class="text-xl md:text-4xl font-extrabold tracking-tight mb-0.5 md:mb-1">
+              <span class="text-amber-300" style="background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Player Values</span>
             </h1>
-            <p class="text-zinc-400 text-sm md:text-base">Market-driven valuations from LeagueLogs · <span class="text-zinc-300 font-semibold">{totalPlayers}</span> players ranked · Updates every 6h</p>
+            <p class="text-zinc-400 text-xs md:text-base"><span class="text-zinc-300 font-semibold">{totalPlayers}</span> players ranked · Updates every 6h</p>
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="text-[11px] text-zinc-500 font-mono">LIVE DATA</span>
+            <span class="text-[10px] md:text-[11px] text-zinc-500 font-mono">LIVE</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Top 10 Elite Showcase -->
+  <!-- Search + Filter Bar — moved above elite showcase for mobile -->
+  <div class="mb-4 md:mb-6 flex flex-col sm:flex-row gap-2 md:gap-3">
+    <div class="relative flex-1">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-zinc-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="player-search" placeholder="Search name, team, position..." class="w-full rounded-lg border border-zinc-800 bg-zinc-900/80 pl-8 md:pl-10 pr-3 py-2 md:py-2.5 text-xs md:text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all" />
+    </div>
+    <div class="flex gap-2">
+      <select id="position-filter" class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-2 md:px-3 py-2 md:py-2.5 text-xs md:text-sm text-zinc-300 focus:outline-none focus:border-amber-500/40 transition-all">
+        <option value="all">All</option>
+        <option value="QB">QB</option>
+        <option value="RB">RB</option>
+        <option value="WR">WR</option>
+        <option value="TE">TE</option>
+      </select>
+      <select id="tier-filter" class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-2 md:px-3 py-2 md:py-2.5 text-xs md:text-sm text-zinc-300 focus:outline-none focus:border-amber-500/40 transition-all">
+        <option value="all">Tier</option>
+        <option value="Elite">Elite</option>
+        <option value="High">High</option>
+        <option value="Mid">Mid</option>
+        <option value="Low">Low</option>
+        <option value="Depth">Depth</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Top 10 Elite Showcase — horizontal scroll on mobile -->
   {elitePlayers.length > 0 && (
-    <div class="mb-10">
-      <div class="flex items-center gap-2 mb-4">
-        <span class="text-lg">👑</span>
-        <h2 class="text-xs font-bold text-amber-400 uppercase tracking-widest">Elite Tier</h2>
-        <span class="text-[10px] text-zinc-600">Top {elitePlayers.length} players</span>
+    <div class="mb-6 md:mb-10">
+      <div class="flex items-center gap-2 mb-3 md:mb-4">
+        <span class="text-base md:text-lg">👑</span>
+        <h2 class="text-[10px] md:text-xs font-bold text-amber-400 uppercase tracking-widest">Elite Tier</h2>
+        <span class="text-[9px] md:text-[10px] text-zinc-600">Top {elitePlayers.length}</span>
       </div>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+      <div class="flex gap-2 md:gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
         {elitePlayers.map(p => {
           const headshot = getEspnHeadshotUrl(p.espnId);
           const teamLogo = getNflTeamLogo(p.team);
           return (
-            <div class="relative rounded-xl border border-amber-500/20 bg-gradient-to-b from-zinc-900 to-zinc-950 overflow-hidden group hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300">
-              <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full"></div>
-              <div class="p-4">
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-[10px] font-mono font-bold text-amber-400/80">#{p.overallRank}</span>
-                  <span class="text-[10px] font-mono text-zinc-600">{p.position} #{p.positionRank}</span>
+            <div class="snap-start shrink-0 w-[130px] md:w-auto md:flex-1 relative rounded-xl border border-amber-500/20 bg-gradient-to-b from-zinc-900 to-zinc-950 overflow-hidden hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300">
+              <div class="absolute top-0 right-0 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full"></div>
+              <div class="p-3 md:p-4">
+                <div class="flex items-center justify-between mb-2 md:mb-3">
+                  <span class="text-[9px] md:text-[10px] font-mono font-bold text-amber-400/80">#{p.overallRank}</span>
+                  <span class="text-[9px] md:text-[10px] font-mono text-zinc-600">{p.position} #{p.positionRank}</span>
                 </div>
                 <div class="flex flex-col items-center text-center">
                   {headshot ? (
-                    <img src={headshot} alt={p.name} class="h-16 w-16 rounded-xl object-cover bg-zinc-800 ring-2 ring-amber-500/20 mb-2" loading="lazy" onerror="this.style.display='none'" />
+                    <img src={headshot} alt={p.name} class="h-12 w-12 md:h-16 md:w-16 rounded-xl object-cover bg-zinc-800 ring-2 ring-amber-500/20 mb-1.5 md:mb-2" loading="lazy" onerror="this.style.display='none'" />
                   ) : (
-                    <div class="h-16 w-16 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 ring-2 ring-amber-500/20 flex items-center justify-center text-xl font-bold text-amber-400 mb-2">
+                    <div class="h-12 w-12 md:h-16 md:w-16 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 ring-2 ring-amber-500/20 flex items-center justify-center text-base md:text-xl font-bold text-amber-400 mb-1.5 md:mb-2">
                       {p.name.charAt(0)}
                     </div>
                   )}
-                  <div class="text-sm font-bold text-zinc-100 truncate max-w-full">{p.name}</div>
-                  <div class="flex items-center gap-1 mt-1">
-                    <img src={teamLogo} alt={p.team} class="h-3.5 w-3.5 object-contain" loading="lazy" onerror="this.style.display='none'" />
-                    <span class="text-[10px] text-zinc-500">{p.team}</span>
+                  <div class="text-[11px] md:text-sm font-bold text-zinc-100 truncate max-w-full">{p.name}</div>
+                  <div class="flex items-center gap-1 mt-0.5 md:mt-1">
+                    <img src={teamLogo} alt={p.team} class="h-3 w-3 md:h-3.5 md:w-3.5 object-contain" loading="lazy" onerror="this.style.display='none'" />
+                    <span class="text-[9px] md:text-[10px] text-zinc-500">{p.team}</span>
                   </div>
-                  <div class="mt-2 flex items-center gap-1.5">
-                    <span class="text-lg font-extrabold text-amber-400">{p.value.toFixed(1)}</span>
-                    <span class="text-[9px] text-zinc-600">value</span>
+                  <div class="mt-1.5 md:mt-2 flex items-center gap-1">
+                    <span class="text-sm md:text-lg font-extrabold text-amber-400">{p.value.toFixed(1)}</span>
+                    <span class="text-[8px] md:text-[9px] text-zinc-600">val</span>
                   </div>
                 </div>
               </div>
@@ -101,91 +127,51 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
     </div>
   )}
 
-  <!-- Value Legend -->
-  <div class="mb-8 rounded-xl border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm p-5">
-    <div class="flex items-center gap-2 mb-4">
-      <span class="text-sm">📊</span>
-      <h2 class="text-xs font-bold text-zinc-400 uppercase tracking-widest">Value Tiers</h2>
+  <!-- Value Legend — compact on mobile -->
+  <div class="mb-4 md:mb-8 rounded-xl border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm p-3 md:p-5">
+    <div class="flex items-center gap-2 mb-2 md:mb-4">
+      <span class="text-xs md:text-sm">📊</span>
+      <h2 class="text-[10px] md:text-xs font-bold text-zinc-400 uppercase tracking-widest">Tiers</h2>
     </div>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-      <div class="rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2.5 text-center">
-        <div class="text-xs font-bold text-amber-400">Elite</div>
-        <div class="text-[10px] text-zinc-500 mt-0.5">80 – 100</div>
-      </div>
-      <div class="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2.5 text-center">
-        <div class="text-xs font-bold text-emerald-400">High</div>
-        <div class="text-[10px] text-zinc-500 mt-0.5">60 – 79</div>
-      </div>
-      <div class="rounded-lg bg-blue-500/10 border border-blue-500/20 px-3 py-2.5 text-center">
-        <div class="text-xs font-bold text-blue-400">Mid</div>
-        <div class="text-[10px] text-zinc-500 mt-0.5">40 – 59</div>
-      </div>
-      <div class="rounded-lg bg-zinc-500/10 border border-zinc-500/20 px-3 py-2.5 text-center">
-        <div class="text-xs font-bold text-zinc-400">Low</div>
-        <div class="text-[10px] text-zinc-500 mt-0.5">20 – 39</div>
-      </div>
-      <div class="rounded-lg bg-zinc-700/20 border border-zinc-700/30 px-3 py-2.5 text-center">
-        <div class="text-xs font-bold text-zinc-600">Depth</div>
-        <div class="text-[10px] text-zinc-700 mt-0.5">0 – 19</div>
-      </div>
+    <div class="flex flex-wrap gap-1.5 md:gap-2">
+      <span class="rounded-md bg-amber-500/10 border border-amber-500/20 px-2 md:px-3 py-1 md:py-1.5 text-[9px] md:text-xs font-semibold text-amber-400">Elite 80-100</span>
+      <span class="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 md:px-3 py-1 md:py-1.5 text-[9px] md:text-xs font-semibold text-emerald-400">High 60-79</span>
+      <span class="rounded-md bg-blue-500/10 border border-blue-500/20 px-2 md:px-3 py-1 md:py-1.5 text-[9px] md:text-xs font-semibold text-blue-400">Mid 40-59</span>
+      <span class="rounded-md bg-zinc-500/10 border border-zinc-500/20 px-2 md:px-3 py-1 md:py-1.5 text-[9px] md:text-xs font-semibold text-zinc-400">Low 20-39</span>
+      <span class="rounded-md bg-zinc-700/20 border border-zinc-700/30 px-2 md:px-3 py-1 md:py-1.5 text-[9px] md:text-xs font-semibold text-zinc-600">Depth 0-19</span>
     </div>
   </div>
 
-  <!-- Search + Filter Bar -->
-  <div class="mb-6 flex flex-col sm:flex-row gap-3">
-    <div class="relative flex-1">
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="player-search" placeholder="Search players by name, team, or position..." class="w-full rounded-lg border border-zinc-800 bg-zinc-900/80 pl-10 pr-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all" />
-    </div>
-    <div class="flex gap-2">
-      <select id="position-filter" class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-amber-500/40 transition-all">
-        <option value="all">All Positions</option>
-        <option value="QB">QB</option>
-        <option value="RB">RB</option>
-        <option value="WR">WR</option>
-        <option value="TE">TE</option>
-      </select>
-      <select id="tier-filter" class="rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-amber-500/40 transition-all">
-        <option value="all">All Tiers</option>
-        <option value="Elite">Elite (80+)</option>
-        <option value="High">High (60-79)</option>
-        <option value="Mid">Mid (40-59)</option>
-        <option value="Low">Low (20-39)</option>
-        <option value="Depth">Depth (0-19)</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Sticky Position Jump Nav -->
-  <div id="position-nav" class="sticky top-14 z-40 -mx-4 px-4 py-2 bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-800/40 mb-6 flex items-center gap-1 overflow-x-auto">
+  <!-- Sticky Position Jump Nav — compact on mobile -->
+  <div id="position-nav" class="sticky top-14 z-40 -mx-4 px-4 py-1.5 md:py-2 bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-800/40 mb-4 md:mb-6 flex items-center gap-1 overflow-x-auto scrollbar-hide">
     {positions.filter(p => byPosition[p]?.length).map(pos => {
       const meta = positionMeta[pos];
       return (
-        <a href={`#section-${pos}`} class="position-jump flex items-center gap-1.5 shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all" data-pos={pos}>
-          <span>{meta.icon}</span>
+        <a href={`#section-${pos}`} class="position-jump flex items-center gap-1 shrink-0 rounded-lg px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 transition-all whitespace-nowrap" data-pos={pos}>
+          <span class="text-xs md:text-sm">{meta.icon}</span>
           <span>{pos}</span>
-          <span class="text-[9px] text-zinc-600 font-mono">({byPosition[pos].length})</span>
+          <span class="text-[8px] md:text-[9px] text-zinc-600 font-mono">({byPosition[pos].length})</span>
         </a>
       );
     })}
-    <span class="text-zinc-700 mx-1">|</span>
-    <span id="result-count" class="text-[10px] text-zinc-600 font-mono whitespace-nowrap">{totalPlayers} players</span>
+    <span class="text-zinc-700 mx-1 shrink-0">|</span>
+    <span id="result-count" class="text-[9px] md:text-[10px] text-zinc-600 font-mono whitespace-nowrap shrink-0">{totalPlayers}</span>
   </div>
 
   <!-- Position Sections -->
-  <div class="space-y-10">
+  <div class="space-y-6 md:space-y-10">
     {positions.filter(p => byPosition[p]?.length).map(pos => {
       const meta = positionMeta[pos];
       const players = byPosition[pos];
       return (
         <section id={`section-${pos}`} class="position-section" data-position={pos}>
-          <!-- Section Header -->
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/80 text-sm">{meta.icon}</div>
+          <!-- Section Header — compact on mobile -->
+          <div class="flex items-center justify-between mb-2 md:mb-4">
+            <div class="flex items-center gap-2 md:gap-3">
+              <div class="flex h-6 w-6 md:h-8 md:w-8 items-center justify-center rounded-lg bg-zinc-800/80 text-xs md:text-sm">{meta.icon}</div>
               <div>
-                <h2 class="text-lg font-bold text-zinc-100">{pos}s</h2>
-                <p class="text-[11px] text-zinc-500">{meta.desc} · <span class="position-count">{players.length}</span> ranked</p>
+                <h2 class="text-sm md:text-lg font-bold text-zinc-100">{pos}s</h2>
+                <p class="text-[9px] md:text-[11px] text-zinc-500"><span class="position-count">{players.length}</span> ranked</p>
               </div>
             </div>
             <div class="hidden sm:flex items-center gap-1.5 text-[10px] text-zinc-600">
@@ -195,32 +181,32 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
             </div>
           </div>
 
-          <!-- Table -->
+          <!-- Table — mobile optimized -->
           <div class="rounded-xl border border-zinc-800/40 bg-zinc-900/30 overflow-hidden">
             <div class="overflow-x-auto">
               <table class="player-table w-full" data-position={pos}>
                 <thead>
                   <tr class="border-b border-zinc-800/40">
-                    <th class="sortable text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="name">
-                      Player <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    <th class="sortable text-left px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors whitespace-nowrap" data-sort="name">
+                      Player <span class="sort-arrow text-zinc-700 ml-0.5 md:ml-1">↕</span>
                     </th>
-                    <th class="sortable text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="team">
-                      Team <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    <th class="sortable text-center px-1 md:px-3 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors whitespace-nowrap" data-sort="team">
+                      Team <span class="sort-arrow text-zinc-700 ml-0.5 md:ml-1">↕</span>
                     </th>
-                    <th class="sortable text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="rank">
-                      Rank <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    <th class="sortable text-center px-1 md:px-3 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors whitespace-nowrap" data-sort="rank">
+                      Rk <span class="sort-arrow text-zinc-700 ml-0.5 md:ml-1">↕</span>
                     </th>
-                    <th class="sortable text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="posrank">
-                      Pos <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    <th class="sortable text-center px-1 md:px-3 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors whitespace-nowrap" data-sort="posrank">
+                      Pos <span class="sort-arrow text-zinc-700 ml-0.5 md:ml-1">↕</span>
                     </th>
-                    <th class="sortable text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors" data-sort="value">
-                      Value <span class="sort-arrow text-zinc-700 ml-1">↕</span>
+                    <th class="sortable text-right px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors whitespace-nowrap" data-sort="value">
+                      Val <span class="sort-arrow text-zinc-700 ml-0.5 md:ml-1">↕</span>
                     </th>
-                    <th class="text-center px-3 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Tier</th>
+                    <th class="text-center px-1 md:px-3 py-2 md:py-3 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-zinc-500 whitespace-nowrap">Tier</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-800/20">
-                  {players.map((p, i) => {
+                  {players.slice(0, INITIAL_ROWS).map((p, i) => {
                     const headshot = getEspnHeadshotUrl(p.espnId);
                     const teamLogo = getNflTeamLogo(p.team);
                     const valueLabel = getValueLabel(p.value);
@@ -228,76 +214,76 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
                     const isEven = i % 2 === 0;
                     return (
                       <tr class="player-row transition-colors hover:bg-zinc-800/30 relative group cursor-default" data-name={p.name.toLowerCase()} data-team={p.team.toLowerCase()} data-position={p.position} data-value={p.value} data-rank={p.overallRank} data-posrank={p.positionRank} class:list={[isEven ? 'bg-zinc-900/20' : 'bg-transparent']}>
-                        <td class="px-4 py-2.5">
-                          <div class="flex items-center gap-3">
+                        <td class="px-2 md:px-4 py-1.5 md:py-2.5">
+                          <div class="flex items-center gap-2 md:gap-3">
                             <div class="relative shrink-0">
                               {headshot ? (
-                                <img src={headshot} alt={p.name} class="h-9 w-9 rounded-lg object-cover bg-zinc-800 ring-1 ring-zinc-700/50" loading="lazy" onerror="this.style.display='none'" />
+                                <img src={headshot} alt={p.name} class="h-7 w-7 md:h-9 md:w-9 rounded-lg object-cover bg-zinc-800 ring-1 ring-zinc-700/50" loading="lazy" onerror="this.style.display='none'" />
                               ) : (
-                                <div class="h-9 w-9 rounded-lg bg-zinc-800 ring-1 ring-zinc-700/50 flex items-center justify-center text-xs font-bold text-zinc-600">
+                                <div class="h-7 w-7 md:h-9 md:w-9 rounded-lg bg-zinc-800 ring-1 ring-zinc-700/50 flex items-center justify-center text-[10px] md:text-xs font-bold text-zinc-600">
                                   {p.name.charAt(0)}
                                 </div>
                               )}
                             </div>
                             <div class="min-w-0">
-                              <div class="text-sm font-semibold text-zinc-100 truncate max-w-[160px] md:max-w-[200px]">{p.name}</div>
-                              <div class="text-[10px] text-zinc-600 font-mono">#{p.overallRank} overall</div>
+                              <div class="text-[11px] md:text-sm font-semibold text-zinc-100 truncate max-w-[100px] md:max-w-[200px]">{p.name}</div>
+                              <div class="text-[8px] md:text-[10px] text-zinc-600 font-mono">#{p.overallRank}</div>
                             </div>
                           </div>
-                          <!-- Hover tooltip -->
-                          <div class="absolute left-0 top-full mt-1 z-50 hidden group-hover:lg:block w-64 rounded-xl border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 p-4 pointer-events-none">
-                            <div class="flex items-center gap-3 mb-3">
+                          <!-- Hover tooltip — desktop only -->
+                          <div class="absolute left-0 top-full mt-1 z-50 hidden group-hover:lg:block w-56 md:w-64 rounded-xl border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 p-3 md:p-4 pointer-events-none">
+                            <div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
                               {headshot ? (
-                                <img src={headshot} alt={p.name} class="h-12 w-12 rounded-xl object-cover bg-zinc-800 ring-2 ring-zinc-700/50" />
+                                <img src={headshot} alt={p.name} class="h-10 w-10 md:h-12 md:w-12 rounded-xl object-cover bg-zinc-800 ring-2 ring-zinc-700/50" />
                               ) : (
-                                <div class="h-12 w-12 rounded-xl bg-zinc-800 ring-2 ring-zinc-700/50 flex items-center justify-center text-lg font-bold text-zinc-500">{p.name.charAt(0)}</div>
+                                <div class="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-zinc-800 ring-2 ring-zinc-700/50 flex items-center justify-center text-base md:text-lg font-bold text-zinc-500">{p.name.charAt(0)}</div>
                               )}
                               <div>
-                                <div class="text-sm font-bold text-zinc-100">{p.name}</div>
-                                <div class="flex items-center gap-1.5 mt-0.5">
-                                  <img src={teamLogo} alt={p.team} class="h-4 w-4 object-contain" />
-                                  <span class="text-[10px] text-zinc-500">{p.team} · {p.position}</span>
+                                <div class="text-xs md:text-sm font-bold text-zinc-100">{p.name}</div>
+                                <div class="flex items-center gap-1 mt-0.5">
+                                  <img src={teamLogo} alt={p.team} class="h-3 w-3 md:h-4 md:w-4 object-contain" />
+                                  <span class="text-[9px] md:text-[10px] text-zinc-500">{p.team} · {p.position}</span>
                                 </div>
                               </div>
                             </div>
-                            <div class="grid grid-cols-3 gap-2 text-center">
-                              <div class="rounded-lg bg-zinc-800/50 p-2">
-                                <div class="text-lg font-bold text-amber-400">{p.value.toFixed(1)}</div>
-                                <div class="text-[9px] text-zinc-500">Value</div>
+                            <div class="grid grid-cols-3 gap-1 md:gap-2 text-center">
+                              <div class="rounded-lg bg-zinc-800/50 p-1.5 md:p-2">
+                                <div class="text-sm md:text-lg font-bold text-amber-400">{p.value.toFixed(1)}</div>
+                                <div class="text-[8px] md:text-[9px] text-zinc-500">Value</div>
                               </div>
-                              <div class="rounded-lg bg-zinc-800/50 p-2">
-                                <div class="text-lg font-bold text-zinc-200">#{p.overallRank}</div>
-                                <div class="text-[9px] text-zinc-500">Overall</div>
+                              <div class="rounded-lg bg-zinc-800/50 p-1.5 md:p-2">
+                                <div class="text-sm md:text-lg font-bold text-zinc-200">#{p.overallRank}</div>
+                                <div class="text-[8px] md:text-[9px] text-zinc-500">Overall</div>
                               </div>
-                              <div class="rounded-lg bg-zinc-800/50 p-2">
-                                <div class="text-lg font-bold text-zinc-200">#{p.positionRank}</div>
-                                <div class="text-[9px] text-zinc-500">Pos Rank</div>
+                              <div class="rounded-lg bg-zinc-800/50 p-1.5 md:p-2">
+                                <div class="text-sm md:text-lg font-bold text-zinc-200">#{p.positionRank}</div>
+                                <div class="text-[8px] md:text-[9px] text-zinc-500">Pos Rank</div>
                               </div>
                             </div>
-                            <div class="mt-2 text-center">
-                              <span class={`inline-block rounded-md px-2 py-0.5 text-[10px] font-semibold border ${getValueBg(p.value)} ${valueColor}`}>{valueLabel}</span>
+                            <div class="mt-1.5 md:mt-2 text-center">
+                              <span class={`inline-block rounded-md px-1.5 md:px-2 py-0.5 text-[9px] md:text-[10px] font-semibold border ${getValueBg(p.value)} ${valueColor}`}>{valueLabel}</span>
                             </div>
                           </div>
                         </td>
-                        <td class="px-3 py-2.5 text-center">
-                          <div class="flex items-center justify-center gap-1.5">
-                            <img src={teamLogo} alt={p.team} class="h-5 w-5 object-contain" loading="lazy" onerror="this.style.display='none'" />
-                            <span class="text-xs font-mono font-medium text-zinc-400">{p.team}</span>
+                        <td class="px-1 md:px-3 py-1.5 md:py-2.5 text-center">
+                          <div class="flex items-center justify-center gap-1">
+                            <img src={teamLogo} alt={p.team} class="h-4 w-4 md:h-5 md:w-5 object-contain" loading="lazy" onerror="this.style.display='none'" />
+                            <span class="text-[10px] md:text-xs font-mono font-medium text-zinc-400 hidden sm:inline">{p.team}</span>
                           </div>
                         </td>
-                        <td class="px-3 py-2.5 text-center">
-                          <span class="inline-flex items-center justify-center h-6 min-w-[28px] rounded-md bg-zinc-800/60 px-1.5 text-xs font-mono font-semibold text-zinc-300">
+                        <td class="px-1 md:px-3 py-1.5 md:py-2.5 text-center">
+                          <span class="inline-flex items-center justify-center h-5 w-6 md:h-6 md:min-w-[28px] rounded-md bg-zinc-800/60 px-1 text-[9px] md:text-xs font-mono font-semibold text-zinc-300">
                             {p.overallRank}
                           </span>
                         </td>
-                        <td class="px-3 py-2.5 text-center">
-                          <span class="inline-flex items-center justify-center h-6 min-w-[28px] rounded-md bg-zinc-800/40 px-1.5 text-xs font-mono text-zinc-500">
+                        <td class="px-1 md:px-3 py-1.5 md:py-2.5 text-center">
+                          <span class="inline-flex items-center justify-center h-5 w-6 md:h-6 md:min-w-[28px] rounded-md bg-zinc-800/40 px-1 text-[9px] md:text-xs font-mono text-zinc-500">
                             {p.positionRank}
                           </span>
                         </td>
-                        <td class="px-4 py-2.5 text-right">
-                          <div class="flex items-center justify-end gap-2">
-                            <div class="w-16 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                        <td class="px-2 md:px-4 py-1.5 md:py-2.5 text-right">
+                          <div class="flex items-center justify-end gap-1 md:gap-2">
+                            <div class="w-10 md:w-16 h-1 md:h-1.5 rounded-full bg-zinc-800 overflow-hidden hidden sm:block">
                               <div class="h-full rounded-full transition-all" class:list={[
                                 p.value >= 80 ? 'bg-amber-400' :
                                 p.value >= 60 ? 'bg-emerald-400' :
@@ -305,11 +291,11 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
                                 p.value >= 20 ? 'bg-zinc-400' : 'bg-zinc-600'
                               ]} style={`width: ${p.value}%`}></div>
                             </div>
-                            <span class="text-sm font-mono font-bold text-zinc-200 w-12 text-right">{p.value.toFixed(1)}</span>
+                            <span class="text-[11px] md:text-sm font-mono font-bold text-zinc-200 w-8 md:w-12 text-right">{p.value.toFixed(1)}</span>
                           </div>
                         </td>
-                        <td class="px-3 py-2.5 text-center">
-                          <span class={`inline-block rounded-md px-2 py-1 text-[10px] font-semibold border ${getValueBg(p.value)} ${valueColor}`}>
+                        <td class="px-1 md:px-3 py-1.5 md:py-2.5 text-center">
+                          <span class={`inline-block rounded-md px-1.5 md:px-2 py-0.5 md:py-1 text-[8px] md:text-[10px] font-semibold border ${getValueBg(p.value)} ${valueColor}`}>
                             {valueLabel}
                           </span>
                         </td>
@@ -319,6 +305,14 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
                 </tbody>
               </table>
             </div>
+            <!-- Show more button -->
+            {players.length > INITIAL_ROWS && (
+              <div class="border-t border-zinc-800/40 p-3 md:p-4 text-center">
+                <button class="show-more-btn text-xs md:text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors" data-position={pos}>
+                  Show all {players.length} {pos}s →
+                </button>
+              </div>
+            )}
           </div>
         </section>
       );
@@ -326,8 +320,8 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
   </div>
 
   <!-- Attribution -->
-  <div class="mt-12 pt-6 border-t border-zinc-800/30 text-center">
-    <a href="https://leaguelogs.com" target="_blank" rel="noopener" class="inline-flex items-baseline gap-1.5 text-sm text-zinc-600 hover:text-zinc-400 transition-colors" style="font-family:Georgia,'Times New Roman',serif;">
+  <div class="mt-8 md:mt-12 pt-4 md:pt-6 border-t border-zinc-800/30 text-center">
+    <a href="https://leaguelogs.com" target="_blank" rel="noopener" class="inline-flex items-baseline gap-1 text-xs md:text-sm text-zinc-600 hover:text-zinc-400 transition-colors" style="font-family:Georgia,'Times New Roman',serif;">
       <span>Powered by</span>
       <em class="font-semibold not-italic" style="letter-spacing:-0.01em;">LeagueLogs</em>
       <span class="inline-block h-1.5 w-1.5 rounded-full bg-amber-400/60"></span>
@@ -375,9 +369,7 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
       if (visible) visibleCount++;
     });
 
-    // Show/hide sections
     sections.forEach(section => {
-      const pos = section.dataset.position;
       const hasVisible = Array.from(section.querySelectorAll('.player-row')).some(r => r.style.display !== 'none');
       section.style.display = hasVisible ? '' : 'none';
     });
@@ -389,6 +381,21 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
   posFilter.addEventListener('change', filterPlayers);
   tierFilter.addEventListener('change', filterPlayers);
 
+  // ─── Show More ───
+  document.querySelectorAll('.show-more-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pos = btn.dataset.position;
+      const section = document.getElementById('section-' + pos);
+      const table = section.querySelector('.player-table');
+      const tbody = table.querySelector('tbody');
+      const allPlayers = Array.from(tbody.querySelectorAll('.player-row'));
+      
+      // Show all hidden rows
+      allPlayers.forEach(r => r.style.display = '');
+      btn.style.display = 'none';
+    });
+  });
+
   // ─── Sortable Columns ───
   document.querySelectorAll('.sortable').forEach(header => {
     header.addEventListener('click', () => {
@@ -398,7 +405,6 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
       const sortKey = header.dataset.sort;
       const isAsc = header.dataset.dir !== 'asc';
 
-      // Reset arrows
       table.querySelectorAll('.sortable').forEach(h => {
         h.dataset.dir = '';
         h.querySelector('.sort-arrow').textContent = '↕';
@@ -429,7 +435,6 @@ const elitePlayers = allPlayers.filter(p => p.value >= 80).slice(0, 10);
       const target = document.querySelector(link.getAttribute('href'));
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // Highlight briefly
         target.querySelector('h2')?.classList.add('text-amber-400');
         setTimeout(() => target.querySelector('h2')?.classList.remove('text-amber-400'), 1000);
       }
