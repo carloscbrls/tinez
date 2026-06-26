@@ -1,0 +1,278 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { fetchRosters, fetchUsers, fetchLeague, fetchAllMatchups, LEAGUE_CONFIG } from "../data/sleeper-api";
+
+const [rosters, users, league] = await Promise.all([
+  fetchRosters(),
+  fetchUsers(),
+  fetchLeague(),
+]);
+
+const userMap = new Map(users.map(u => [u.user_id, u]));
+
+// Build standings
+const standings = rosters
+  .map(roster => {
+    const user = userMap.get(roster.owner_id);
+    return {
+      teamName: user?.metadata?.team_name || user?.display_name || "Unknown",
+      owner: user?.display_name || "Unknown",
+      wins: roster.settings.wins,
+      losses: roster.settings.losses,
+      pf: roster.settings.fpts,
+      rosterId: roster.roster_id,
+    };
+  })
+  .sort((a, b) => b.wins - a.wins || b.pf - a.pf);
+
+// Playoff teams (top 6)
+const playoffTeams = standings.slice(0, 6);
+const eliminated = standings.slice(6);
+
+// Build bracket
+const bracket = [
+  { round: "Quarterfinals", matchups: [
+    { seed: 3, team: playoffTeams[2] },
+    { seed: 6, team: playoffTeams[5] },
+  ]},
+  { round: "Quarterfinals", matchups: [
+    { seed: 4, team: playoffTeams[3] },
+    { seed: 5, team: playoffTeams[4] },
+  ]},
+  { round: "Semifinals", matchups: [
+    { seed: 1, team: playoffTeams[0], bye: true },
+    { seed: 2, team: playoffTeams[1], bye: true },
+  ]},
+];
+
+const currentWeek = league?.settings?.last_scored_week || 0;
+const playoffStart = 15; // Week 15 is typical playoff start
+const playoffStatus = currentWeek < playoffStart ? "upcoming" : currentWeek >= playoffStart && currentWeek <= 17 ? "active" : "completed";
+---
+
+<Layout title="Playoffs">
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">🏆</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">Playoff Bracket</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · {LEAGUE_CONFIG.season} Season · Week {currentWeek}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Playoff Status -->
+  <div class="glass-card-accent rounded-xl p-5 mb-8">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl">
+        {playoffStatus === "upcoming" ? "📅" : playoffStatus === "active" ? "🔥" : "🏆"}
+      </span>
+      <div>
+        <h2 class="text-lg font-bold text-zinc-100">
+          {playoffStatus === "upcoming" ? "Playoffs Start Week 15" :
+           playoffStatus === "active" ? "Playoffs Are Live!" :
+           "Playoffs Complete"}
+        </h2>
+        <p class="text-sm text-zinc-500">
+          {playoffStatus === "upcoming" ? `${playoffStart - currentWeek} weeks until playoff action` :
+           playoffStatus === "active" ? `Week ${currentWeek} of 3 playoff weeks` :
+           "Championship decided"}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bracket -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">🏆</div>
+      <h2 class="text-lg font-bold text-amber-400">Bracket</h2>
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-3 stagger-children">
+      <!-- Quarterfinals -->
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-lg">🔴</span>
+          <h3 class="text-sm font-bold text-red-400 uppercase tracking-wider">Quarterfinals</h3>
+        </div>
+        <div class="space-y-3">
+          <div class="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/30">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-mono text-zinc-500">(3)</span>
+              <span class="text-xs text-zinc-600">vs</span>
+              <span class="text-xs font-mono text-zinc-500">(6)</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold text-zinc-200">{playoffTeams[2]?.teamName || "TBD"}</span>
+              <span class="text-sm font-semibold text-zinc-200">{playoffTeams[5]?.teamName || "TBD"}</span>
+            </div>
+          </div>
+          <div class="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/30">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-mono text-zinc-500">(4)</span>
+              <span class="text-xs text-zinc-600">vs</span>
+              <span class="text-xs font-mono text-zinc-500">(5)</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold text-zinc-200">{playoffTeams[3]?.teamName || "TBD"}</span>
+              <span class="text-sm font-semibold text-zinc-200">{playoffTeams[4]?.teamName || "TBD"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semifinals -->
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-lg">🟠</span>
+          <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">Semifinals</h3>
+        </div>
+        <div class="space-y-3">
+          <div class="bg-zinc-800/30 rounded-lg p-3 border border-amber-500/20">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-mono text-emerald-400">(1)</span>
+              <span class="text-xs text-zinc-600">BYE</span>
+              <span class="text-xs text-zinc-500">—</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold text-zinc-200">{playoffTeams[0]?.teamName || "TBD"}</span>
+              <span class="text-xs text-emerald-400 font-semibold">1st Round Bye</span>
+            </div>
+          </div>
+          <div class="bg-zinc-800/30 rounded-lg p-3 border border-amber-500/20">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-mono text-emerald-400">(2)</span>
+              <span class="text-xs text-zinc-600">BYE</span>
+              <span class="text-xs text-zinc-500">—</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold text-zinc-200">{playoffTeams[1]?.teamName || "TBD"}</span>
+              <span class="text-xs text-emerald-400 font-semibold">1st Round Bye</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Championship -->
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-lg">🏆</span>
+          <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider">Championship</h3>
+        </div>
+        <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/5 rounded-lg p-4 border border-amber-500/30 text-center">
+          <div class="text-4xl mb-2">🏆</div>
+          <div class="text-sm text-zinc-500 mb-2">Winner takes $1,400</div>
+          <div class="text-xs text-zinc-600">Super Bowl LX Champion</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Playoff Teams -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">✅</div>
+      <h2 class="text-lg font-bold text-amber-400">Playoff Teams</h2>
+    </div>
+    <div class="glass-card-static rounded-xl overflow-x-auto">
+      <table class="premium-table">
+        <thead>
+          <tr>
+            <th class="w-8">Seed</th>
+            <th>Team</th>
+            <th class="text-center">W</th>
+            <th class="text-center">L</th>
+            <th class="text-right">PF</th>
+            <th class="text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {playoffTeams.map((t, i) => (
+            <tr class="hover:bg-zinc-800/30 transition-colors">
+              <td class="text-center">
+                <span class="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold" class:list={[
+                  i === 0 ? 'bg-emerald-500/20 text-emerald-400' :
+                  i === 1 ? 'bg-emerald-500/20 text-emerald-400' :
+                  'bg-zinc-800 text-zinc-400'
+                ]}>{i + 1}</span>
+              </td>
+              <td>
+                <span class="text-sm font-semibold text-zinc-100">{t.teamName}</span>
+                <span class="text-xs text-zinc-500 ml-2">({t.owner})</span>
+              </td>
+              <td class="text-center font-mono text-sm font-semibold text-emerald-400">{t.wins}</td>
+              <td class="text-center font-mono text-sm">{t.losses}</td>
+              <td class="text-right font-mono text-sm text-zinc-300">{t.pf.toFixed(1)}</td>
+              <td class="text-center">
+                {i < 2 ? (
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-medium">1st Rd Bye</span>
+                ) : (
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">In Playoffs</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Eliminated Teams -->
+  <div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10 text-sm">❌</div>
+      <h2 class="text-lg font-bold text-red-400">Eliminated</h2>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {eliminated.map(t => (
+        <div class="glass-card rounded-xl p-3 flex items-center justify-between">
+          <div>
+            <div class="text-sm font-semibold text-zinc-200">{t.teamName}</div>
+            <div class="text-[10px] text-zinc-500">{t.owner}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-mono text-zinc-400">{t.wins}-{t.losses}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Playoff History -->
+  <div class="glass-card rounded-xl p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">📜</span>
+      <h2 class="text-lg font-bold text-zinc-100">Playoff Format</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-amber-400 mb-2">Format</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• <strong class="text-zinc-200">6 teams</strong> make playoffs (top 6 of 14)</li>
+          <li>• <strong class="text-zinc-200">Seeds 1-2</strong> get first-round bye</li>
+          <li>• <strong class="text-zinc-200">Seeds 3-6</strong> play quarterfinals (Week 15)</li>
+          <li>• <strong class="text-zinc-200">Semifinals</strong> Week 16</li>
+          <li>• <strong class="text-zinc-200">Championship</strong> Week 17</li>
+        </ul>
+      </div>
+      <div class="bg-zinc-800/30 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2">Payouts</h3>
+        <ul class="space-y-1.5 text-xs text-zinc-400">
+          <li>• <strong class="text-zinc-200">1st Place:</strong> $1,400</li>
+          <li>• <strong class="text-zinc-200">2nd Place:</strong> $700</li>
+          <li>• <strong class="text-zinc-200">3rd Place:</strong> $350</li>
+          <li>• <strong class="text-zinc-200">Regular Season Champ:</strong> $100</li>
+          <li>• <strong class="text-zinc-200">Weekly High Score:</strong> $25 (Weeks 1-14)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</Layout>
