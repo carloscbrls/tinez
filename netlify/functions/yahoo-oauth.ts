@@ -92,6 +92,10 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   // Handle OAuth callback (code parameter)
   const code = params.code;
   if (code) {
+    // Warm up: make the token exchange request immediately
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    
     const tokenBody = new URLSearchParams({
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
@@ -105,7 +109,9 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: tokenBody.toString(),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const data: any = await res.json();
       
       if (data.access_token) {
@@ -120,6 +126,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         return respond(500, JSON.stringify({ error: "Token exchange failed", data }), "application/json");
       }
     } catch (err: any) {
+      clearTimeout(timeout);
       return respond(500, `OAuth error: ${err.message}`, "text/plain");
     }
   }
