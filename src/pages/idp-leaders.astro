@@ -3,54 +3,53 @@ import Layout from "../layouts/Layout.astro";
 import { fetchPlayers } from "../data/sleeper";
 import { getEspnHeadshotUrl } from "../data/players";
 import { getNFLTeam } from "../data/nfl-teams";
+import { generateIdpProjections, getIdpRankings, getTopIdpByGroup, getIdpSleepers, getIdpPositionGroup } from "../data/idp-projections";
 
-const allPlayers = await fetchPlayers();
+const projections = await generateIdpProjections();
+const { overall, byPosition } = await getIdpRankings();
+const topDL = await getTopIdpByGroup("DL", 25);
+const topLB = await getTopIdpByGroup("LB", 25);
+const topDB = await getTopIdpByGroup("DB", 25);
+const sleepers = await getIdpSleepers(10);
 
-// Get all IDP players
-const idpPlayers = Object.values(allPlayers).filter(p => {
-  const pos = p.position || "";
-  return ["DL", "LB", "DB", "DE", "DT", "S", "CB", "OLB", "ILB", "NT"].includes(pos);
-});
+// Top 50 overall
+const top50 = overall.slice(0, 50);
 
-// Build IDP rankings by position
-const byPosition: Record<string, any[]> = {};
-for (const p of idpPlayers) {
-  const pos = p.position || "Unknown";
-  if (!byPosition[pos]) byPosition[pos] = [];
-  byPosition[pos].push(p);
+// Position group stats
+const groupStats = {
+  DL: { count: projections.filter(p => getIdpPositionGroup(p.position) === "DL").length, avg: 0 },
+  LB: { count: projections.filter(p => getIdpPositionGroup(p.position) === "LB").length, avg: 0 },
+  DB: { count: projections.filter(p => getIdpPositionGroup(p.position) === "DB").length, avg: 0 },
+};
+
+for (const group of ["DL", "LB", "DB"] as const) {
+  const players = projections.filter(p => getIdpPositionGroup(p.position) === group);
+  groupStats[group].avg = players.length > 0
+    ? Math.round(players.reduce((s, p) => s + p.weeklyProjected, 0) / players.length * 10) / 10
+    : 0;
 }
 
-// Sort by age (proxy for experience/value)
-for (const pos of Object.keys(byPosition)) {
-  byPosition[pos].sort((a, b) => (a.age || 99) - (b.age || 99));
-}
+const tierColors: Record<string, string> = {
+  elite: "text-amber-400",
+  starter: "text-emerald-400",
+  rotational: "text-blue-400",
+  depth: "text-zinc-500",
+  rookie: "text-purple-400",
+};
 
-// Top IDP players overall (by age/experience)
-const topIdpOverall = idpPlayers
-  .filter(p => p.age && p.age >= 24 && p.age <= 30)
-  .sort((a, b) => (a.age || 99) - (b.age || 99))
-  .slice(0, 50);
+const tierLabels: Record<string, string> = {
+  elite: "Elite",
+  starter: "Starter",
+  rotational: "Rotational",
+  depth: "Depth",
+  rookie: "Rookie",
+};
 
-const positionOrder = ["DE", "DT", "NT", "DL", "LB", "OLB", "ILB", "CB", "S", "DB"];
-const positionNames: Record<string, string> = {
-  DE: "Defensive Ends", DT: "Defensive Tackles", NT: "Nose Tackles", DL: "Defensive Linemen",
-  LB: "Linebackers", OLB: "Outside Linebackers", ILB: "Inside Linebackers",
-  CB: "Cornerbacks", S: "Safeties", DB: "Defensive Backs",
-};
-const positionEmojis: Record<string, string> = {
-  DE: "💪", DT: "🏋️", NT: "🦍", DL: "💪",
-  LB: "🛡️", OLB: "🛡️", ILB: "🛡️",
-  CB: "⚡", S: "🎯", DB: "⚡",
-};
-const positionColors: Record<string, string> = {
-  DE: "from-zinc-600 to-zinc-700", DT: "from-zinc-700 to-zinc-800", NT: "from-zinc-800 to-zinc-900",
-  DL: "from-zinc-600 to-zinc-700", LB: "from-zinc-500 to-zinc-600", OLB: "from-zinc-500 to-zinc-600",
-  ILB: "from-zinc-500 to-zinc-600", CB: "from-zinc-400 to-zinc-500", S: "from-zinc-400 to-zinc-500",
-  DB: "from-zinc-400 to-zinc-500",
-};
+const groupEmojis: Record<string, string> = { DL: "💪", LB: "🛡️", DB: "⚡" };
+const groupNames: Record<string, string> = { DL: "Defensive Line", LB: "Linebackers", DB: "Defensive Backs" };
 ---
 
-<Layout title="IDP Leaders">
+<Layout title="IDP Leaders | Tinez Fantasy Football">
   <div class="mb-8">
     <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
       <div class="hero-gradient absolute inset-0 animate-gradient"></div>
@@ -61,226 +60,212 @@ const positionColors: Record<string, string> = {
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
               <span class="gradient-text">IDP Leaders</span>
             </h1>
-            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Top Defensive Players · {idpPlayers.length} total</p>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · {projections.length} IDP players with projected stats</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Pre-Season Notice -->
-  <div class="glass-card-accent rounded-xl p-6 mb-8">
-    <div class="flex items-center gap-3">
-      <span class="text-3xl">🛡️</span>
-      <div>
-        <h2 class="text-lg font-bold text-amber-400">Pre-Season — IDP leaders will appear during the season</h2>
-        <p class="text-sm text-zinc-500 mt-1">Live IDP stats and rankings will populate once the regular season begins.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- IDP Scoring Reference -->
-  <div class="glass-card-accent rounded-xl p-5 mb-8">
-    <div class="flex items-center gap-2 mb-3">
-      <span class="text-lg">⚡</span>
-      <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">IDP Scoring Reference</h2>
-    </div>
-    <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-8">
-      <div class="bg-zinc-800/30 rounded-lg p-2 text-center">
-        <div class="text-sm font-bold text-emerald-400">1.5</div>
-        <div class="text-[9px] text-zinc-500">Solo Tkl</div>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-2 text-center">
-        <div class="text-sm font-bold text-zinc-300">0.5</div>
-        <div class="text-[9px] text-zinc-500">Ast Tkl</div>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-2 text-center">
-        <div class="text-sm font-bold text-emerald-400">3</div>
-        <div class="text-[9px] text-zinc-500">Sack</div>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-2 text-center">
-        <div class="text-sm font-bold text-emerald-400">3</div>
-        <div class="text-[9px] text-zinc-500">INT</div>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-2 text-center">
-        <div class="text-sm font-bold text-zinc-300">2</div>
-        <div class="text-[9px] text-zinc-500">FF</div>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-2 text-center">
-        <div class="text-sm font-bold text-zinc-300">2</div>
-        <div class="text-[9px] text-zinc-500">FR</div>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-2 text-center">
-        <div class="text-sm font-bold text-zinc-300">1</div>
-        <div class="text-[9px] text-zinc-500">PD</div>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-2 text-center">
-        <div class="text-sm font-bold text-zinc-300">0.5</div>
-        <div class="text-[9px] text-zinc-500">TFL</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Top IDP Players Overall -->
-  <div class="mb-8">
-    <div class="flex items-center gap-2 mb-4">
-      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">⭐</div>
-      <h2 class="text-lg font-bold text-amber-400">Top IDP Players (Prime Age 24-30)</h2>
-      <span class="text-xs text-zinc-600">({topIdpOverall.length} players)</span>
-    </div>
-    <div class="glass-card-static rounded-xl overflow-x-auto">
-      <table class="premium-table">
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th class="text-center">Pos</th>
-            <th class="text-center">Team</th>
-            <th class="text-center">Age</th>
-            <th class="text-center">Number</th>
-            <th class="text-center">Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {topIdpOverall.map(p => {
-            const espnId = p.espn_id || 0;
-            const nfl = p.team ? getNFLTeam(p.team) : null;
-            const valueScore = p.age ? Math.max(0, 30 - p.age) * 5 + (["LB", "ILB", "OLB"].includes(p.position) ? 20 : ["DE", "DL"].includes(p.position) ? 15 : 10) : 0;
-            const valueLabel = valueScore >= 40 ? "Elite" : valueScore >= 30 ? "High" : valueScore >= 20 ? "Mid" : "Depth";
-            const valueColor = valueScore >= 40 ? "text-amber-400" : valueScore >= 30 ? "text-emerald-400" : valueScore >= 20 ? "text-blue-400" : "text-zinc-500";
-            return (
-              <tr class="hover:bg-zinc-800/30 transition-colors">
-                <td>
-                  <div class="flex items-center gap-2.5">
-                    {espnId > 0 ? (
-                      <img src={getEspnHeadshotUrl(espnId)} alt={p.full_name} class="h-8 w-8 rounded-lg object-cover" loading="lazy" onerror="this.style.display='none'" />
-                    ) : (
-                      <div class="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">?</div>
-                    )}
-                    <div>
-                      <div class="text-sm font-semibold text-zinc-100">{p.full_name}</div>
-                      <div class="text-[10px] text-zinc-500">{nfl?.name || p.team || "FA"}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="text-center">
-                  <span class={`inline-flex items-center justify-center h-6 w-8 rounded text-[10px] font-bold text-white bg-gradient-to-br ${positionColors[p.position] || 'from-zinc-600 to-zinc-700'}`}>
-                    {p.position}
-                  </span>
-                </td>
-                <td class="text-center">
-                  <span class="text-xs font-mono text-zinc-400">{p.team || "FA"}</span>
-                </td>
-                <td class="text-center font-mono text-xs text-zinc-500">{p.age || "—"}</td>
-                <td class="text-center font-mono text-xs text-zinc-500">{p.number || "—"}</td>
-                <td class="text-center">
-                  <span class={`text-xs font-semibold ${valueColor}`}>{valueLabel}</span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- IDP by Position -->
-  <div class="mb-8">
-    <div class="flex items-center gap-2 mb-4">
-      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📋</div>
-      <h2 class="text-lg font-bold text-amber-400">IDP by Position</h2>
-    </div>
-
-    {positionOrder.filter(pos => byPosition[pos]?.length).map(pos => (
-      <div class="mb-6">
-        <div class="flex items-center gap-2 mb-3">
-          <div class={`h-6 w-6 rounded flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-br ${positionColors[pos]}`}>{positionEmojis[pos]}</div>
-          <h3 class="text-sm font-bold text-zinc-200">{positionNames[pos] || pos + "s"}</h3>
-          <span class="text-xs text-zinc-600">({byPosition[pos].length})</span>
+  <!-- Overview Stats -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    {(["DL", "LB", "DB"] as const).map((group) => (
+      <div class="glass-card rounded-xl p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="text-2xl">{groupEmojis[group]}</span>
+          <div>
+            <h3 class="text-sm font-bold text-white">{groupNames[group]}</h3>
+            <p class="text-[10px] text-zinc-500">{groupStats[group].count} players</p>
+          </div>
         </div>
-        <div class="glass-card-static rounded-xl overflow-x-auto">
-          <table class="premium-table">
-            <thead>
-              <tr>
-                <th>Player</th>
-                <th class="text-center">Team</th>
-                <th class="text-center">Age</th>
-                <th class="text-center">#</th>
-                <th class="text-center">Depth</th>
-                <th class="text-center">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {byPosition[pos].slice(0, 25).map(p => {
-                const espnId = p.espn_id || 0;
-                const nfl = p.team ? getNFLTeam(p.team) : null;
-                const valueScore = p.age ? Math.max(0, 30 - p.age) * 5 + (["LB", "ILB", "OLB"].includes(p.position) ? 20 : ["DE", "DL"].includes(p.position) ? 15 : 10) : 0;
-                const valueLabel = valueScore >= 40 ? "Elite" : valueScore >= 30 ? "High" : valueScore >= 20 ? "Mid" : "Depth";
-                const valueColor = valueScore >= 40 ? "text-amber-400" : valueScore >= 30 ? "text-emerald-400" : valueScore >= 20 ? "text-blue-400" : "text-zinc-500";
-                return (
-                  <tr class="hover:bg-zinc-800/30 transition-colors">
-                    <td>
-                      <div class="flex items-center gap-2.5">
-                        {espnId > 0 ? (
-                          <img src={getEspnHeadshotUrl(espnId)} alt={p.full_name} class="h-8 w-8 rounded-lg object-cover" loading="lazy" onerror="this.style.display='none'" />
-                        ) : (
-                          <div class="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">?</div>
-                        )}
-                        <div>
-                          <div class="text-sm font-semibold text-zinc-100">{p.full_name}</div>
-                          <div class="text-[10px] text-zinc-500">{nfl?.name || p.team || "FA"}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="text-center">
-                      <span class="text-xs font-mono text-zinc-400">{p.team || "FA"}</span>
-                    </td>
-                    <td class="text-center font-mono text-xs text-zinc-500">{p.age || "—"}</td>
-                    <td class="text-center font-mono text-xs text-zinc-500">{p.number || "—"}</td>
-                    <td class="text-center">
-                      <span class="text-xs font-mono text-zinc-400">{p.depth_chart_position || "—"}</span>
-                    </td>
-                    <td class="text-center">
-                      <span class={`text-xs font-semibold ${valueColor}`}>{valueLabel}</span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div class="flex items-baseline gap-1">
+          <span class="text-2xl font-bold text-amber-400">{groupStats[group].avg}</span>
+          <span class="text-xs text-zinc-600">avg weekly projection</span>
+        </div>
+        <div class="mt-2">
+          <span class="text-[10px] text-zinc-600">Top: </span>
+          <span class="text-xs text-zinc-300">
+            {group === "DL" ? topDL[0]?.player.name : group === "LB" ? topLB[0]?.player.name : topDB[0]?.player.name}
+          </span>
+          <span class="text-[10px] text-amber-400 ml-1">
+            ({group === "DL" ? topDL[0]?.player.weeklyProjected : group === "LB" ? topLB[0]?.player.weeklyProjected : topDB[0]?.player.weeklyProjected})
+          </span>
         </div>
       </div>
     ))}
   </div>
 
-  <!-- IDP Strategy -->
-  <div class="glass-card rounded-xl p-6">
-    <div class="flex items-center gap-2 mb-4">
-      <span class="text-lg">💡</span>
-      <h2 class="text-lg font-bold text-zinc-100">IDP Draft Strategy</h2>
+  <!-- Top 50 Overall -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+      <span>🏆</span> Top 50 IDP Players
+    </h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-zinc-500 text-[10px] uppercase tracking-wider border-b border-zinc-800">
+            <th class="text-left py-2 pr-2">Rank</th>
+            <th class="text-left py-2 pr-2">Player</th>
+            <th class="text-center py-2 pr-2">Pos</th>
+            <th class="text-center py-2 pr-2">Team</th>
+            <th class="text-center py-2 pr-2">Age</th>
+            <th class="text-center py-2 pr-2">Exp</th>
+            <th class="text-center py-2 pr-2">Tier</th>
+            <th class="text-center py-2 pr-2">Src</th>
+            <th class="text-center py-2 pr-2">Tkl</th>
+            <th class="text-center py-2 pr-2">Sack</th>
+            <th class="text-center py-2 pr-2">INT</th>
+            <th class="text-center py-2 pr-2">FF</th>
+            <th class="text-center py-2 pr-2">PD</th>
+            <th class="text-right py-2 pl-2 text-amber-400">Wkly</th>
+            <th class="text-right py-2 pl-2 text-zinc-500">Season</th>
+          </tr>
+        </thead>
+        <tbody>
+          {top50.map((r) => (
+            <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+              <td class="py-2 pr-2 text-zinc-500 text-xs">{r.overallRank}</td>
+              <td class="py-2 pr-2">
+                <div class="flex items-center gap-2">
+                  <img src={getEspnHeadshotUrl(r.player.playerId)} alt="" class="w-6 h-6 rounded-full bg-zinc-800 object-cover" loading="lazy" onerror="this.style.display='none'" />
+                  <span class="text-zinc-200 font-medium text-xs truncate max-w-[140px]">{r.player.name}</span>
+                </div>
+              </td>
+              <td class="py-2 pr-2 text-center">
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">{r.player.position}</span>
+              </td>
+              <td class="py-2 pr-2 text-center text-zinc-500 text-xs">{r.player.team}</td>
+              <td class="py-2 pr-2 text-center text-zinc-500 text-xs">{r.player.age}</td>
+              <td class="py-2 pr-2 text-center text-zinc-500 text-xs">{r.player.yearsExp}</td>
+              <td class="py-2 pr-2 text-center">
+                <span class={`text-[10px] ${tierColors[r.player.tier]}`}>{tierLabels[r.player.tier]}</span>
+              </td>
+              <td class="py-2 pr-2 text-center">
+                {r.player.source === "fantasynerds" || r.player.source === "merged" ? (
+                  <span class="text-[9px] text-amber-500 font-mono" title="FantasyNerds expert projection">FN</span>
+                ) : (
+                  <span class="text-[9px] text-zinc-600 font-mono" title="TINEZ statistical model">TZ</span>
+                )}
+              </td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.tackles}</td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.sacks}</td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.interceptions}</td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.forcedFumbles}</td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.passDefended}</td>
+              <td class="py-2 pl-2 text-right font-bold text-amber-400 text-xs">{r.player.weeklyProjected}</td>
+              <td class="py-2 pl-2 text-right text-zinc-500 text-xs">{r.player.projectedPoints}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-    <div class="grid gap-4 sm:grid-cols-3">
-      <div class="bg-zinc-800/30 rounded-lg p-4">
-        <h3 class="text-sm font-bold text-emerald-400 mb-2">Round 1-3</h3>
+  </div>
+
+  <!-- Position-Specific Rankings -->
+  {(["DL", "LB", "DB"] as const).map((group) => {
+    const rankings = group === "DL" ? topDL : group === "LB" ? topLB : topDB;
+    if (rankings.length === 0) return null;
+    return (
+      <div class="glass-card rounded-xl p-6 mb-6">
+        <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+          <span>{groupEmojis[group]}</span> Top {groupNames[group]}
+        </h2>
+        <p class="text-xs text-zinc-500 mb-4">Ranked by projected weekly points</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-zinc-500 text-[10px] uppercase tracking-wider border-b border-zinc-800">
+                <th class="text-left py-2 pr-2">#</th>
+                <th class="text-left py-2 pr-2">Player</th>
+                <th class="text-center py-2 pr-2">Pos</th>
+                <th class="text-center py-2 pr-2">Team</th>
+                <th class="text-center py-2 pr-2">Age</th>
+                <th class="text-center py-2 pr-2">Tier</th>
+                <th class="text-center py-2 pr-2">Tkl</th>
+                <th class="text-center py-2 pr-2">Sack</th>
+                <th class="text-center py-2 pr-2">INT</th>
+                <th class="text-center py-2 pr-2">PD</th>
+                <th class="text-right py-2 pl-2 text-amber-400">Wkly</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rankings.map((r) => (
+                <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                  <td class="py-2 pr-2 text-zinc-500 text-xs">{r.positionRank}</td>
+                  <td class="py-2 pr-2">
+                    <div class="flex items-center gap-2">
+                      <img src={getEspnHeadshotUrl(r.player.playerId)} alt="" class="w-6 h-6 rounded-full bg-zinc-800 object-cover" loading="lazy" onerror="this.style.display='none'" />
+                      <span class="text-zinc-200 font-medium text-xs truncate max-w-[140px]">{r.player.name}</span>
+                    </div>
+                  </td>
+                  <td class="py-2 pr-2 text-center">
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">{r.player.position}</span>
+                  </td>
+                  <td class="py-2 pr-2 text-center text-zinc-500 text-xs">{r.player.team}</td>
+                  <td class="py-2 pr-2 text-center text-zinc-500 text-xs">{r.player.age}</td>
+                  <td class="py-2 pr-2 text-center">
+                    <span class={`text-[10px] ${tierColors[r.player.tier]}`}>{tierLabels[r.player.tier]}</span>
+                  </td>
+                  <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.tackles}</td>
+                  <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.sacks}</td>
+                  <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.interceptions}</td>
+                  <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.passDefended}</td>
+                  <td class="py-2 pl-2 text-right font-bold text-amber-400 text-xs">{r.player.weeklyProjected}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  })}
+
+  <!-- Sleepers -->
+  {sleepers.length > 0 && (
+    <div class="glass-card-accent rounded-xl p-6 mb-8 border-amber-500/20">
+      <h2 class="text-lg font-bold text-amber-400 mb-4 flex items-center gap-2">
+        <span>🔮</span> IDP Sleepers — Late-Round Targets
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {sleepers.map((p) => (
+          <div class="bg-zinc-800/50 rounded-lg p-3 flex items-center gap-3">
+            <img src={getEspnHeadshotUrl(p.playerId)} alt="" class="w-8 h-8 rounded-full bg-zinc-700 object-cover" loading="lazy" onerror="this.style.display='none'" />
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-zinc-200 truncate">{p.name}</div>
+              <div class="text-[10px] text-zinc-500">{p.team} · {p.position} · Age {p.age} · {p.yearsExp}yr</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-bold text-amber-400">{p.weeklyProjected}</div>
+              <div class="text-[9px] text-zinc-600">wkly proj</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Draft Strategy -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+      <span>📖</span> IDP Draft Guide
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-zinc-800/50 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-white mb-2">When to Draft IDP</h3>
         <ul class="space-y-1.5 text-xs text-zinc-400">
-          <li>• Elite LBs (3-down, high tackle volume)</li>
-          <li>• Premium edge rushers (15+ sack potential)</li>
-          <li>• Don't reach — offense still priority</li>
+          <li>• <strong class="text-zinc-300">Rounds 8-10:</strong> Elite LBs (top 5-7)</li>
+          <li>• <strong class="text-zinc-300">Rounds 10-12:</strong> Elite DEs, top Safeties</li>
+          <li>• <strong class="text-zinc-300">Rounds 12-14:</strong> Starting LBs, top CBs</li>
+          <li>• <strong class="text-zinc-300">Rounds 14+:</strong> Rotational players, sleepers</li>
         </ul>
       </div>
-      <div class="bg-zinc-800/30 rounded-lg p-4">
-        <h3 class="text-sm font-bold text-amber-400 mb-2">Round 4-7</h3>
+      <div class="bg-zinc-800/50 rounded-lg p-4">
+        <h3 class="text-sm font-bold text-white mb-2">Positional Scarcity</h3>
         <ul class="space-y-1.5 text-xs text-zinc-400">
-          <li>• Starting LBs with secure roles</li>
-          <li>• Box safeties with tackle upside</li>
-          <li>• DL2s with breakout potential</li>
-        </ul>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-4">
-        <h3 class="text-sm font-bold text-blue-400 mb-2">Round 8+</h3>
-        <ul class="space-y-1.5 text-xs text-zinc-400">
-          <li>• IDP streamers based on matchups</li>
-          <li>• Rookie LBs with path to playing time</li>
-          <li>• CBs with high target volume</li>
+          <li>• <strong class="text-zinc-300">LB:</strong> Deepest position — 20+ startable options</li>
+          <li>• <strong class="text-zinc-300">DE:</strong> Top-heavy — big drop after elite tier</li>
+          <li>• <strong class="text-zinc-300">S:</strong> Moderate depth — target box safeties</li>
+          <li>• <strong class="text-zinc-300">CB:</strong> Streamable — don't invest early</li>
         </ul>
       </div>
     </div>

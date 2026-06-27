@@ -1,3 +1,5 @@
+import { monitor } from "../lib/monitor";
+
 // ESPN Depth Charts Integration — TINEZ Fantasy Football
 // Fetches NFL teams and depth charts from ESPN's public API (no auth required)
 

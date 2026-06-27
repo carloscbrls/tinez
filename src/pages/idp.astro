@@ -4,65 +4,55 @@ import { fetchPlayers } from "../data/sleeper";
 import { getEspnHeadshotUrl } from "../data/players";
 import { getNFLTeam } from "../data/nfl-teams";
 import { scoringSummary } from "../data/scoring";
+import { generateIdpProjections, getIdpRankings, getIdpSleepers, getIdpPositionGroup } from "../data/idp-projections";
 
 const allPlayers = await fetchPlayers();
+const projections = await generateIdpProjections();
+const { overall, byPosition } = await getIdpRankings();
+const sleepers = await getIdpSleepers();
 
-// Filter IDP players (DL, LB, DB)
-const idpPlayers = Object.values(allPlayers).filter(p => {
-  const pos = p.position || "";
-  return ["DL", "LB", "DB", "DE", "DT", "S", "CB", "OLB", "ILB", "NT"].includes(pos);
-});
-
-// Group by position
-const byPosition: Record<string, any[]> = {};
-for (const p of idpPlayers) {
-  const pos = p.position || "Unknown";
-  if (!byPosition[pos]) byPosition[pos] = [];
-  byPosition[pos].push(p);
+// Group projections by position group
+const byGroup: Record<string, typeof projections> = { DL: [], LB: [], DB: [] };
+for (const p of projections) {
+  const group = getIdpPositionGroup(p.position);
+  if (group) byGroup[group].push(p);
 }
 
-// Sort each position
-for (const pos of Object.keys(byPosition)) {
-  byPosition[pos].sort((a, b) => {
-    const aAge = a.age || 99;
-    const bAge = b.age || 99;
-    return aAge - bAge;
-  });
+// Sort each group by projected points
+for (const group of Object.keys(byGroup)) {
+  byGroup[group].sort((a, b) => b.weeklyProjected - a.weeklyProjected);
 }
 
-const positionOrder = ["DE", "DT", "NT", "DL", "LB", "OLB", "ILB", "CB", "S", "DB"];
-const positionNames: Record<string, string> = {
-  DE: "Defensive Ends",
-  DT: "Defensive Tackles",
-  NT: "Nose Tackles",
-  DL: "Defensive Linemen",
-  LB: "Linebackers",
-  OLB: "Outside Linebackers",
-  ILB: "Inside Linebackers",
-  CB: "Cornerbacks",
-  S: "Safeties",
-  DB: "Defensive Backs",
+const positionGroupInfo: Record<string, { name: string; emoji: string; color: string; desc: string }> = {
+  DL: { name: "Defensive Line", emoji: "💪", color: "from-zinc-600 to-zinc-700", desc: "DE · DT · NT — Sack specialists and run stuffers" },
+  LB: { name: "Linebackers", emoji: "🛡️", color: "from-zinc-500 to-zinc-600", desc: "LB · OLB · ILB — Tackle machines and playmakers" },
+  DB: { name: "Defensive Backs", emoji: "⚡", color: "from-zinc-400 to-zinc-500", desc: "CB · S — Coverage specialists and ball hawks" },
 };
-const positionEmojis: Record<string, string> = {
-  DE: "💪", DT: "🏋️", NT: "🦍", DL: "💪",
-  LB: "🛡️", OLB: "🛡️", ILB: "🛡️",
-  CB: "⚡", S: "🎯", DB: "⚡",
+
+const tierColors: Record<string, string> = {
+  elite: "text-amber-400",
+  starter: "text-emerald-400",
+  rotational: "text-blue-400",
+  depth: "text-zinc-500",
+  rookie: "text-purple-400",
 };
-const positionColors: Record<string, string> = {
-  DE: "from-zinc-600 to-zinc-700",
-  DT: "from-zinc-700 to-zinc-800",
-  NT: "from-zinc-800 to-zinc-900",
-  DL: "from-zinc-600 to-zinc-700",
-  LB: "from-zinc-500 to-zinc-600",
-  OLB: "from-zinc-500 to-zinc-600",
-  ILB: "from-zinc-500 to-zinc-600",
-  CB: "from-zinc-400 to-zinc-500",
-  S: "from-zinc-400 to-zinc-500",
-  DB: "from-zinc-400 to-zinc-500",
+
+const tierLabels: Record<string, string> = {
+  elite: "Elite",
+  starter: "Starter",
+  rotational: "Rotational",
+  depth: "Depth",
+  rookie: "Rookie",
+};
+
+const confidenceColors: Record<string, string> = {
+  high: "text-emerald-400",
+  medium: "text-amber-400",
+  low: "text-zinc-500",
 };
 ---
 
-<Layout title="IDP">
+<Layout title="IDP Players | Tinez Fantasy Football">
   <div class="mb-8">
     <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
       <div class="hero-gradient absolute inset-0 animate-gradient"></div>
@@ -73,181 +63,242 @@ const positionColors: Record<string, string> = {
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
               <span class="gradient-text">IDP</span>
             </h1>
-            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Individual Defensive Players · {idpPlayers.length} players</p>
+            <p class="text-zinc-400 text-sm mt-0.5">TINEZ LEAGUE · Individual Defensive Players · {projections.length} players with projections</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Pre-Season Notice -->
-  <div class="glass-card-accent rounded-xl p-6 mb-8">
-    <div class="flex items-center gap-3">
-      <span class="text-3xl">🛡️</span>
-      <div>
-        <h2 class="text-lg font-bold text-amber-400">Pre-Season — IDP data will update once the season starts</h2>
-        <p class="text-sm text-zinc-500 mt-1">Live IDP stats and scoring will appear during the regular season.</p>
+  <!-- Scoring Summary -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+      <span>📋</span> TINEZ IDP Scoring
+    </h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div class="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div class="text-lg font-bold text-amber-400">1.5</div>
+        <div class="text-[10px] text-zinc-500">Tackle Solo</div>
       </div>
-    </div>
-  </div>
-
-  <!-- IDP Scoring Summary -->
-  <div class="glass-card-accent rounded-xl p-5 mb-8">
-    <div class="flex items-center gap-2 mb-3">
-      <span class="text-lg">⚡</span>
-      <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">IDP Scoring</h2>
-    </div>
-    <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
-        <div class="text-lg font-bold text-emerald-400">{scoringSummary.tackleSolo}</div>
-        <div class="text-[10px] text-zinc-500">Solo Tackle</div>
+      <div class="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div class="text-lg font-bold text-amber-400">0.5</div>
+        <div class="text-[10px] text-zinc-500">Tackle Assist</div>
       </div>
-      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
-        <div class="text-lg font-bold text-zinc-300">{scoringSummary.tackleAssist}</div>
-        <div class="text-[10px] text-zinc-500">Assisted Tackle</div>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
-        <div class="text-lg font-bold text-emerald-400">{scoringSummary.sackDef}</div>
+      <div class="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div class="text-lg font-bold text-amber-400">3</div>
         <div class="text-[10px] text-zinc-500">Sack</div>
       </div>
-      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
-        <div class="text-lg font-bold text-emerald-400">{scoringSummary.interceptionDef}</div>
+      <div class="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div class="text-lg font-bold text-amber-400">3</div>
         <div class="text-[10px] text-zinc-500">Interception</div>
       </div>
-      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
-        <div class="text-lg font-bold text-zinc-300">{scoringSummary.passDefended}</div>
+      <div class="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div class="text-lg font-bold text-amber-400">2</div>
+        <div class="text-[10px] text-zinc-500">Forced Fumble</div>
+      </div>
+      <div class="bg-zinc-800/50 rounded-lg p-3 text-center">
+        <div class="text-lg font-bold text-amber-400">1</div>
         <div class="text-[10px] text-zinc-500">Pass Defended</div>
       </div>
-      <div class="bg-zinc-800/30 rounded-lg p-3 text-center">
-        <div class="text-lg font-bold text-zinc-300">{scoringSummary.tfl}</div>
-        <div class="text-[10px] text-zinc-500">Tackle for Loss</div>
+    </div>
+  </div>
+
+  <!-- Top IDP Players Overall -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+      <span>🏆</span> Top 20 IDP Projections
+    </h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-zinc-500 text-[10px] uppercase tracking-wider border-b border-zinc-800">
+            <th class="text-left py-2 pr-2">#</th>
+            <th class="text-left py-2 pr-2">Player</th>
+            <th class="text-center py-2 pr-2">Pos</th>
+            <th class="text-center py-2 pr-2">Team</th>
+            <th class="text-center py-2 pr-2">Age</th>
+            <th class="text-center py-2 pr-2">Tier</th>
+            <th class="text-center py-2 pr-2">Src</th>
+            <th class="text-center py-2 pr-2">Tkl</th>
+            <th class="text-center py-2 pr-2">Sack</th>
+            <th class="text-center py-2 pr-2">INT</th>
+            <th class="text-center py-2 pr-2">FF</th>
+            <th class="text-center py-2 pr-2">PD</th>
+            <th class="text-right py-2 pl-2 text-amber-400">Wkly</th>
+            <th class="text-right py-2 pl-2 text-amber-400">Season</th>
+          </tr>
+        </thead>
+        <tbody>
+          {overall.slice(0, 20).map((r, i) => (
+            <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+              <td class="py-2 pr-2 text-zinc-500 text-xs">{r.overallRank}</td>
+              <td class="py-2 pr-2">
+                <div class="flex items-center gap-2">
+                  <img src={getEspnHeadshotUrl(r.player.playerId)} alt="" class="w-6 h-6 rounded-full bg-zinc-800 object-cover" loading="lazy" onerror="this.style.display='none'" />
+                  <span class="text-zinc-200 font-medium text-xs truncate max-w-[140px]">{r.player.name}</span>
+                </div>
+              </td>
+              <td class="py-2 pr-2 text-center">
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">{r.player.position}</span>
+              </td>
+              <td class="py-2 pr-2 text-center">
+                <span class="text-[10px] text-zinc-500">{r.player.team}</span>
+              </td>
+              <td class="py-2 pr-2 text-center text-zinc-500 text-xs">{r.player.age}</td>
+              <td class="py-2 pr-2 text-center">
+                <span class={`text-[10px] ${tierColors[r.player.tier]}`}>{tierLabels[r.player.tier]}</span>
+              </td>
+              <td class="py-2 pr-2 text-center">
+                {r.player.source === "fantasynerds" || r.player.source === "merged" ? (
+                  <span class="text-[9px] text-amber-500 font-mono" title="FantasyNerds expert projection">FN</span>
+                ) : (
+                  <span class="text-[9px] text-zinc-600 font-mono" title="TINEZ statistical model">TZ</span>
+                )}
+              </td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.tackles}</td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.sacks}</td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.interceptions}</td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.forcedFumbles}</td>
+              <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{r.player.projectedStats.passDefended}</td>
+              <td class="py-2 pl-2 text-right font-bold text-amber-400 text-xs">{r.player.weeklyProjected}</td>
+              <td class="py-2 pl-2 text-right text-zinc-400 text-xs">{r.player.projectedPoints}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- IDP Sleepers -->
+  {sleepers.length > 0 && (
+    <div class="glass-card-accent rounded-xl p-6 mb-8 border-amber-500/20">
+      <h2 class="text-lg font-bold text-amber-400 mb-4 flex items-center gap-2">
+        <span>🔮</span> IDP Sleepers — Undervalued Gems
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {sleepers.slice(0, 9).map((p) => (
+          <div class="bg-zinc-800/50 rounded-lg p-3 flex items-center gap-3">
+            <img src={getEspnHeadshotUrl(p.playerId)} alt="" class="w-8 h-8 rounded-full bg-zinc-700 object-cover" loading="lazy" onerror="this.style.display='none'" />
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-zinc-200 truncate">{p.name}</div>
+              <div class="text-[10px] text-zinc-500">{p.team} · {p.position} · Age {p.age}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-bold text-amber-400">{p.weeklyProjected}</div>
+              <div class="text-[9px] text-zinc-600">wkly proj</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
-  </div>
+  )}
 
-  <!-- IDP Strategy -->
-  <div class="grid gap-4 sm:grid-cols-3 mb-8 stagger-children">
-    <div class="glass-card rounded-xl p-5">
-      <div class="text-2xl mb-2">💪</div>
-      <h3 class="text-sm font-bold text-zinc-100 mb-1">DL Strategy</h3>
-      <p class="text-xs text-zinc-500">Target edge rushers with high sack potential. 3 pts per sack with 1.5 per solo tackle makes elite pass rushers as valuable as mid-tier WRs.</p>
-      <div class="mt-3 text-xs text-zinc-600">Key stat: <span class="text-amber-400">Sacks + TFLs</span></div>
-    </div>
-    <div class="glass-card rounded-xl p-5">
-      <div class="text-2xl mb-2">🛡️</div>
-      <h3 class="text-sm font-bold text-zinc-100 mb-1">LB Strategy</h3>
-      <p class="text-xs text-zinc-500">Three-down LBs are gold. Solo tackles (1.5) + assists (0.5) + pass defensed (1) = consistent weekly floor. Target high-tackle volume LBs.</p>
-      <div class="mt-3 text-xs text-zinc-600">Key stat: <span class="text-amber-400">Tackles + Pass Defensed</span></div>
-    </div>
-    <div class="glass-card rounded-xl p-5">
-      <div class="text-2xl mb-2">⚡</div>
-      <h3 class="text-sm font-bold text-zinc-100 mb-1">DB Strategy</h3>
-      <p class="text-xs text-zinc-500">Safeties over corners for IDP. Safeties get more tackle opportunities. Target box safeties and slot corners who play close to the line.</p>
-      <div class="mt-3 text-xs text-zinc-600">Key stat: <span class="text-amber-400">Tackles + INTs</span></div>
-    </div>
-  </div>
-
-  <!-- IDP Player Database -->
-  <div class="mb-8">
-    <div class="flex items-center gap-2 mb-4">
-      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-sm">📋</div>
-      <h2 class="text-lg font-bold text-amber-400">IDP Player Database</h2>
-      <span class="text-xs text-zinc-600">({idpPlayers.length} players)</span>
-    </div>
-
-    {positionOrder.filter(pos => byPosition[pos]?.length).map(pos => (
-      <div class="mb-6">
-        <div class="flex items-center gap-2 mb-3">
-          <div class={`h-6 w-6 rounded flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-br ${positionColors[pos]}`}>{positionEmojis[pos]}</div>
-          <h3 class="text-sm font-bold text-zinc-200">{positionNames[pos] || pos + "s"}</h3>
-          <span class="text-xs text-zinc-600">({byPosition[pos].length})</span>
-        </div>
-        <div class="glass-card-static rounded-xl overflow-x-auto">
-          <table class="premium-table">
+  <!-- By Position Group -->
+  {["DL", "LB", "DB"].map((group) => {
+    const info = positionGroupInfo[group];
+    const topPlayers = byGroup[group].slice(0, 15);
+    if (topPlayers.length === 0) return null;
+    return (
+      <div class="glass-card rounded-xl p-6 mb-6">
+        <h2 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+          <span>{info.emoji}</span> {info.name}
+        </h2>
+        <p class="text-xs text-zinc-500 mb-4">{info.desc} · {topPlayers.length} players projected</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
             <thead>
-              <tr>
-                <th>Player</th>
-                <th class="text-center">Pos</th>
-                <th class="text-center">Team</th>
-                <th class="text-center">Age</th>
-                <th class="text-center">Number</th>
-                <th class="text-center">Depth</th>
+              <tr class="text-zinc-500 text-[10px] uppercase tracking-wider border-b border-zinc-800">
+                <th class="text-left py-2 pr-2">#</th>
+                <th class="text-left py-2 pr-2">Player</th>
+                <th class="text-center py-2 pr-2">Pos</th>
+                <th class="text-center py-2 pr-2">Team</th>
+                <th class="text-center py-2 pr-2">Tier</th>
+                <th class="text-center py-2 pr-2">Tkl</th>
+                <th class="text-center py-2 pr-2">Sack</th>
+                <th class="text-center py-2 pr-2">INT</th>
+                <th class="text-center py-2 pr-2">PD</th>
+                <th class="text-right py-2 pl-2 text-amber-400">Wkly</th>
               </tr>
             </thead>
             <tbody>
-              {byPosition[pos].slice(0, 30).map(p => {
-                const espnId = p.espn_id || 0;
-                const nfl = p.team ? getNFLTeam(p.team) : null;
-                const depth = p.depth_chart_position || "";
-                return (
-                  <tr class="hover:bg-zinc-800/30 transition-colors">
-                    <td>
-                      <div class="flex items-center gap-2.5">
-                        {espnId > 0 ? (
-                          <img src={getEspnHeadshotUrl(espnId)} alt={p.full_name} class="h-8 w-8 rounded-lg object-cover" loading="lazy" onerror="this.style.display='none'" />
-                        ) : (
-                          <div class="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">?</div>
-                        )}
-                        <div>
-                          <div class="text-sm font-semibold text-zinc-100">{p.full_name}</div>
-                          <div class="text-[10px] text-zinc-500">{nfl?.name || p.team || "FA"}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="text-center">
-                      <span class={`inline-flex items-center justify-center h-6 w-8 rounded text-[10px] font-bold text-white bg-gradient-to-br ${positionColors[p.position] || 'from-zinc-600 to-zinc-700'}`}>
-                        {p.position}
-                      </span>
-                    </td>
-                    <td class="text-center">
-                      <span class="text-xs font-mono text-zinc-400">{p.team || "FA"}</span>
-                    </td>
-                    <td class="text-center font-mono text-xs text-zinc-500">{p.age || "—"}</td>
-                    <td class="text-center font-mono text-xs text-zinc-500">{p.number || "—"}</td>
-                    <td class="text-center">
-                      {depth ? (
-                        <span class="text-xs font-mono text-zinc-400">{depth}</span>
-                      ) : (
-                        <span class="text-xs text-zinc-600">—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+              {topPlayers.map((p, i) => (
+                <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                  <td class="py-2 pr-2 text-zinc-500 text-xs">{i + 1}</td>
+                  <td class="py-2 pr-2">
+                    <div class="flex items-center gap-2">
+                      <img src={getEspnHeadshotUrl(p.playerId)} alt="" class="w-6 h-6 rounded-full bg-zinc-800 object-cover" loading="lazy" onerror="this.style.display='none'" />
+                      <span class="text-zinc-200 font-medium text-xs truncate max-w-[140px]">{p.name}</span>
+                    </div>
+                  </td>
+                  <td class="py-2 pr-2 text-center">
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">{p.position}</span>
+                  </td>
+                  <td class="py-2 pr-2 text-center text-zinc-500 text-xs">{p.team}</td>
+                  <td class="py-2 pr-2 text-center">
+                    <span class={`text-[10px] ${tierColors[p.tier]}`}>{tierLabels[p.tier]}</span>
+                  </td>
+                  <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{p.projectedStats.tackles}</td>
+                  <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{p.projectedStats.sacks}</td>
+                  <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{p.projectedStats.interceptions}</td>
+                  <td class="py-2 pr-2 text-center text-zinc-300 text-xs">{p.projectedStats.passDefended}</td>
+                  <td class="py-2 pl-2 text-right font-bold text-amber-400 text-xs">{p.weeklyProjected}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
-    ))}
+    );
+  })}
+
+  <!-- Strategy Guide -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+      <span>📖</span> IDP Draft Strategy
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-zinc-800/50 rounded-lg p-4">
+        <div class="text-2xl mb-2">💪</div>
+        <h3 class="text-sm font-bold text-white mb-1">Defensive Line</h3>
+        <p class="text-xs text-zinc-500 leading-relaxed">
+          Target elite DEs in rounds 8-10. Sacks are volatile — prioritize volume sack artists (4-3 DEs) over boom/bust pass rushers. 
+          DT is streamable; don't draft one before round 14.
+        </p>
+      </div>
+      <div class="bg-zinc-800/50 rounded-lg p-4">
+        <div class="text-2xl mb-2">🛡️</div>
+        <h3 class="text-sm font-bold text-white mb-1">Linebackers</h3>
+        <p class="text-xs text-zinc-500 leading-relaxed">
+          The backbone of IDP scoring. Target 3-down LBs with high tackle ceilings. 
+          In 0.5 PPR IDP, LBs are the most consistent scorers. Prioritize MLB/ILB over edge rushers.
+        </p>
+      </div>
+      <div class="bg-zinc-800/50 rounded-lg p-4">
+        <div class="text-2xl mb-2">⚡</div>
+        <h3 class="text-sm font-bold text-white mb-1">Defensive Backs</h3>
+        <p class="text-xs text-zinc-500 leading-relaxed">
+          Safeties > CBs for consistency. Target strong safeties with box responsibilities. 
+          CBs are boom/bust — elite ones are worth it, but streaming is viable.
+        </p>
+      </div>
+    </div>
   </div>
 
-  <!-- IDP vs Offense Value Comparison -->
-  <div class="glass-card rounded-xl p-6">
-    <div class="flex items-center gap-2 mb-4">
-      <span class="text-lg">⚖️</span>
-      <h2 class="text-lg font-bold text-zinc-100">IDP Value in This League</h2>
-    </div>
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div class="bg-zinc-800/30 rounded-lg p-4">
-        <h3 class="text-sm font-bold text-emerald-400 mb-2">Why IDP Matters Here</h3>
-        <ul class="space-y-1.5 text-xs text-zinc-400">
-          <li>• <strong class="text-zinc-200">1.5 pts per solo tackle</strong> — 50% more than Yahoo default</li>
-          <li>• <strong class="text-zinc-200">3 pts per sack</strong> — 50% more than Yahoo default</li>
-          <li>• <strong class="text-zinc-200">1 pt per pass defensed</strong> — Yahoo default is 0</li>
-          <li>• <strong class="text-zinc-200">0.5 pts per TFL</strong> — Yahoo default is 0</li>
-          <li>• Elite LBs can outscore mid-tier RBs weekly</li>
-        </ul>
-      </div>
-      <div class="bg-zinc-800/30 rounded-lg p-4">
-        <h3 class="text-sm font-bold text-amber-400 mb-2">Draft Strategy</h3>
-        <ul class="space-y-1.5 text-xs text-zinc-400">
-          <li>• <strong class="text-zinc-200">Don't ignore IDP</strong> — 4+ IDP starters in lineup</li>
-          <li>• <strong class="text-zinc-200">LB > DL > DB</strong> — LBs have highest floor</li>
-          <li>• <strong class="text-zinc-200">Target 3-down LBs</strong> — They never leave the field</li>
-          <li>• <strong class="text-zinc-200">Edge rushers in DL slots</strong> — Sack upside is real</li>
-          <li>• <strong class="text-zinc-200">Box safeties over corners</strong> — More tackle opportunities</li>
-        </ul>
-      </div>
-    </div>
+  <!-- Projection Methodology -->
+  <div class="glass-card rounded-xl p-6 mb-8">
+    <h2 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+      <span>🔬</span> About These Projections
+    </h2>
+    <p class="text-xs text-zinc-500 leading-relaxed">
+      Projections are generated using a statistical model based on player age, experience, and position group.
+      Tier classifications (Elite/Starter/Rotational/Depth/Rookie) are derived from historical IDP performance curves.
+      When a <strong class="text-amber-500">FantasyNerds API key</strong> is configured, projections blend expert-curated
+      FantasyNerds data (70%) with the TINEZ statistical model (30%) for more accurate weekly projections.
+      Players with FantasyNerds data show <span class="text-amber-500 font-mono text-[9px]">FN</span> in the Src column.
+      During the regular season, projections will be supplemented with live stats from ESPN's gamecast API.
+      <strong class="text-zinc-400"> Confidence:</strong> <span class="text-emerald-400">High</span> = Elite/Starter tier or FantasyNerds-sourced,
+      <span class="text-amber-400">Medium</span> = Rotational,
+      <span class="text-zinc-500">Low</span> = Depth/Rookie.
+    </p>
   </div>
 </Layout>

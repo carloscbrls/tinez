@@ -2,6 +2,16 @@
   command = "npm run build"
   publish = "dist"
 
+# Environment variables for Yahoo OAuth
+# Set these in Netlify dashboard:
+#   YAHOO_CLIENT_ID     — Yahoo Developer Network app client ID
+#   YAHOO_CLIENT_SECRET — Yahoo Developer Network app client secret
+#   YAHOO_REDIRECT_URI  — OAuth callback URL (default: https://tinez.netlify.app/api/yahoo/callback)
+#
+# Optional: FantasyNerds API for expert IDP projections
+#   FANTASYNERDS_API_KEY — Get from fantasynerds.com after signup
+#   Without this, IDP projections use the TINEZ statistical model only
+
 [[redirects]]
   from = "/api/yahoo/*"
   to = "/.netlify/functions/yahoo-oauth/:splat"

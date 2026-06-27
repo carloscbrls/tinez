@@ -1,3 +1,5 @@
+import { monitor } from "../lib/monitor";
+
 // NFL Live Data — ESPN API (no auth) + Open-Meteo weather (no key) + RSS news
 // All endpoints are public, no API keys required.
 
@@ -121,29 +123,26 @@ export async function fetchScoreboard(week?: number): Promise<ESPNScoreboard> {
   const url = week
     ? `${ESPN_BASE}/scoreboard?week=${week}`
     : `${ESPN_BASE}/scoreboard`;
-  const res = await fetch(url, { headers: { "User-Agent": "TINEZ/1.0" } });
-  if (!res.ok) throw new Error(`ESPN API error: ${res.status}`);
-  return res.json();
+  const result = await monitor.fetch<ESPNScoreboard>("ESPN", url, {
+    headers: { "User-Agent": "TINEZ/1.0" },
+  });
+  if (!result.ok || !result.data) throw new Error(result.error ?? `ESPN API error`);
+  return result.data;
 }
 
 /** Fetch weather for a stadium location */
 export async function fetchWeather(lat: number, lng: number): Promise<WeatherForecast | null> {
-  try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_days=1`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const c = data.current;
-    return {
-      temperature: c.temperature_2m,
-      precipitation: c.precipitation || 0,
-      windSpeed: c.wind_speed_10m,
-      weatherCode: c.weather_code,
-      weatherLabel: WMO_CODES[c.weather_code] || "Unknown",
-    };
-  } catch {
-    return null;
-  }
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_days=1`;
+  const result = await monitor.fetch<any>("OpenMeteo", url);
+  if (!result.ok || !result.data) return null;
+  const c = result.data.current;
+  return {
+    temperature: c.temperature_2m,
+    precipitation: c.precipitation || 0,
+    windSpeed: c.wind_speed_10m,
+    weatherCode: c.weather_code,
+    weatherLabel: WMO_CODES[c.weather_code] || "Unknown",
+  };
 }
 
 /** Fetch weather for a team's home stadium */
@@ -197,31 +196,29 @@ export async function fetchNflNews(limit = 20): Promise<NewsItem[]> {
   const allItems: NewsItem[] = [];
 
   for (const feed of RSS_FEEDS) {
-    try {
-      const res = await fetch(feed.url, { headers: { "User-Agent": "TINEZ/1.0" } });
-      if (!res.ok) continue;
-      const text = await res.text();
+    const result = await monitor.fetch<string>("RSS", feed.url, {
+      headers: { "User-Agent": "TINEZ/1.0" },
+    });
+    if (!result.ok || !result.data) continue;
+    const text = result.data;
 
-      // Simple RSS XML parser (no dependencies)
-      const items = text.split("<item>").slice(1);
-      for (const item of items) {
-        const title = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/);
-        const link = item.match(/<link>(.*?)<\/link>/);
-        const desc = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || item.match(/<description>(.*?)<\/description>/);
-        const date = item.match(/<pubDate>(.*?)<\/pubDate>/);
+    // Simple RSS XML parser (no dependencies)
+    const items = text.split("<item>").slice(1);
+    for (const item of items) {
+      const title = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/);
+      const link = item.match(/<link>(.*?)<\/link>/);
+      const desc = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || item.match(/<description>(.*?)<\/description>/);
+      const date = item.match(/<pubDate>(.*?)<\/pubDate>/);
 
-        if (title && link) {
-          allItems.push({
-            title: title[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim(),
-            link: link[1].trim(),
-            source: feed.source,
-            date: date ? date[1].trim() : "",
-            snippet: desc ? desc[1].replace(/<[^>]*>/g, "").replace(/<!\[CDATA\[|\]\]>/g, "").trim().substring(0, 200) : "",
-          });
-        }
+      if (title && link) {
+        allItems.push({
+          title: title[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim(),
+          link: link[1].trim(),
+          source: feed.source,
+          date: date ? date[1].trim() : "",
+          snippet: desc ? desc[1].replace(/<[^>]*>/g, "").replace(/<!\[CDATA\[|\]\]>/g, "").trim().substring(0, 200) : "",
+        });
       }
-    } catch {
-      // Skip failed feeds
     }
   }
 

@@ -11,6 +11,8 @@
 // Types matching the actual API response
 // ---------------------------------------------------------------------------
 
+import { monitor } from "../lib/monitor";
+
 export interface LeagueLogsMarketItem {
   sleeperPlayerId: string;
   value: number;
@@ -122,20 +124,16 @@ function setCache<T>(key: string, data: T, ttlMs: number = 6 * 60 * 60 * 1000): 
 // ---------------------------------------------------------------------------
 
 async function fetchApi<T>(url: string, fallback: T[]): Promise<T[]> {
-  try {
-    const response = await fetch(url, {
-      headers: { Accept: "application/json", "User-Agent": "TINEZ/1.0" },
-    });
-    if (!response.ok) {
-      console.warn(`[LeagueLogs] HTTP ${response.status} fetching ${url}`);
-      return fallback;
-    }
-    const json: LeagueLogsApiResponse<T> = await response.json();
-    return json.data ?? fallback;
-  } catch (error) {
-    console.error(`[LeagueLogs] Error fetching ${url}:`, error);
+  const result = await monitor.fetch<LeagueLogsApiResponse<T>>("LeagueLogs", url, {
+    headers: { Accept: "application/json", "User-Agent": "TINEZ/1.0" },
+  });
+
+  if (!result.ok) {
+    console.warn(`[LeagueLogs] ${result.error}`);
     return fallback;
   }
+
+  return result.data?.data ?? fallback;
 }
 
 // ---------------------------------------------------------------------------

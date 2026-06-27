@@ -1,0 +1,92 @@
+---
+/**
+ * DataFreshnessBar — Shows live status of all data sources
+ *
+ * Renders a compact bar showing which data sources are live, stale, or down.
+ * Fetches from /api/health on the client side for live updates.
+ */
+---
+
+<div id="data-freshness-bar" class="fixed bottom-0 left-0 right-0 z-50 border-t border-zinc-800 bg-zinc-950/90 backdrop-blur-sm">
+  <div class="max-w-7xl mx-auto px-4 py-1.5 flex items-center gap-3 text-xs overflow-x-auto">
+    <span class="text-zinc-500 font-medium shrink-0">Data Status</span>
+    <div id="freshness-indicators" class="flex items-center gap-2">
+      <span class="text-zinc-600">Loading...</span>
+    </div>
+    <button
+      id="refresh-health"
+      class="ml-auto shrink-0 text-zinc-500 hover:text-zinc-300 transition-colors"
+      title="Refresh health status"
+    >
+      ↻
+    </button>
+  </div>
+</div>
+
+<script>
+  (async function initFreshness() {
+    const container = document.getElementById("freshness-indicators");
+    const refreshBtn = document.getElementById("refresh-health");
+    if (!container) return;
+
+    async function fetchHealth() {
+      try {
+        const res = await fetch("/api/health");
+        const health = await res.json();
+        renderIndicators(health);
+      } catch {
+        container.innerHTML = `<span class="text-red-400">Health check failed</span>`;
+      }
+    }
+
+    function renderIndicators(health) {
+      const parts = health.sources.map((s) => {
+        const dot = s.status === "ok" ? "🟢" : s.status === "degraded" ? "🟡" : s.status === "down" ? "🔴" : "⚪";
+        const age = s.lastSuccess
+          ? formatAge(Date.now() - s.lastSuccess)
+          : "never";
+        return `<span title="${s.label}: ${s.totalRequests} req, ${s.totalFailures} err, ${s.avgResponseTimeMs.toFixed(0)}ms avg, cache: ${(s.cacheHitRate * 100).toFixed(0)}%">${dot} ${s.label} <span class="text-zinc-600">${age}</span></span>`;
+      });
+
+      // Add OAuth status
+      if (health.oauth) {
+        const oa = health.oauth;
+        const oaDot = oa.authenticated ? "🔵" : "⚪";
+        const expires = oa.tokenExpiresIn != null
+          ? `${formatDuration(oa.tokenExpiresIn)}`
+          : "unknown";
+        parts.push(`<span title="Yahoo OAuth: ${oa.refreshStatus}, scope: ${oa.scope || "unknown"}">${oaDot} OAuth <span class="text-zinc-600">${expires}</span></span>`);
+      }
+
+      container.innerHTML = parts.join('<span class="text-zinc-700 mx-1">|</span>');
+    }
+
+    function formatAge(ms) {
+      const sec = Math.floor(ms / 1000);
+      if (sec < 60) return `${sec}s ago`;
+      const min = Math.floor(sec / 60);
+      if (min < 60) return `${min}m ago`;
+      const hr = Math.floor(min / 60);
+      return `${hr}h ago`;
+    }
+
+    function formatDuration(sec) {
+      if (sec < 60) return `${sec}s`;
+      const min = Math.floor(sec / 60);
+      if (min < 60) return `${min}m`;
+      const hr = Math.floor(min / 60);
+      return `${hr}h`;
+    }
+
+    // Initial fetch
+    await fetchHealth();
+
+    // Refresh every 30 seconds
+    setInterval(fetchHealth, 30000);
+
+    // Manual refresh
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", fetchHealth);
+    }
+  })();
+</script>

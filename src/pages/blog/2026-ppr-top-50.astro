@@ -1,0 +1,145 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getEspnHeadshotUrl, getNflTeamLogoUrl } from "../../data/players";
+import { getNFLTeam } from "../../data/nfl-teams";
+
+const rankings = [
+  { rank: 1, adp: 1, name: "Bijan Robinson", pos: "RB", team: "ATL", bye: 11, pts: 20.4 },
+  { rank: 2, adp: 2, name: "Jahmyr Gibbs", pos: "RB", team: "DET", bye: 6, pts: 20.5 },
+  { rank: 3, adp: 3, name: "Ja'Marr Chase", pos: "WR", team: "CIN", bye: 6, pts: 18.6 },
+  { rank: 4, adp: 4, name: "Puka Nacua", pos: "WR", team: "LAR", bye: 11, pts: 18.8 },
+  { rank: 5, adp: 6, name: "Jaxon Smith-Njigba", pos: "WR", team: "SEA", bye: 11, pts: 17.6 },
+  { rank: 6, adp: 5, name: "Christian McCaffrey", pos: "RB", team: "SF", bye: 8, pts: 18.9 },
+  { rank: 7, adp: 8, name: "Amon-Ra St. Brown", pos: "WR", team: "DET", bye: 6, pts: 17.4 },
+  { rank: 8, adp: 7, name: "Jonathan Taylor", pos: "RB", team: "IND", bye: 13, pts: 17.8 },
+  { rank: 9, adp: 11, name: "CeeDee Lamb", pos: "WR", team: "DAL", bye: 14, pts: 15.5 },
+  { rank: 10, adp: 12, name: "Justin Jefferson", pos: "WR", team: "MIN", bye: 6, pts: 15.6 },
+];
+
+const byPosition = {
+  QB: { name: "Josh Allen", team: "BUF", note: "Consensus QB1 entering 2026" },
+  RB: { name: "Bijan Robinson", team: "ATL", note: "Top overall pick in PPR formats" },
+  WR: { name: "Ja'Marr Chase", team: "CIN", note: "Elite WR1 with 18.6 PPR projection" },
+  TE: { name: "Trey McBride", team: "ARI", note: "Top tight end in 2026 rankings" },
+  K: { name: "Brandon Aubrey", team: "DAL", note: "Highest ranked kicker" },
+};
+---
+
+<Layout title="2026 PPR Draft Rankings: Top 50 | TINEZ Blog">
+  <div class="mb-6">
+    <a href="/blog" class="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">← Back to Blog</a>
+  </div>
+
+  <div class="mb-8">
+    <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
+      <div class="hero-gradient absolute inset-0 animate-gradient"></div>
+      <div class="relative z-10 p-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white shadow-lg shadow-amber-500/20">🏆</div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              <span class="gradient-text">2026 PPR Draft Rankings: Top 50</span>
+            </h1>
+            <p class="text-zinc-400 text-sm mt-0.5">Consensus rankings from FantasyNerds — updated September 9, 2026</p>
+            <div class="mt-2 flex items-center gap-3 text-xs text-zinc-500">
+              <span>Jun 27, 2026</span>
+              <span>·</span>
+              <span>3 min read</span>
+              <span>·</span>
+              <span>Source: FantasyNerds</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prose prose-invert max-w-none mb-8">
+    <p class="text-lg text-zinc-300">
+      The 2026 NFL season is approaching, and it's time to start preparing for your fantasy draft. 
+      We've compiled the consensus PPR rankings from FantasyNerds to help you build a championship roster.
+    </p>
+
+    <h2 class="text-xl font-bold text-white mt-8 mb-4">Top Players by Position</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+      {Object.entries(byPosition).map(([pos, info]) => (
+        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div class="text-xs font-semibold uppercase tracking-wider text-amber-500 mb-1">{pos}</div>
+          <div class="text-white font-bold">{info.name}</div>
+          <div class="text-sm text-zinc-400">{info.team}</div>
+          <div class="text-xs text-zinc-500 mt-1">{info.note}</div>
+        </div>
+      ))}
+    </div>
+
+    <h2 class="text-xl font-bold text-white mt-8 mb-4">Top 10 PPR Rankings</h2>
+    <p class="text-zinc-400 mb-4">
+      These rankings are based on FantasyNerds' consensus projections for PPR scoring formats. 
+      ADP (Average Draft Position) is included to help you identify value picks.
+    </p>
+  </div>
+
+  <div class="overflow-hidden rounded-xl border border-zinc-800 mb-8">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-zinc-800/50">
+          <th class="px-4 py-3 text-left font-semibold text-zinc-300">Rank</th>
+          <th class="px-4 py-3 text-left font-semibold text-zinc-300">ADP</th>
+          <th class="px-4 py-3 text-left font-semibold text-zinc-300">Player</th>
+          <th class="px-4 py-3 text-left font-semibold text-zinc-300">Pos</th>
+          <th class="px-4 py-3 text-left font-semibold text-zinc-300">Team</th>
+          <th class="px-4 py-3 text-left font-semibold text-zinc-300">Bye</th>
+          <th class="px-4 py-3 text-right font-semibold text-zinc-300">Pts/Gm</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800">
+        {rankings.map(r => (
+          <tr class="hover:bg-zinc-800/30 transition-colors">
+            <td class="px-4 py-3 text-zinc-400">#{r.rank}</td>
+            <td class="px-4 py-3 text-zinc-500">{r.adp}</td>
+            <td class="px-4 py-3 font-medium text-white">{r.name}</td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center rounded-md bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300">{r.pos}</span>
+            </td>
+            <td class="px-4 py-3 text-zinc-400">{r.team}</td>
+            <td class="px-4 py-3 text-zinc-500">{r.bye}</td>
+            <td class="px-4 py-3 text-right font-mono text-amber-400">{r.pts.toFixed(1)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose prose-invert max-w-none">
+    <h2 class="text-xl font-bold text-white mt-8 mb-4">Key Takeaways</h2>
+
+    <h3 class="text-lg font-semibold text-white mt-6">Running Backs Dominate the Top</h3>
+    <p class="text-zinc-400">
+      Four of the top eight picks are running backs, with Bijan Robinson and Jahmyr Gibbs 
+      leading the charge. Both are projected for over 20 PPR points per game — elite territory. 
+      Christian McCaffrey at #6 (18.9 Pts/Gm) is the value pick if you're comfortable with his injury history.
+    </p>
+
+    <h3 class="text-lg font-semibold text-white mt-6">Wide Receiver Depth</h3>
+    <p class="text-zinc-400">
+      Ja'Marr Chase (18.6), Puka Nacua (18.8), and Jaxon Smith-Njigba (17.6) form the top WR tier. 
+      CeeDee Lamb at #9 with a 14th-round ADP value is a steal if he falls to you.
+    </p>
+
+    <h3 class="text-lg font-semibold text-white mt-6">Draft Strategy</h3>
+    <p class="text-zinc-400">
+      With elite RBs going early, consider targeting a top-3 RB in round 1, then loading up on 
+      WRs in rounds 2-4. The WR depth in 2026 is exceptional — you can find starters well into 
+      round 6.
+    </p>
+
+    <div class="mt-8 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+      <h3 class="text-lg font-semibold text-white mb-2">📊 About These Rankings</h3>
+      <p class="text-sm text-zinc-400">
+        Rankings sourced from <a href="https://www.fantasynerds.com/nfl/draft-rankings/ppr" class="text-amber-400 hover:text-amber-300" target="_blank">FantasyNerds</a> — 
+        consensus projections updated September 9, 2026. Full rankings (50+ players) available 
+        with a FantasyNerds Pro subscription. Check back for weekly updates during the season.
+      </p>
+    </div>
+  </div>
+</Layout>

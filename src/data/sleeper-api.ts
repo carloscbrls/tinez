@@ -17,6 +17,7 @@ import type {
   PowerRanking,
   LeagueRecord,
 } from "./sleeper-types";
+import { monitor } from "../lib/monitor";
 
 // Cache configuration
 const CACHE_DIR = "./node_modules/.cache/sleeper";
@@ -65,29 +66,29 @@ function setCache(key: string, data: unknown): void {
 async function sleeperFetch<T>(endpoint: string, cacheKey: string, ttl: number): Promise<T> {
   if (isCacheValid(cacheKey, ttl)) {
     const cached = getFromCache<T>(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      monitor.reportCacheHit("Sleeper");
+      return cached;
+    }
   }
+  monitor.reportCacheMiss("Sleeper");
 
   const url = endpoint.startsWith("http") ? endpoint : `https://api.sleeper.app/v1/${endpoint}`;
-  
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "TinezFFL/1.0" },
-    });
-    
-    if (!res.ok) {
-      throw new Error(`Sleeper API error: ${res.status} for ${url}`);
-    }
-    
-    const data = await res.json() as T;
-    setCache(cacheKey, data);
-    return data;
-  } catch (error) {
+
+  const result = await monitor.fetch<T>("Sleeper", url, {
+    headers: { "User-Agent": "TinezFFL/1.0" },
+  });
+
+  if (!result.ok) {
     // Return cached data even if stale, rather than failing
     const stale = getFromCache<T>(cacheKey);
     if (stale) return stale;
-    throw error;
+    throw new Error(result.error ?? `Sleeper API error for ${url}`);
   }
+
+  const data = result.data!;
+  setCache(cacheKey, data);
+  return data;
 }
 
 /**

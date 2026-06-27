@@ -78,6 +78,8 @@ const POSITION_MAP: Record<number, string> = {
   16: "DST",
 };
 
+import { monitor } from "../lib/monitor";
+
 // ─── Cache ────────────────────────────────────────────────────────────────────
 
 const CACHE_TTL = 3_600_000; // 1 hour
@@ -103,6 +105,7 @@ function getFromCache<T>(key: string): T | null {
 
 function setCache(key: string, data: unknown): void {
   memoryCache.set(key, { data, timestamp: Date.now() });
+  monitor.reportCacheWrite("ESPN");
 }
 
 // ─── API Endpoints ────────────────────────────────────────────────────────────
@@ -134,26 +137,32 @@ async function fetchEspnView(view: EspnView): Promise<EspnRawPlayer[]> {
 
   if (isCacheValid(cacheKey)) {
     const cached = getFromCache<EspnRawPlayer[]>(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      monitor.reportCacheHit("ESPN");
+      return cached;
+    }
   }
+  monitor.reportCacheMiss("ESPN");
 
   const url = `${ESPN_BASE}?view=${view}`;
 
-  try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": "TinezFFL/1.0",
-        "Accept": "application/json",
-      },
-    });
+  const result = await monitor.fetch<EspnRawPlayer[]>("ESPN", url, {
+    headers: {
+      "User-Agent": "TinezFFL/1.0",
+      "Accept": "application/json",
+    },
+  });
 
-    if (!res.ok) {
-      throw new Error(`ESPN API error: ${res.status} for view=${view}`);
-    }
+  if (!result.ok) {
+    // Return stale cache if available
+    const stale = getFromCache<EspnRawPlayer[]>(cacheKey);
+    if (stale) return stale;
+    throw new Error(result.error ?? `ESPN API error for view=${view}`);
+  }
 
-    const data = (await res.json()) as EspnRawPlayer[];
-    setCache(cacheKey, data);
-    return data;
+  const data = result.data!;
+  setCache(cacheKey, data);
+  return data;
   } catch (error) {
     // Return stale cache if available
     const stale = getFromCache<EspnRawPlayer[]>(cacheKey);
