@@ -416,22 +416,11 @@ try {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
   if (code) {
-    // Exchange code for token via API call (faster than redirect)
-    fetch('/api/yahoo/callback?code=' + encodeURIComponent(code))
-      .then(r => r.text())
-      .then(text => {
-        try {
-          const data = JSON.parse(text);
-          if (data.error) {
-            document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif;"><h1>Yahoo Auth Error</h1><p>' + data.error + '</p><pre>' + JSON.stringify(data.data, null, 2) + '</pre><p><a href="/">Go home</a></p></div>';
-          }
-        } catch {
-          // Redirect response — follow it
-          window.location.href = '/';
-        }
-      })
-      .catch(err => {
-        document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif;"><h1>Connection Error</h1><p>' + err.message + '</p><p><a href="/">Go home</a></p></div>';
-      });
+    // Warm up the function first, then redirect
+    fetch('/api/yahoo/status').then(() => {
+      window.location.href = '/api/yahoo/callback?code=' + encodeURIComponent(code);
+    }).catch(() => {
+      window.location.href = '/api/yahoo/callback?code=' + encodeURIComponent(code);
+    });
   }
 </script>
