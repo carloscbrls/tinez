@@ -2,7 +2,7 @@ import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
 
 const CLIENT_ID = "dj0yJmk9WHBRT3hndWh0NDAxJmQ9WVdrOWVEZExWbkZuY0hZbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PWVk";
 const CLIENT_SECRET = "6558133c494c1826bba17ece74da9df4ec289696";
-const REDIRECT_URI = "https://tinez.netlify.app/api/yahoo/callback";
+const REDIRECT_URI = "https://tinez.netlify.app/";
 const AUTH_URL = "https://api.login.yahoo.com/oauth2/request_auth";
 const TOKEN_URL = "https://api.login.yahoo.com/oauth2/get_token";
 const API_BASE = "https://fantasysports.yahooapis.com/fantasy/v2";
