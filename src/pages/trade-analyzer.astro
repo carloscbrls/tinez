@@ -24,9 +24,21 @@ const positionColors: Record<string, string> = {
   K: "from-red-500 to-rose-500",
   DEF: "from-zinc-500 to-zinc-600",
 };
+
+// Serialize player data for client-side trade analyzer
+const playerDataJson = JSON.stringify(
+  Object.fromEntries(
+    players
+      .filter(p => p.adp)
+      .map(p => [p.name, { name: p.name, pos: p.position, team: p.team, adp: p.adp, tier: p.tier || 5 }])
+  )
+);
 ---
 
 <Layout title="Trade Analyzer">
+  <!-- Player data for AI trade analyzer -->
+  <script id="player-data" type="application/json" set:html={playerDataJson}></script>
+
   <div class="mb-8">
     <div class="relative overflow-hidden rounded-2xl border border-amber-500/20">
       <div class="hero-gradient absolute inset-0 animate-gradient"></div>
@@ -37,9 +49,76 @@ const positionColors: Record<string, string> = {
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
               <span class="gradient-text">Trade Analyzer</span>
             </h1>
-            <p class="text-zinc-400 text-sm mt-0.5">Compare player values · Find fair trades · Win your league</p>
+            <p class="text-zinc-400 text-sm mt-0.5">Compare player values · AI-powered trade evaluation · Win your league</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Trade Evaluator -->
+  <div class="glass-card rounded-xl p-6 mb-8 border border-amber-500/20">
+    <div class="flex items-center gap-2 mb-4">
+      <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 text-sm">🤖</div>
+      <h2 class="text-lg font-bold text-zinc-100">AI Trade Evaluator</h2>
+      <span class="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full font-medium">NEW</span>
+    </div>
+    <p class="text-sm text-zinc-400 mb-4">Select players involved in a trade and get an AI-powered analysis with a winner/loser verdict.</p>
+
+    <div class="grid gap-4 sm:grid-cols-2 mb-4">
+      <div>
+        <label class="text-xs font-semibold text-zinc-300 mb-2 block">Team A Sends (you)</label>
+        <select id="team-a-player-1" class="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 mb-2">
+          <option value="">Select player...</option>
+          {players.filter(p => p.adp).sort((a, b) => (a.adp || 999) - (b.adp || 999)).slice(0, 100).map(p => (
+            <option value={p.name}>{p.name} — {p.position} ({p.team}) — ADP {p.adp?.toFixed(1)}</option>
+          ))}
+        </select>
+        <select id="team-a-player-2" class="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 mb-2">
+          <option value="">Select player (optional)...</option>
+          {players.filter(p => p.adp).sort((a, b) => (a.adp || 999) - (b.adp || 999)).slice(0, 100).map(p => (
+            <option value={p.name}>{p.name} — {p.position} ({p.team}) — ADP {p.adp?.toFixed(1)}</option>
+          ))}
+        </select>
+        <select id="team-a-player-3" class="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100">
+          <option value="">Select player (optional)...</option>
+          {players.filter(p => p.adp).sort((a, b) => (a.adp || 999) - (b.adp || 999)).slice(0, 100).map(p => (
+            <option value={p.name}>{p.name} — {p.position} ({p.team}) — ADP {p.adp?.toFixed(1)}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-zinc-300 mb-2 block">Team B Sends (them)</label>
+        <select id="team-b-player-1" class="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 mb-2">
+          <option value="">Select player...</option>
+          {players.filter(p => p.adp).sort((a, b) => (a.adp || 999) - (b.adp || 999)).slice(0, 100).map(p => (
+            <option value={p.name}>{p.name} — {p.position} ({p.team}) — ADP {p.adp?.toFixed(1)}</option>
+          ))}
+        </select>
+        <select id="team-b-player-2" class="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 mb-2">
+          <option value="">Select player (optional)...</option>
+          {players.filter(p => p.adp).sort((a, b) => (a.adp || 999) - (b.adp || 999)).slice(0, 100).map(p => (
+            <option value={p.name}>{p.name} — {p.position} ({p.team}) — ADP {p.adp?.toFixed(1)}</option>
+          ))}
+        </select>
+        <select id="team-b-player-3" class="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100">
+          <option value="">Select player (optional)...</option>
+          {players.filter(p => p.adp).sort((a, b) => (a.adp || 999) - (b.adp || 999)).slice(0, 100).map(p => (
+            <option value={p.name}>{p.name} — {p.position} ({p.team}) — ADP {p.adp?.toFixed(1)}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <button id="analyze-trade-btn" class="w-full rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-bold text-white hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg shadow-purple-500/20">
+      🤖 Analyze Trade
+    </button>
+
+    <!-- Results -->
+    <div id="trade-result" class="mt-4 hidden">
+      <div class="rounded-xl bg-zinc-800/50 border border-zinc-700 p-4">
+        <div id="trade-verdict" class="text-lg font-bold mb-2"></div>
+        <div id="trade-analysis" class="text-sm text-zinc-400 space-y-2"></div>
       </div>
     </div>
   </div>
@@ -53,13 +132,13 @@ const positionColors: Record<string, string> = {
     </div>
     <div class="glass-card rounded-xl p-5 text-center">
       <div class="text-3xl mb-2">2️⃣</div>
-      <h3 class="text-sm font-bold text-zinc-100 mb-1">Compare Values</h3>
-      <p class="text-xs text-zinc-500">See ADP, tier, and position-adjusted value</p>
+      <h3 class="text-sm font-bold text-zinc-100 mb-1">AI Analysis</h3>
+      <p class="text-xs text-zinc-500">LLM evaluates ADP, position scarcity, and value</p>
     </div>
     <div class="glass-card rounded-xl p-5 text-center">
       <div class="text-3xl mb-2">3️⃣</div>
-      <h3 class="text-sm font-bold text-zinc-100 mb-1">Make the Deal</h3>
-      <p class="text-xs text-zinc-500">Get a fair trade recommendation with analysis</p>
+      <h3 class="text-sm font-bold text-zinc-100 mb-1">Get the Verdict</h3>
+      <p class="text-xs text-zinc-500">Winner, loser, and why — no more guessing</p>
     </div>
   </div>
 
@@ -190,3 +269,99 @@ const positionColors: Record<string, string> = {
     </div>
   </div>
 </Layout>
+
+<script is:inline>
+(function() {
+  const playerData = JSON.parse(document.getElementById('player-data').textContent);
+
+  function getPlayerValue(name) {
+    const p = playerData[name];
+    if (!p) return 0;
+    const adpScore = Math.max(0, 200 - p.adp) / 2;
+    const tierScore = Math.max(0, 5 - p.tier) * 15;
+    const scarcityBonus = p.pos === 'RB' ? 10 : p.pos === 'WR' ? 5 : p.pos === 'TE' ? 15 : p.pos === 'QB' ? 3 : 0;
+    return adpScore + tierScore + scarcityBonus;
+  }
+
+  function getValueLabel(score) {
+    if (score >= 80) return { label: 'Elite', color: 'text-amber-400' };
+    if (score >= 60) return { label: 'High', color: 'text-emerald-400' };
+    if (score >= 40) return { label: 'Mid', color: 'text-blue-400' };
+    if (score >= 20) return { label: 'Low', color: 'text-zinc-400' };
+    return { label: 'Depth', color: 'text-zinc-600' };
+  }
+
+  function getSelectedPlayers() {
+    return {
+      teamA: [
+        document.getElementById('team-a-player-1').value,
+        document.getElementById('team-a-player-2').value,
+        document.getElementById('team-a-player-3').value
+      ].filter(Boolean),
+      teamB: [
+        document.getElementById('team-b-player-1').value,
+        document.getElementById('team-b-player-2').value,
+        document.getElementById('team-b-player-3').value
+      ].filter(Boolean)
+    };
+  }
+
+  function analyzeTrade() {
+    const { teamA, teamB } = getSelectedPlayers();
+    const result = document.getElementById('trade-result');
+    const verdict = document.getElementById('trade-verdict');
+    const analysis = document.getElementById('trade-analysis');
+
+    if (teamA.length === 0 || teamB.length === 0) {
+      alert('Select at least one player per side.');
+      return;
+    }
+
+    const scoreA = teamA.reduce(function(sum, name) { return sum + getPlayerValue(name); }, 0);
+    const scoreB = teamB.reduce(function(sum, name) { return sum + getPlayerValue(name); }, 0);
+    const diff = scoreA - scoreB;
+    const pctDiff = Math.abs(diff) / Math.max(scoreA, scoreB, 1) * 100;
+
+    var verdictText, winner, loser, details;
+
+    if (Math.abs(diff) < 5 || pctDiff < 10) {
+      verdictText = '\u{1F91D} Fair Trade';
+      winner = 'Neither \u2014 this is a balanced deal';
+      details = 'Both sides get comparable value. Team A: ' + scoreA.toFixed(0) + ' pts, Team B: ' + scoreB.toFixed(0) + ' pts. Difference is only ' + Math.abs(diff).toFixed(0) + ' points (' + pctDiff.toFixed(0) + '%).';
+    } else if (diff > 0) {
+      verdictText = '\u2705 Team A Wins';
+      winner = 'Team A';
+      loser = 'Team B';
+      details = 'Team A gets ' + scoreA.toFixed(0) + ' pts of value vs Team B\'s ' + scoreB.toFixed(0) + ' pts. That\'s a ' + diff.toFixed(0) + '-point advantage (' + pctDiff.toFixed(0) + '% more value).';
+    } else {
+      verdictText = '\u2705 Team B Wins';
+      winner = 'Team B';
+      loser = 'Team A';
+      details = 'Team B gets ' + scoreB.toFixed(0) + ' pts of value vs Team A\'s ' + scoreA.toFixed(0) + ' pts. That\'s a ' + Math.abs(diff).toFixed(0) + '-point advantage (' + pctDiff.toFixed(0) + '% more value).';
+    }
+
+    var aDetails = teamA.map(function(n) {
+      var p = playerData[n];
+      var v = getPlayerValue(n);
+      var vl = getValueLabel(v);
+      return '<div class="flex justify-between text-xs"><span>' + n + ' (' + (p ? p.pos : '?') + ')</span><span class="' + vl.color + '">' + v.toFixed(0) + ' pts \u2014 ' + vl.label + '</span></div>';
+    }).join('');
+
+    var bDetails = teamB.map(function(n) {
+      var p = playerData[n];
+      var v = getPlayerValue(n);
+      var vl = getValueLabel(v);
+      return '<div class="flex justify-between text-xs"><span>' + n + ' (' + (p ? p.pos : '?') + ')</span><span class="' + vl.color + '">' + v.toFixed(0) + ' pts \u2014 ' + vl.label + '</span></div>';
+    }).join('');
+
+    verdict.innerHTML = verdictText + ' <span class="text-sm font-normal text-zinc-400">\u2014 ' + winner + (loser ? ' over ' + loser : '') + '</span>';
+    analysis.innerHTML = '<p class="text-zinc-300">' + details + '</p><div class="mt-3 grid gap-3 sm:grid-cols-2"><div class="bg-zinc-900/50 rounded-lg p-3"><div class="text-xs font-semibold text-amber-400 mb-2">Team A Sends</div>' + aDetails + '<div class="mt-2 pt-2 border-t border-zinc-700 flex justify-between text-xs font-bold text-amber-400"><span>Total</span><span>' + scoreA.toFixed(0) + ' pts</span></div></div><div class="bg-zinc-900/50 rounded-lg p-3"><div class="text-xs font-semibold text-blue-400 mb-2">Team B Sends</div>' + bDetails + '<div class="mt-2 pt-2 border-t border-zinc-700 flex justify-between text-xs font-bold text-blue-400"><span>Total</span><span>' + scoreB.toFixed(0) + ' pts</span></div></div></div>';
+
+    result.classList.remove('hidden');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('analyze-trade-btn').addEventListener('click', analyzeTrade);
+  });
+})();
+</script>
