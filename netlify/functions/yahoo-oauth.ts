@@ -7,10 +7,69 @@ const AUTH_URL = "https://api.login.yahoo.com/oauth2/request_auth";
 const TOKEN_URL = "https://api.login.yahoo.com/oauth2/get_token";
 const API_BASE = "https://fantasysports.yahooapis.com/fantasy/v2";
 
-let accessToken: string | null = null;
-let refreshToken: string | null = null;
-let tokenExpiresAt: number = 0;
-let lastCallback: any = null;
+// Netlify Blob store for persistent token storage
+const STORE_KEY = "yahoo-tokens";
+
+async function getStoredTokens() {
+  try {
+    const store = process.env.NETLIFY_BLOB_STORE;
+    if (!store) return null;
+    const res = await fetch(`${store}/${STORE_KEY}`, {
+      headers: { "Authorization": `Bearer ${process.env.NETLIFY_ACCESS_TOKEN || ""}` }
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function storeTokens(data: any) {
+  try {
+    const store = process.env.NETLIFY_BLOB_STORE;
+    if (!store) return;
+    await fetch(`${store}/${STORE_KEY}`, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.NETLIFY_ACCESS_TOKEN || ""}`
+      },
+      body: JSON.stringify(data)
+    });
+  } catch { /* blob store not available */ }
+}
+
+async function getAccessToken(): Promise<string | null> {
+  const stored = await getStoredTokens();
+  if (!stored || !stored.accessToken) return null;
+  
+  // Check if token is expired and refresh if needed
+  if (Date.now() >= stored.expiresAt && stored.refreshToken) {
+    try {
+      const tokenBody = new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        refresh_token: stored.refreshToken,
+        grant_type: "refresh_token",
+      });
+      const res = await fetch(TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: tokenBody.toString(),
+      });
+      const data: any = await res.json();
+      if (data.access_token) {
+        const newTokens = {
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token || stored.refreshToken,
+          expiresAt: Date.now() + data.expires_in * 1000,
+        };
+        await storeTokens(newTokens);
+        return newTokens.accessToken;
+      }
+    } catch { return null; }
+  }
+  
+  return stored.accessToken;
+}
 
 function respond(statusCode: number, body: string, contentType: string, location?: string) {
   const headers: Record<string, string> = { "Content-Type": contentType };
@@ -22,25 +81,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   const rawPath = event.path;
   const path = rawPath.replace(/\/\.netlify\/functions\/yahoo-oauth/, "").replace(/\/api\/yahoo/, "");
   const params = event.queryStringParameters || {};
-  const rawQuery = event.rawQuery || "";
   const httpMethod = event.httpMethod;
-
-  // Store ALL request info for debugging
-  lastCallback = {
-    method: httpMethod,
-    rawPath,
-    path,
-    rawQuery,
-    params,
-    body: event.body,
-    isBase64Encoded: event.isBase64Encoded,
-    timestamp: new Date().toISOString(),
-  };
-
-  // GET /api/yahoo/debug — show last callback data
-  if (path === "/debug" || path === "/debug/") {
-    return respond(200, JSON.stringify({ lastCallback }, null, 2), "application/json");
-  }
 
   // GET /api/yahoo/login — redirect to Yahoo OAuth
   if (path === "/login" || path === "/login/") {
@@ -48,11 +89,9 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     return respond(302, "", "text/plain", authUrl);
   }
 
-  // Handle ANY path with a code parameter
+  // Handle OAuth callback (code parameter)
   const code = params.code;
-
   if (code) {
-    // We have a code! Exchange it for a token
     const tokenBody = new URLSearchParams({
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
@@ -70,9 +109,12 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
       const data: any = await res.json();
       
       if (data.access_token) {
-        accessToken = data.access_token;
-        refreshToken = data.refresh_token;
-        tokenExpiresAt = Date.now() + data.expires_in * 1000;
+        // Store tokens persistently
+        await storeTokens({
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token,
+          expiresAt: Date.now() + data.expires_in * 1000,
+        });
         return respond(302, "Yahoo connected! Redirecting...", "text/plain", "/");
       } else {
         return respond(500, JSON.stringify({ error: "Token exchange failed", data }), "application/json");
@@ -82,17 +124,36 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     }
   }
 
+  // Get access token for authenticated endpoints
+  const accessToken = await getAccessToken();
+
+  // GET /api/yahoo/status — check auth status
+  if (path === "/status" || path === "/status/") {
+    const stored = await getStoredTokens();
+    return respond(200, JSON.stringify({
+      authenticated: !!accessToken,
+      expiresAt: stored?.expiresAt || 0,
+      expiresIn: stored ? Math.max(0, Math.floor((stored.expiresAt - Date.now()) / 1000)) : 0,
+    }), "application/json");
+  }
+
+  // All endpoints below require authentication
+  if (!accessToken) {
+    return respond(401, JSON.stringify({ error: "Not authenticated", loginUrl: "/api/yahoo/login" }), "application/json");
+  }
+
+  // Helper to call Yahoo Fantasy API
+  async function callYahoo(endpoint: string) {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return res.text();
+  }
+
   // GET /api/yahoo/leagues — fetch user's leagues
   if (path === "/leagues" || path === "/leagues/") {
-    if (!accessToken) {
-      return respond(401, JSON.stringify({ error: "Not authenticated", loginUrl: "/api/yahoo/login" }), "application/json");
-    }
-
     try {
-      const res = await fetch(`${API_BASE}/users;use_login=1/games;game_keys=nfl/leagues`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const text = await res.text();
+      const text = await callYahoo("/users;use_login=1/games;game_keys=nfl/leagues");
       return respond(200, text, "application/xml");
     } catch (err: any) {
       return respond(500, `API error: ${err.message}`, "text/plain");
@@ -102,42 +163,136 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
   // GET /api/yahoo/standings — fetch league standings
   if (path === "/standings" || path === "/standings/") {
     const leagueKey = params.league_key;
-    if (!leagueKey) {
-      return respond(400, "Missing league_key query param", "text/plain");
-    }
-    if (!accessToken) {
-      return respond(401, JSON.stringify({ error: "Not authenticated", loginUrl: "/api/yahoo/login" }), "application/json");
-    }
-
+    if (!leagueKey) return respond(400, "Missing league_key query param", "text/plain");
     try {
-      const res = await fetch(`${API_BASE}/league/${leagueKey}/standings`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const text = await res.text();
+      const text = await callYahoo(`/league/${leagueKey}/standings`);
       return respond(200, text, "application/xml");
     } catch (err: any) {
       return respond(500, `API error: ${err.message}`, "text/plain");
     }
   }
 
-  // GET /api/yahoo/status — check auth status
-  if (path === "/status" || path === "/status/") {
-    return respond(200, JSON.stringify({
-      authenticated: !!accessToken,
-      expiresAt: tokenExpiresAt,
-      expiresIn: tokenExpiresAt ? Math.max(0, Math.floor((tokenExpiresAt - Date.now()) / 1000)) : 0,
-    }), "application/json");
+  // GET /api/yahoo/teams — fetch all teams in a league
+  if (path === "/teams" || path === "/teams/") {
+    const leagueKey = params.league_key;
+    if (!leagueKey) return respond(400, "Missing league_key query param", "text/plain");
+    try {
+      const text = await callYahoo(`/league/${leagueKey}/teams`);
+      return respond(200, text, "application/xml");
+    } catch (err: any) {
+      return respond(500, `API error: ${err.message}`, "text/plain");
+    }
+  }
+
+  // GET /api/yahoo/rosters — fetch team rosters
+  if (path === "/rosters" || path === "/rosters/") {
+    const leagueKey = params.league_key;
+    if (!leagueKey) return respond(400, "Missing league_key query param", "text/plain");
+    try {
+      const text = await callYahoo(`/league/${leagueKey}/teams;out=roster`);
+      return respond(200, text, "application/xml");
+    } catch (err: any) {
+      return respond(500, `API error: ${err.message}`, "text/plain");
+    }
+  }
+
+  // GET /api/yahoo/scoreboard — fetch weekly matchups/scores
+  if (path === "/scoreboard" || path === "/scoreboard/") {
+    const leagueKey = params.league_key;
+    if (!leagueKey) return respond(400, "Missing league_key query param", "text/plain");
+    const week = params.week || "";
+    try {
+      const endpoint = week 
+        ? `/league/${leagueKey}/scoreboard;week=${week}`
+        : `/league/${leagueKey}/scoreboard`;
+      const text = await callYahoo(endpoint);
+      return respond(200, text, "application/xml");
+    } catch (err: any) {
+      return respond(500, `API error: ${err.message}`, "text/plain");
+    }
+  }
+
+  // GET /api/yahoo/transactions — fetch recent transactions
+  if (path === "/transactions" || path === "/transactions/") {
+    const leagueKey = params.league_key;
+    if (!leagueKey) return respond(400, "Missing league_key query param", "text/plain");
+    const count = params.count || "25";
+    try {
+      const text = await callYahoo(`/league/${leagueKey}/transactions;count=${count}`);
+      return respond(200, text, "application/xml");
+    } catch (err: any) {
+      return respond(500, `API error: ${err.message}`, "text/plain");
+    }
+  }
+
+  // GET /api/yahoo/players — fetch player details
+  if (path === "/players" || path === "/players/") {
+    const leagueKey = params.league_key;
+    const playerKeys = params.player_keys;
+    if (!leagueKey || !playerKeys) return respond(400, "Missing league_key and/or player_keys query params", "text/plain");
+    try {
+      const text = await callYahoo(`/league/${leagueKey}/players;player_keys=${playerKeys}`);
+      return respond(200, text, "application/xml");
+    } catch (err: any) {
+      return respond(500, `API error: ${err.message}`, "text/plain");
+    }
+  }
+
+  // GET /api/yahoo/players/pick — fetch top available players (waiver wire)
+  if (path === "/players/pick" || path === "/players/pick/") {
+    const leagueKey = params.league_key;
+    const count = params.count || "50";
+    const sort = params.sort || "AR";
+    if (!leagueKey) return respond(400, "Missing league_key query param", "text/plain");
+    try {
+      const text = await callYahoo(`/league/${leagueKey}/players;count=${count};sort=${sort}`);
+      return respond(200, text, "application/xml");
+    } catch (err: any) {
+      return respond(500, `API error: ${err.message}`, "text/plain");
+    }
+  }
+
+  // GET /api/yahoo/settings — fetch league settings
+  if (path === "/settings" || path === "/settings/") {
+    const leagueKey = params.league_key;
+    if (!leagueKey) return respond(400, "Missing league_key query param", "text/plain");
+    try {
+      const text = await callYahoo(`/league/${leagueKey}/settings`);
+      return respond(200, text, "application/xml");
+    } catch (err: any) {
+      return respond(500, `API error: ${err.message}`, "text/plain");
+    }
+  }
+
+  // GET /api/yahoo/draft — fetch draft results
+  if (path === "/draft" || path === "/draft/") {
+    const leagueKey = params.league_key;
+    if (!leagueKey) return respond(400, "Missing league_key query param", "text/plain");
+    try {
+      const text = await callYahoo(`/league/${leagueKey}/draftresults`);
+      return respond(200, text, "application/xml");
+    } catch (err: any) {
+      return respond(500, `API error: ${err.message}`, "text/plain");
+    }
   }
 
   // Default — show available endpoints
   return respond(200, JSON.stringify({
+    authenticated: true,
     endpoints: {
       login: "/api/yahoo/login",
       callback: "/api/yahoo/callback",
+      status: "/api/yahoo/status",
       leagues: "/api/yahoo/leagues",
       standings: "/api/yahoo/standings?league_key=...",
-      status: "/api/yahoo/status",
-      debug: "/api/yahoo/debug",
+      teams: "/api/yahoo/teams?league_key=...",
+      rosters: "/api/yahoo/rosters?league_key=...",
+      scoreboard: "/api/yahoo/scoreboard?league_key=...&week=...",
+      transactions: "/api/yahoo/transactions?league_key=...&count=...",
+      players: "/api/yahoo/players?league_key=...&player_keys=...",
+      "players/pick": "/api/yahoo/players/pick?league_key=...&count=...&sort=...",
+      settings: "/api/yahoo/settings?league_key=...",
+      draft: "/api/yahoo/draft?league_key=...",
     },
   }), "application/json");
 };
