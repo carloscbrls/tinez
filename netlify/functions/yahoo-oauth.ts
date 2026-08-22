@@ -18,7 +18,7 @@
  *   GET  /api/yahoo/players      — Player details
  *   GET  /api/yahoo/players/pick — Waiver wire
  *   GET  /api/yahoo/settings     — League settings
- *   GET  /api/yahoo/draft        — Draft results
+ *   GET  /api/yahoo/draft        — Draft results (add ?season=YYYY for historical)
  */
 
 import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
@@ -446,11 +446,15 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
     return routeYahoo(`/league/${leagueKey}/settings`, "json");
   }
 
-  // GET /api/yahoo/draft
+  // GET /api/yahoo/draft?league_key=...&season=YYYY
+  // season is optional — defaults to current. Pass e.g. season=2025 to get
+  // last year's draft results (needed for keeper eligibility calculations).
   if (path === "/draft" || path === "/draft/") {
     const leagueKey = params.league_key;
     if (!leagueKey) return respond(400, JSON.stringify({ error: "Missing league_key" }), "application/json");
-    return routeYahoo(`/league/${leagueKey}/draftresults`, "json");
+    const season = params.season;
+    const seasonPart = season ? `;season=${encodeURIComponent(season)}` : "";
+    return routeYahoo(`/league/${leagueKey}${seasonPart}/draftresults`, "json");
   }
 
   // ─── Default — show available endpoints ────────────────────────────────
@@ -472,7 +476,7 @@ export const handler: Handler = async (event: HandlerEvent, context: HandlerCont
         players: "/api/yahoo/players?league_key=...&player_keys=...",
         "players/pick": "/api/yahoo/players/pick?league_key=...&count=...&sort=...",
         settings: "/api/yahoo/settings?league_key=...",
-        draft: "/api/yahoo/draft?league_key=...",
+        draft: "/api/yahoo/draft?league_key=... (&season=YYYY)",
       },
     }),
     "application/json"
