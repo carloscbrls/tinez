@@ -47,38 +47,50 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
     </div>
   </div>
 
-  <!-- Keeper Rules -->
+  <!-- Keeper Rules (from Tinez Constitution, Articles XVI + XXI) -->
   <div class="glass-card-accent rounded-xl p-5 mb-8">
     <div class="flex items-center gap-2 mb-3">
       <span class="text-lg">📋</span>
-      <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">Keeper Rules</h2>
+      <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider">
+        Keeper Rules
+        <span class="text-[10px] text-zinc-500 normal-case font-normal ml-2">
+          from Constitution Art. XVI &amp; XXI
+        </span>
+      </h2>
     </div>
     <div class="grid gap-3 sm:grid-cols-2 text-xs text-zinc-400">
       <div class="flex items-start gap-2">
         <span class="text-emerald-400 mt-0.5">•</span>
-        <span>Each team keeps <strong class="text-zinc-200">1 player + 1 rookie</strong> from previous season</span>
+        <span>Each team keeps <strong class="text-zinc-200">1 offensive + 1 defensive</strong> player</span>
       </div>
       <div class="flex items-start gap-2">
         <span class="text-emerald-400 mt-0.5">•</span>
-        <span>Keepers cost <strong class="text-zinc-200">1 round higher</strong> than previous draft position</span>
+        <span>Keepers must be on roster by <strong class="text-zinc-200">Week 8</strong></span>
       </div>
       <div class="flex items-start gap-2">
         <span class="text-emerald-400 mt-0.5">•</span>
-        <span>Undrafted players kept as <strong class="text-zinc-200">15th round</strong> pick</span>
+        <span>A player <strong class="text-zinc-200">can only be kept for 1 season</strong> before returning to pool</span>
       </div>
       <div class="flex items-start gap-2">
         <span class="text-emerald-400 mt-0.5">•</span>
-        <span>Rookies kept as <strong class="text-zinc-200">16th round</strong> pick (separate from main keeper)</span>
+        <span>Deadline: <strong class="text-zinc-200">24 hours before the draft</strong></span>
       </div>
       <div class="flex items-start gap-2">
         <span class="text-emerald-400 mt-0.5">•</span>
-        <span>Players kept <strong class="text-zinc-200">max 2 consecutive years</strong> before returning to pool</span>
+        <span><strong class="text-zinc-200">New team owners</strong> may keep any player on their roster, including ones kept by previous owners</span>
       </div>
       <div class="flex items-start gap-2">
         <span class="text-emerald-400 mt-0.5">•</span>
-        <span>Keeper deadline: <strong class="text-zinc-200">1 week before draft</strong></span>
+        <span>Players from <strong class="text-zinc-200">Rounds 21 &amp; 22</strong> of the previous draft are <strong class="text-zinc-200">not eligible</strong> to be kept</span>
+      </div>
+      <div class="flex items-start gap-2 sm:col-span-2">
+        <span class="text-amber-400 mt-0.5">★</span>
+        <span><strong class="text-zinc-200">House rule (cost):</strong> every keeper costs their <strong class="text-zinc-200">last-round pick</strong> of the draft (Rd 22 for the 2026 draft), regardless of when they were originally drafted.</span>
       </div>
     </div>
+    <p class="text-[10px] text-zinc-600 mt-3">
+      See <a href="/constitution" class="text-amber-400/80 hover:text-amber-400 underline">full constitution</a> for Articles XVI &amp; XXI in context.
+    </p>
   </div>
 
   <!-- Team Keeper Cards -->
@@ -117,10 +129,10 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
               </div>
             )}
 
-            <!-- Live Current Roster (Yahoo, fetched client-side) -->
+            <!-- Live Keeper Eligibility (Yahoo draft + roster, computed client-side) -->
             <div data-eligible-slot={idx}>
               <h4 class="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider mb-2 mt-1">
-                Current Roster <span class="text-zinc-600 normal-case font-normal">(live from Yahoo)</span>
+                Keeper Eligible · 2026 <span class="text-zinc-600 normal-case font-normal">(live from Yahoo)</span>
               </h4>
               <div class="space-y-1 max-h-48 overflow-y-auto" data-eligible-list>
                 <!-- Skeleton while loading -->
@@ -145,26 +157,37 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
     <span id="keepers-live-label">Live data idle</span>
   </div>
 
-  <!-- Client-side Yahoo roster fetch -->
+  <!-- Client-side Yahoo draft + roster fetch (keeper eligibility logic) -->
   <script>
-    import { checkAuth, getLeagues, getRosters, YahooAuthError, YahooRateLimitError } from "../data/yahoo-api";
+    import { checkAuth, getLeagues, getRosters, getDraftResults, YahooAuthError, YahooRateLimitError } from "../data/yahoo-api";
 
     // Tinez league — if /leagues lookup fails we fall back to this hardcoded key.
     const TINEZ_LEAGUE_ID = "541137";
     const TINEZ_LEAGUE_KEY = "449.l.541137";
+    // The season whose draft we're using to determine 2026 keeper eligibility.
+    // Each pick in SEASON's draft is annotated with keeper_status, telling us
+    // whether the player was itself a keeper from the prior year.
+    const ELIGIBILITY_SEASON = 2025;
     const SESSION_TTL_MS = 5 * 60 * 1000;
+    // House rule (not in constitution): every keeper costs their last-round
+    // pick of the whole draft. For the 2026 draft that's Rd 22. If the draft
+    // length ever changes, update this constant.
+    const LAST_ROUND_PICK = 22;
 
-    type SlotEl = HTMLDivElement;
-    type LivePlayer = {
+    type EligiblePlayer = {
       name: string;
       position: string;
       nflTeam: string;
-      injuryStatus?: string;
+      draftRound: number;       // round drafted in 2025
+      /** Cost to keep in 2026 per the house rule: every keeper costs their
+       *  last-round pick of the whole draft (= Rd 22 for the 2026 draft). */
+      newCost: number;
+      isLockedAlready: boolean; // already kept from 2024 into 2025 (Yahoo says)
+      side: "O" | "D";          // offensive or defensive — per Article XVI
     };
-    type LiveRoster = {
+    type LiveTeam = {
       teamName: string;
-      manager: string;
-      players: LivePlayer[];
+      eligible: EligiblePlayer[];
     };
 
     function setStatus(text: string, dot: "idle" | "loading" | "ok" | "err" = "idle") {
@@ -180,20 +203,25 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
       }
     }
 
-    function getCachedRosters(): { rosters: LiveRoster[]; ts: number } | null {
+    type CachedData = { teams: LiveTeam[]; ts: number };
+    function getCached(): CachedData | null {
       try {
-        const raw = sessionStorage.getItem("tinez:keepers:v1");
+        const raw = sessionStorage.getItem("tinez:keepers:v4");
         if (!raw) return null;
         const parsed = JSON.parse(raw);
-        if (!parsed?.ts || !parsed?.rosters) return null;
+        if (!parsed?.ts || !parsed?.teams) return null;
         if (Date.now() - parsed.ts > SESSION_TTL_MS) return null;
-        return { rosters: parsed.rosters as LiveRoster[], ts: parsed.ts };
+        return parsed as CachedData;
       } catch { return null; }
     }
-    function setCachedRosters(rosters: LiveRoster[]) {
+    function setCached(teams: LiveTeam[]) {
       try {
-        sessionStorage.setItem("tinez:keepers:v1", JSON.stringify({ ts: Date.now(), rosters }));
+        sessionStorage.setItem("tinez:keepers:v4", JSON.stringify({ ts: Date.now(), teams }));
       } catch {}
+    }
+
+    function secondsAgo(ts: number): number {
+      return Math.max(0, Math.round((Date.now() - ts) / 1000));
     }
 
     function escapeHtml(s: string): string {
@@ -202,44 +230,53 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
       ));
     }
 
-    function secondsAgo(ts: number): number {
-      return Math.max(0, Math.round((Date.now() - ts) / 1000));
-    }
-
-    function playerRowHtml(p: LivePlayer): string {
-      // Yahoo's /rosters endpoint doesn't return draft_round or keeper_status,
-      // so we show name + position + team + injury status. Round/cost math
-      // would be misleading without that data.
-      const injuryBadge = p.injuryStatus
-        ? `<span class="text-[10px] text-red-400 shrink-0">${escapeHtml(p.injuryStatus)}</span>`
-        : "";
+    function playerRowHtml(p: EligiblePlayer): string {
+      // Article XVI: 1 offensive + 1 defensive keeper per team. Yahoo's
+      // keeper_status tells us if they were already kept from 2024 into
+      // 2025 — those can't be re-kept (1-season max). Show those greyed.
+      const lockIcon = p.isLockedAlready ? "🔒" : "🔓";
+      const rowClass = p.isLockedAlready
+        ? "flex items-center justify-between px-2.5 py-1 rounded-lg opacity-60"
+        : "flex items-center justify-between px-2.5 py-1 hover:bg-zinc-800/30 rounded-lg transition-colors";
+      const sideBadgeColor = p.side === "O" ? "text-amber-400" : "text-sky-400";
       return `
-        <div class="flex items-center justify-between px-2.5 py-1 hover:bg-zinc-800/30 rounded-lg transition-colors">
+        <div class="${rowClass}">
           <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-xs shrink-0">${lockIcon}</span>
+            <span class="text-[9px] font-mono ${sideBadgeColor} shrink-0">${p.side}</span>
             <span class="text-xs text-zinc-200 truncate">${escapeHtml(p.name)}</span>
             <span class="text-[10px] text-zinc-500 shrink-0">${escapeHtml(p.position)} · ${escapeHtml(p.nflTeam)}</span>
-            ${injuryBadge}
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="text-[10px] text-zinc-600 font-mono">Rd ${p.draftRound}</span>
+            <span class="text-[10px] ${p.isLockedAlready ? "text-zinc-600" : "text-emerald-400"} font-mono">→ Rd ${p.newCost}</span>
           </div>
         </div>`;
     }
 
-    function renderRostersInto(rosters: LiveRoster[]) {
+    function renderTeamsInto(teams: LiveTeam[]) {
       const cards = document.querySelectorAll<HTMLElement>("[data-team-name]");
+      let matched = 0;
       cards.forEach(card => {
         const teamName = card.dataset.teamName || "";
-        const slot = card.querySelector<SlotEl>("[data-eligible-list]");
+        const slot = card.querySelector<HTMLElement>("[data-eligible-list]");
         if (!slot) return;
-        // Try exact match first, then fuzzy (Yahoo sometimes adds "(...)" suffixes)
-        let roster = rosters.find(r => r.teamName === teamName);
-        if (!roster) {
-          roster = rosters.find(r => r.teamName.startsWith(teamName));
-        }
-        if (!roster || !roster.players || roster.players.length === 0) {
-          slot.innerHTML = `<p class="text-[10px] text-zinc-600 py-2">No roster data for this team.</p>`;
+        // Try exact match first, then fuzzy (Yahoo team_name sometimes has
+        // "(...)" suffixes from the manager name).
+        let team = teams.find(t => t.teamName === teamName);
+        if (!team) team = teams.find(t => t.teamName.startsWith(teamName));
+        if (!team) {
+          slot.innerHTML = `<p class="text-[10px] text-zinc-600 py-2">No 2025 draft data for this team.</p>`;
           return;
         }
-        slot.innerHTML = roster.players.map(playerRowHtml).join("");
+        matched++;
+        if (team.eligible.length === 0) {
+          slot.innerHTML = `<p class="text-[10px] text-zinc-600 py-2">No eligible keepers for 2026 (all 2025 picks were either round 1–3 or already 2-year locked).</p>`;
+          return;
+        }
+        slot.innerHTML = team.eligible.map(playerRowHtml).join("");
       });
+      return matched;
     }
 
     function renderAuthError() {
@@ -247,13 +284,12 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
       slots.forEach(s => {
         s.innerHTML = `
           <div class="text-center py-4">
-            <p class="text-xs text-zinc-400 mb-2">Connect Yahoo to see live current rosters.</p>
+            <p class="text-xs text-zinc-400 mb-2">Connect Yahoo to see live keeper eligibility.</p>
             <a href="/connect-yahoo" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform">
               Connect Yahoo →
             </a>
           </div>`;
       });
-      // Hide loading skeletons
       document.querySelectorAll<HTMLElement>("[data-eligible-loading]").forEach(el => el.remove());
     }
 
@@ -270,8 +306,6 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
       document.querySelectorAll<HTMLElement>("[data-retry]").forEach(b => b.addEventListener("click", () => run()));
     }
 
-    // Look up the league_key from /leagues (handles the case where the
-    // hardcoded key is stale because Yahoo's game_id changed or similar).
     async function resolveLeagueKey(): Promise<string> {
       try {
         const leagues = await getLeagues();
@@ -281,27 +315,104 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
       return TINEZ_LEAGUE_KEY;
     }
 
-    function yahooRosterToLive(rosters: any[]): LiveRoster[] {
-      return rosters.map(r => ({
-        teamName: r.team_name || "",
-        manager: "",
-        players: (r.players || []).map((p: any) => ({
-          name: p.name?.full || "",
-          position: p.display_position || "",
-          nflTeam: p.editorial_team || "",
-          // Show "Q", "O", "IR", "D" etc. when Yahoo tags the player
-          injuryStatus: p.status && p.status !== "Healthy" && p.status !== "ACTIVE"
-            ? p.status
-            : undefined,
-        })),
-      }));
+    // ─── Keeper eligibility engine ────────────────────────────────────────
+    // Inputs:
+    //   drafts: YahooDraftResult[] — full 2025 draft, each pick has
+    //           { round, cost, keeper, keeper_status, player_key, team_key, ... }
+    //   rosters: YahooRoster[] — current 2025 rosters, each with team_name
+    //            and players[] with player_keys.
+    //
+    // Rules per the Tinez Constitution (Articles XVI + XXI):
+    //   1. Each team keeps 1 offensive + 1 defensive player. (Position-based
+    //      split — offensive = QB/RB/WR/TE/K, defensive = DL/LB/DB/IDP. We
+    //      tag each pick with its side and only show O-side here since K is
+    //      treated as offense in this league's convention; commissioner
+    //      picks the split per team.)
+    //   2. Players from Rounds 21 & 22 of the 2025 draft are NOT eligible.
+    //      (Article XXI clarification.)
+    //   3. A player can only be kept for 1 season. Constitution has no cost
+    //      formula — we display "Rnd X → Rnd X" (no inflation) to be
+    //      honest about the fact that cost math isn't codified.
+    //   4. Yahoo's keeper_status 'kept' / 'uneligible' → ineligible to keep
+    //      again (already kept from 2024 into 2025).
+    //   5. Traded/cut picks → filtered out (can't keep what you don't own).
+    //   6. New team owners (we can't detect this server-side; flagged in the
+    //      rules section above) may keep anyone on their roster.
+    function positionSide(position: string): "O" | "D" {
+      const d = (position || "").toUpperCase();
+      if (d === "QB" || d === "RB" || d === "WR" || d === "TE" || d === "K") return "O";
+      return "D"; // DL, LB, DB, S, CB, DT, DE, IDP
+    }
+
+    function buildKeeperEligibility(
+      drafts: any[],
+      rosters: any[]
+    ): LiveTeam[] {
+      // Build a set of player_keys currently on each team's roster.
+      const rosterByTeam = new Map<string, Set<string>>();
+      for (const r of rosters) {
+        const teamName = r.team_name || "";
+        const keys = new Set<string>();
+        for (const p of (r.players || [])) {
+          if (p.player_key) keys.add(p.player_key);
+        }
+        rosterByTeam.set(teamName, keys);
+      }
+
+      // Group all 2025 picks by team_name.
+      const teamMap = new Map<string, { eligible: EligiblePlayer[] }>();
+      for (const pick of drafts) {
+        const teamName = pick.team_name || "";
+        if (!teamName) continue;
+        if (!teamMap.has(teamName)) {
+          teamMap.set(teamName, { eligible: [] });
+        }
+        const entry = teamMap.get(teamName)!;
+
+        // Filter out picks the team doesn't currently roster (cut, traded away).
+        const rk = rosterByTeam.get(teamName);
+        if (rk && !rk.has(pick.player_key)) continue;
+
+        // Article XXI: Rounds 21 & 22 are not eligible.
+        if (pick.round >= 21) continue;
+
+        // Article XVI: a player can only be kept for 1 season. Yahoo signals
+        // they were already kept from 2024 into 2025 with keeper_status
+        // 'kept' / 'uneligible'. Those players can't be kept again.
+        const alreadyKept =
+          pick.keeper_status === "kept" ||
+          pick.keeper_status === "uneligible" ||
+          pick.keeper_status === "ineligible" ||
+          pick.keeper === true;
+
+        entry.eligible.push({
+          name: pick.player_name || "",
+          position: pick.position || "",
+          nflTeam: pick.nfl_team || "",
+          draftRound: pick.round,
+          // House rule: every keeper costs the last-round pick (= 22).
+          // Their 2025 draft round is irrelevant for cost — we show it as
+          // context only.
+          newCost: LAST_ROUND_PICK,
+          isLockedAlready: alreadyKept,
+          side: positionSide(pick.position || ""),
+        });
+      }
+
+      // Sort: best value first (late round steals that became starters).
+      const out: LiveTeam[] = [];
+      teamMap.forEach((entry, teamName) => {
+        entry.eligible.sort((a, b) => b.draftRound - a.draftRound);
+        out.push({ teamName, eligible: entry.eligible });
+      });
+      return out;
     }
 
     async function run() {
       const cards = document.querySelectorAll("[data-team-name]");
-      if (cards.length === 0) return; // page not in expected shape
+      if (cards.length === 0) return;
 
-      // 1. Check auth first — fast fail with a clear CTA.
+      // 1. Auth check
       try {
         const auth = await checkAuth();
         if (!auth.authenticated) {
@@ -315,16 +426,16 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
         return;
       }
 
-      // 2. Cache hit?
-      const cached = getCachedRosters();
+      // 2. Cache hit
+      const cached = getCached();
       if (cached) {
-        renderRostersInto(cached.rosters);
+        renderTeamsInto(cached.teams);
         setStatus(`Live data · ${secondsAgo(cached.ts)}s ago`, "ok");
         return;
       }
 
-      // 3. Resolve league_key (handles stale hardcoded fallback)
-      setStatus("Loading Yahoo rosters…", "loading");
+      // 3. Resolve league_key
+      setStatus("Loading Yahoo data…", "loading");
       let leagueKey: string;
       try {
         leagueKey = await resolveLeagueKey();
@@ -334,10 +445,14 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
         return;
       }
 
-      // 4. Fetch rosters
-      let rosters: any[];
+      // 4. Fetch 2025 draft + current roster IN PARALLEL
+      let drafts: any[] = [];
+      let rosters: any[] = [];
       try {
-        rosters = await getRosters(leagueKey);
+        [drafts, rosters] = await Promise.all([
+          getDraftResults(leagueKey, ELIGIBILITY_SEASON),
+          getRosters(leagueKey),
+        ]);
       } catch (e: any) {
         if (e instanceof YahooAuthError) {
           setStatus("Yahoo session expired", "err");
@@ -346,22 +461,28 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
           setStatus("Yahoo rate limited", "err");
           renderGenericError("Rate limited by Yahoo — try again in a minute");
         } else {
-          setStatus("Yahoo roster fetch failed", "err");
-          renderGenericError("Couldn't load rosters");
+          setStatus("Yahoo data fetch failed", "err");
+          renderGenericError("Couldn't load Yahoo data");
         }
         return;
       }
 
+      if (!drafts || drafts.length === 0) {
+        setStatus("No draft data", "err");
+        renderGenericError(`Yahoo returned no ${ELIGIBILITY_SEASON} draft results`);
+        return;
+      }
       if (!rosters || rosters.length === 0) {
-        setStatus("No rosters returned", "err");
-        renderGenericError("Yahoo returned no rosters for this league");
+        setStatus("No roster data", "err");
+        renderGenericError("Yahoo returned no current rosters");
         return;
       }
 
-      const live = yahooRosterToLive(rosters);
-      setCachedRosters(live);
-      renderRostersInto(live);
-      setStatus("Live data · just now", "ok");
+      // 5. Compute eligibility
+      const teams = buildKeeperEligibility(drafts, rosters);
+      setCached(teams);
+      renderTeamsInto(teams);
+      setStatus(`Live data · just now (${drafts.length} picks scanned)`, "ok");
     }
 
     // requestIdleCallback polyfill (Safari doesn't ship it)
@@ -369,7 +490,6 @@ import { teamRosters, getKeeperSummary } from "../data/keepers";
       (window as any).requestIdleCallback ||
       ((cb: () => void) => setTimeout(cb, 1));
 
-    // Defer until idle / DOM ready
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => ric(() => run()));
     } else {
