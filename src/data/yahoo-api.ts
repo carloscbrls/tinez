@@ -99,6 +99,16 @@ export interface YahooDraftResult {
   team_name: string;
   player_key: string;
   player_name: string;
+  /** Round cost Yahoo recorded for this pick. For kept players, this is the
+   *  round they were kept AT. For new picks, it's the round they were drafted
+   *  at. Used to compute next year's keeper cost (= cost + 1). */
+  cost: number;
+  /** Was this pick a keeper FROM a prior year? True → ineligible to keep again. */
+  keeper: boolean;
+  /** Yahoo's eligibility annotation: "kept" | "eligible" | "uneligible" | "ineligible" */
+  keeper_status: string;
+  position?: string;
+  nfl_team?: string;
 }
 
 export interface YahooLeagueSettings {
@@ -295,10 +305,13 @@ export async function getSettings(leagueKey: string): Promise<YahooLeagueSetting
 }
 
 /**
- * Fetch draft results
+ * Fetch draft results for a given season (defaults to current).
+ * Pass season="2025" to get the 2025 draft — needed for keeper eligibility
+ * calculations (each 2025 pick is annotated with keeper_status from Yahoo).
  */
-export async function getDraftResults(leagueKey: string): Promise<YahooDraftResult[]> {
-  const data = await yahooFetch<any>(`/draft?league_key=${leagueKey}`, `yahoo_draft_${leagueKey}`);
+export async function getDraftResults(leagueKey: string, season?: number): Promise<YahooDraftResult[]> {
+  const seasonPart = season ? `&season=${encodeURIComponent(String(season))}` : "";
+  const data = await yahooFetch<any>(`/draft?league_key=${leagueKey}${seasonPart}`, `yahoo_draft_${leagueKey}_${season || "current"}`);
   return extractDraftResults(data);
 }
 
@@ -484,14 +497,31 @@ function extractDraftResults(data: any): YahooDraftResult[] {
   if (!data) return [];
   const picks = data.fantasy_content?.league?.[0]?.draft_results?.draft_result || [];
   if (!Array.isArray(picks)) return [];
-  return picks.map((p: any) => ({
-    pick: parseInt(p.pick, 10) || 0,
-    round: parseInt(p.round, 10) || 0,
-    team_key: p.team_key || "",
-    team_name: "",
-    player_key: p.player_key || "",
-    player_name: "",
-  }));
+  return picks.map((p: any) => {
+    // Yahoo's draft_result has a nested player object with name/full
+    // when out=players is used, but bare string otherwise. Handle both.
+    const playerName =
+      typeof p.player_name === "string"
+        ? p.player_name
+        : p.player_name?.full || p.player?.name?.full || "";
+    const position =
+      p.position || p.display_position || p.player?.display_position || "";
+    const nflTeam =
+      p.editorial_team || p.player?.editorial_team || "";
+    return {
+      pick: parseInt(p.pick, 10) || 0,
+      round: parseInt(p.round, 10) || 0,
+      team_key: p.team_key || "",
+      team_name: p.team_name || "",
+      player_key: p.player_key || p.player?.player_key || "",
+      player_name: playerName,
+      cost: parseInt(p.cost, 10) || 0,
+      keeper: p.keeper === true || p.keeper === "1",
+      keeper_status: String(p.keeper_status || "").toLowerCase(),
+      position,
+      nfl_team: nflTeam,
+    };
+  });
 }
 
 function extractSettings(data: any): YahooLeagueSettings {
