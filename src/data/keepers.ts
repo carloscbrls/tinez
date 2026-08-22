@@ -416,26 +416,15 @@ export const teamRosters: TeamKeepers[] = [
 ];
 
 // Keeper rules: 1+1 format (1 offensive + 1 IDP, or 2 offensive)
-// Players drafted in rounds 1-3 are NOT keeper eligible
-// Players drafted in rounds 4+ ARE keeper eligible
-// Cost = round drafted - 3 (e.g., round 4 = 1st round cost, round 5 = 2nd round cost)
-// Rookies (first 2 years) can be kept for a 10th round cost regardless of draft position
+// Previously-kept players (isKeeper: true) are LOCKED for the 2026 season and
+// cannot be re-drafted. The full eligible pool (round 4+) is intentionally
+// NOT shown on /keepers/ — that data comes from a stale Yahoo import, not the
+// live 2026 roster, and was misleading the league.
+// See PR: hide Keeper Eligible (Rd 4+) section.
 
-export function getKeeperEligible(teamName: string): KeeperPlayer[] {
+export function getKeeperSummary(teamName: string): { kept: KeeperPlayer[] } {
   const team = teamRosters.find(t => t.teamName === teamName);
-  if (!team) return [];
-  return team.players.filter(p => p.draftRound >= 4);
-}
-
-export function getKeeperCost(player: KeeperPlayer): number {
-  if (player.draftRound <= 3) return 0; // Not eligible
-  return player.draftRound - 3; // Round 4 = 1st round, Round 5 = 2nd, etc.
-}
-
-export function getKeeperSummary(teamName: string): { eligible: KeeperPlayer[]; kept: KeeperPlayer[] } {
-  const team = teamRosters.find(t => t.teamName === teamName);
-  if (!team) return { eligible: [], kept: [] };
-  const eligible = team.players.filter(p => p.draftRound >= 4);
+  if (!team) return { kept: [] };
   const kept = team.players.filter(p => p.isKeeper);
-  return { eligible, kept };
+  return { kept };
 }

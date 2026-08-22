@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { teams } from "../data/teams";
-import { teamRosters, getKeeperEligible, getKeeperCost, getKeeperSummary } from "../data/keepers";
+import { teamRosters, getKeeperSummary } from "../data/keepers";
 ---
 
 <Layout title="Keepers">
@@ -84,7 +84,7 @@ import { teamRosters, getKeeperEligible, getKeeperCost, getKeeperSummary } from 
   <!-- Team Keeper Cards -->
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
     {teamRosters.map(roster => {
-      const { eligible, kept } = getKeeperSummary(roster.teamName);
+      const { kept } = getKeeperSummary(roster.teamName);
       return (
         <div class="glass-card rounded-xl overflow-hidden">
           <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/5 p-4 border-b border-zinc-800/40">
