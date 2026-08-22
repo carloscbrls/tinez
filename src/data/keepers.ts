@@ -1,6 +1,10 @@
 // 2025 Final Rosters & 2026 Keeper Eligibility
 // Source: Yahoo! Sports - TINEZ LEAGUE (ID# 541137) - 2025 Season
-//  = Keeper designation from 2025 draft
+// 🔒 = Keeper designation from 2025 draft (locked for 2026)
+// The "Previously Kept" cards on /keepers/ render from this file (these are
+// the locks everyone needs to see).
+// The "Keeper Eligible" cards are rendered LIVE from Yahoo rosters via the
+// Netlify function (see <script> in src/pages/keepers.astro).
 
 export interface KeeperPlayer {
   name: string;
