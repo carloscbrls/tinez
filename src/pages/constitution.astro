@@ -30,6 +30,9 @@ import Layout from "../layouts/Layout.astro";
     <a href="#playoffs" class="flex-shrink-0 rounded-lg bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border border-zinc-700/30 transition-all">Playoffs</a>
     <a href="#finances" class="flex-shrink-0 rounded-lg bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border border-zinc-700/30 transition-all">Finances</a>
     <a href="#conduct" class="flex-shrink-0 rounded-lg bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border border-zinc-700/30 transition-all">Conduct</a>
+    <a href="#punishment" class="flex-shrink-0 rounded-lg bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border border-zinc-700/30 transition-all">Punishment</a>
+    <a href="#champions" class="flex-shrink-0 rounded-lg bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border border-zinc-700/30 transition-all">Champions</a>
+    <a href="#resources" class="flex-shrink-0 rounded-lg bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 border border-zinc-700/30 transition-all">Resources</a>
   </div>
 
   <!-- Overview -->
@@ -41,12 +44,15 @@ import Layout from "../layouts/Layout.astro";
     <div class="space-y-3 text-sm text-zinc-400">
       <p><strong class="text-zinc-200">League Name:</strong> TINEZ LEAGUE</p>
       <p><strong class="text-zinc-200">Established:</strong> 2014</p>
-      <p><strong class="text-zinc-200">Commissioner:</strong> Carlitos</p>
+      <p><strong class="text-zinc-200">Commissioner:</strong> Carlos Cabrales III (Carlitos)</p>
+      <p><strong class="text-zinc-200">Commissioner Contact:</strong> (209) 423-6633 · carloscbrls@gmail.com</p>
+      <p><strong class="text-zinc-200">Co-Commissioners:</strong> Joshua Phillips ((858) 382-6412) · Darnell Simmons ((669) 207-9577)</p>
+      <p><strong class="text-zinc-200">Treasurer:</strong> Joshua Phillips</p>
       <p><strong class="text-zinc-200">Number of Teams:</strong> 14</p>
-      <p><strong class="text-zinc-200">Platform:</strong> Yahoo Fantasy Sports</p>
+      <p><strong class="text-zinc-200">Platform:</strong> Yahoo Fantasy Sports (League ID 541137)</p>
       <p><strong class="text-zinc-200">Scoring Type:</strong> Head-to-Head</p>
       <p><strong class="text-zinc-200">Format:</strong> 0.5 PPR · IDP · 6pt Passing TD</p>
-      <p><strong class="text-zinc-200">Season Length:</strong> 18 weeks regular season + 3 weeks playoffs</p>
+      <p><strong class="text-zinc-200">Governance:</strong> Three-commissioner system for balance, accountability, and fairness</p>
     </div>
   </div>
 
@@ -139,16 +145,17 @@ import Layout from "../layouts/Layout.astro";
       <h2 class="text-lg font-bold text-amber-400">3. Roster Rules</h2>
     </div>
     <div class="space-y-3 text-sm text-zinc-400">
-      <p><strong class="text-zinc-200">Starting Lineup:</strong> 1 QB, 2 RB, 2 WR, 1 TE, 2 FLEX (RB/WR/TE), 1 K, 3 DL, 3 LB, 3 DB, 1 DEF</p>
-      <p><strong class="text-zinc-200">Bench:</strong> 7 spots</p>
-      <p><strong class="text-zinc-200">IR Spots:</strong> 2</p>
-      <p><strong class="text-zinc-200">Total Roster:</strong> 25 players</p>
+      <p><strong class="text-zinc-200">Starting Offense:</strong> 1 QB, 3 WR, 2 RB, 1 TE, 1 Flex (W/R/T), 1 K</p>
+      <p><strong class="text-zinc-200">Starting IDP:</strong> 2 DL, 2 LB, 2 DB, 1 Any DP</p>
+      <p><strong class="text-zinc-200">Bench:</strong> 6 spots</p>
+      <p><strong class="text-zinc-200">IR Spots:</strong> 3</p>
       <p><strong class="text-zinc-200">Position Limits:</strong> None</p>
-      <p><strong class="text-zinc-200">Waiver Type:</strong> FAAB (Free Agent Acquisition Budget)</p>
-      <p><strong class="text-zinc-200">FAAB Budget:</strong> $100 per season</p>
-      <p><strong class="text-zinc-200">Waiver Period:</strong> 2 days after games</p>
-      <p><strong class="text-zinc-200">Trade Deadline:</strong> Week 12</p>
-      <p><strong class="text-zinc-200">Trade Review:</strong> Commissioner approval (no veto unless collusion)</p>
+      <p><strong class="text-zinc-200">Waiver Type:</strong> Free Agency only (no waivers)</p>
+      <p><strong class="text-zinc-200">Max Transactions (Season):</strong> 50</p>
+      <p><strong class="text-zinc-200">Trade Deadline:</strong> Week 10</p>
+      <p><strong class="text-zinc-200">Trade Acceptance:</strong> Must be accepted 24 hours before kickoff</p>
+      <p><strong class="text-zinc-200">Trade Review:</strong> League votes</p>
+      <p><strong class="text-zinc-200">Roster Oversight:</strong> Empty roster spots filled with lowest-projected bench player</p>
     </div>
   </div>
 
@@ -159,11 +166,10 @@ import Layout from "../layouts/Layout.astro";
       <h2 class="text-lg font-bold text-amber-400">4. Draft Rules</h2>
     </div>
     <div class="space-y-3 text-sm text-zinc-400">
-      <p><strong class="text-zinc-200">Draft Type:</strong> Snake (non-linear)</p>
-      <p><strong class="text-zinc-200">Draft Order:</strong> Determined by previous season's finish (reverse order of standings)</p>
-      <p><strong class="text-zinc-200">Rounds:</strong> 18 rounds</p>
-      <p><strong class="text-zinc-200">Time Per Pick:</strong> 90 seconds</p>
-      <p><strong class="text-zinc-200">Draft Style:</strong> Live online (in-person when possible)</p>
+      <p><strong class="text-zinc-200">Draft Type:</strong> Offline draft (Random Generator order)</p>
+      <p><strong class="text-zinc-200">Draft Order:</strong> Finalized 3-7 days before the draft (League vote on method)</p>
+      <p><strong class="text-zinc-200">Draft Day Theme:</strong> Champion chooses the theme</p>
+      <p><strong class="text-zinc-200">Draft Stream:</strong> Live-streamed on YouTube</p>
       <p><strong class="text-zinc-200">Keeper Declaration:</strong> 24 hours before draft</p>
     </div>
   </div>
@@ -175,13 +181,13 @@ import Layout from "../layouts/Layout.astro";
       <h2 class="text-lg font-bold text-amber-400">5. Keeper Rules</h2>
     </div>
     <div class="space-y-3 text-sm text-zinc-400">
-      <p><strong class="text-zinc-200">Format:</strong> 1+1 Keeper (1 player kept + 1 rookie kept)</p>
-      <p><strong class="text-zinc-200">Cost:</strong> Player costs the round they were drafted in the previous year</p>
-      <p><strong class="text-zinc-200">Undrafted Players:</strong> Cost a last-round pick</p>
-      <p><strong class="text-zinc-200">Rookie Exception:</strong> Rookies can be kept for a 16th-round pick regardless of where drafted</p>
-      <p><strong class="text-zinc-200">Max Keep:</strong> A player cannot be kept more than 2 consecutive seasons</p>
+      <p><strong class="text-zinc-200">Format:</strong> 1 offensive + 1 defensive keeper allowed</p>
+      <p><strong class="text-zinc-200">Eligibility:</strong> Must be rostered by Week 8</p>
+      <p><strong class="text-zinc-200">Keep Length:</strong> Can only be kept for 1 season</p>
       <p><strong class="text-zinc-200">Declaration:</strong> Keepers must be declared 24 hours before the draft</p>
-      <p><strong class="text-zinc-200">Traded Players:</strong> Keeper rights transfer with the player in trades</p>
+      <p><strong class="text-zinc-200">Restriction:</strong> No player listed in last year's draft board (Rounds 21 &amp; 22) may be kept again</p>
+      <p><strong class="text-zinc-200">New Team Owners:</strong> May keep anyone on their roster, including players kept previously by former owners</p>
+      <p><strong class="text-zinc-200">Article XXI:</strong> The "--empty--" draft slot from last year's draft (Round 21) is officially Aaron Donald</p>
     </div>
   </div>
 
@@ -192,12 +198,10 @@ import Layout from "../layouts/Layout.astro";
       <h2 class="text-lg font-bold text-amber-400">6. Playoff Rules</h2>
     </div>
     <div class="space-y-3 text-sm text-zinc-400">
-      <p><strong class="text-zinc-200">Teams:</strong> 6 teams qualify (top 6 of 14)</p>
-      <p><strong class="text-zinc-200">Format:</strong> Seeds 1-2 get first-round bye</p>
-      <p><strong class="text-zinc-200">Quarterfinals:</strong> Week 15 — (3) vs (6), (4) vs (5)</p>
-      <p><strong class="text-zinc-200">Semifinals:</strong> Week 16 — (1) vs lowest winner, (2) vs highest winner</p>
-      <p><strong class="text-zinc-200">Championship:</strong> Week 17 — Super Bowl LX</p>
-      <p><strong class="text-zinc-200">Tiebreaker:</strong> Higher seed wins tie</p>
+      <p><strong class="text-zinc-200">Teams:</strong> 8 teams qualify (playoff bracket)</p>
+      <p><strong class="text-zinc-200">Format:</strong> 8-team bracket, Weeks 15-17</p>
+      <p><strong class="text-zinc-200">Tiebreakers:</strong> Win % → Points For → Head-to-Head → Coin Flip</p>
+      <p><strong class="text-zinc-200">Non-Playoff Teams:</strong> Locked after Week 14</p>
       <p><strong class="text-zinc-200">Consolation:</strong> Non-playoff teams play for draft position</p>
     </div>
   </div>
@@ -209,15 +213,16 @@ import Layout from "../layouts/Layout.astro";
       <h2 class="text-lg font-bold text-amber-400">7. Financial Rules</h2>
     </div>
     <div class="space-y-3 text-sm text-zinc-400">
-      <p><strong class="text-zinc-200">Buy-In:</strong> $150 per team per season</p>
-      <p><strong class="text-zinc-200">Total Pool:</strong> $2,100</p>
-      <p><strong class="text-zinc-200">1st Place:</strong> $1,400</p>
-      <p><strong class="text-zinc-200">2nd Place:</strong> $700</p>
-      <p><strong class="text-zinc-200">3rd Place:</strong> $350</p>
-      <p><strong class="text-zinc-200">Regular Season Champion:</strong> $100</p>
-      <p><strong class="text-zinc-200">Weekly High Score:</strong> $25 (Weeks 1-14)</p>
-      <p><strong class="text-zinc-200">Payment Due:</strong> Before the annual draft</p>
+      <p><strong class="text-zinc-200">Buy-In:</strong> $175 per team per season (14 teams)</p>
+      <p><strong class="text-zinc-200">Total Pool:</strong> $2,450</p>
+      <p><strong class="text-zinc-200">Yahoo Prize Pool:</strong> $1,400</p>
+      <p><strong class="text-zinc-200">Venmo / Apple Pay Bonus Pool:</strong> $840</p>
+      <p><strong class="text-zinc-200">1st Place:</strong> $1,435</p>
+      <p><strong class="text-zinc-200">2nd Place:</strong> $175</p>
+      <p><strong class="text-zinc-200">Weekly Winners:</strong> $30 each (Weeks 11-14)</p>
+      <p><strong class="text-zinc-200">Payment Due:</strong> $175 via Venmo / Apple Pay to Treasurer by Week 10</p>
       <p><strong class="text-zinc-200">Late Payment:</strong> Team is ineligible to draft until dues are paid</p>
+      <p><strong class="text-zinc-200">Prize Pool Adjustment:</strong> If league size changes, payouts scale proportionally</p>
     </div>
   </div>
 
@@ -232,9 +237,96 @@ import Layout from "../layouts/Layout.astro";
       <p><strong class="text-zinc-200">Tanking:</strong> Intentional tanking for better draft position is prohibited.</p>
       <p><strong class="text-zinc-200">Inactive Teams:</strong> Teams that fail to set lineups for 3 consecutive weeks may be removed.</p>
       <p><strong class="text-zinc-200">Trash Talk:</strong> Encouraged. If you dish it, you must be able to take it.</p>
-      <p><strong class="text-zinc-200">Rule Changes:</strong> Proposed during offseason. Requires majority vote (7 of 14).</p>
-      <p><strong class="text-zinc-200">Commissioner Authority:</strong> Commissioner has final say on all disputes. Decisions can be appealed to the league.</p>
+      <p><strong class="text-zinc-200">Rule Changes — Preseason:</strong> Requires 2/3 majority</p>
+      <p><strong class="text-zinc-200">Rule Changes — Midseason:</strong> Requires unanimous approval</p>
+      <p><strong class="text-zinc-200">Commissioner Authority:</strong> Three-commissioner system; Commissioner has final say, appeals go to the league.</p>
+      <p><strong class="text-zinc-200">Communication:</strong> All announcements posted in Yahoo Chat or group text are binding once posted.</p>
       <p><strong class="text-zinc-200">Punishment:</strong> Last place must complete league-assigned punishment before next year's draft or forfeit league membership.</p>
+    </div>
+  </div>
+
+  <!-- Last Place Punishment -->
+  <div id="punishment" class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">🍳</span>
+      <h2 class="text-lg font-bold text-amber-400">9. Last Place Punishment</h2>
+    </div>
+    <div class="space-y-3 text-sm text-zinc-400">
+      <p><strong class="text-zinc-200">Default:</strong> Waffle Challenge — 24 hours in a diner, minus 2 hours per waffle/pancake consumed.</p>
+      <p><strong class="text-zinc-200">Alternative Options:</strong></p>
+      <ul class="list-disc list-inside space-y-1">
+        <li>$300 Fine</li>
+        <li>Golden Toilet Trophy</li>
+        <li>Funny League Video</li>
+        <li>Draft Penalty (last pick, Round 1)</li>
+        <li>Extra $50 on next year's buy-in</li>
+      </ul>
+      <p><strong class="text-zinc-200">Refusal:</strong> $300 fine + next year's fee upfront OR removal from league.</p>
+    </div>
+  </div>
+
+  <!-- Hall of Champions -->
+  <div id="champions" class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">🏆</span>
+      <h2 class="text-lg font-bold text-amber-400">10. Hall of Champions</h2>
+    </div>
+    <div class="space-y-3 text-sm text-zinc-400">
+      <p><strong class="text-zinc-200">2023:</strong> DatDudeVic 🏆</p>
+      <p><strong class="text-zinc-200">2025:</strong> DatDudeVic 🏆</p>
+      <p><strong class="text-zinc-200">2026:</strong> jayyphilly 🏆</p>
+      <p class="pt-2 text-xs text-amber-400/70">Dynasty Recognition: Winning 3+ titles in a row = permanent enshrinement.</p>
+    </div>
+  </div>
+
+  <!-- New Manager Resource Guide -->
+  <div id="resources" class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-lg">📚</span>
+      <h2 class="text-lg font-bold text-amber-400">11. Resource Guide for New Managers</h2>
+    </div>
+    <div class="space-y-4 text-sm text-zinc-400">
+      <p class="text-xs text-zinc-500">Welcome to fantasy football! Since this is a 14-team Half-PPR Yahoo league, here are the most relevant resources:</p>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">1. Understanding Half-PPR</h3>
+        <p>Yahoo Fantasy Football Scoring Help. Key takeaway: WRs and pass-catching RBs gain more value in this format.</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">2. Draft &amp; Rankings Help</h3>
+        <p>Yahoo Pre-Draft Rankings &amp; ADP (via league draft room) · CBS Fantasy Football Today Podcast · Fantasy Footballers (Foot Clan) · The Ringer Fantasy Football Show</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">3. Weekly Lineup Help</h3>
+        <p>Yahoo Fantasy App — “Who Should I Start?” Tool · FantasyPros Start/Sit Assistant</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">4. Position Tips in Half-PPR</h3>
+        <p>QB – Only need 1; plenty of mid-round value. RB – Pass-catching RBs are gold. WR – Most valuable position in Half-PPR. TE – Only a few elite; otherwise stream weekly. K/DEF – Always draft last; stream matchups.</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">5. Waiver Wire Help</h3>
+        <p>FantasyPros Waiver Rankings · Yahoo Waiver Wire Articles (inside the app weekly)</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">6. Trade Analyzer</h3>
+        <p>FantasyPros Trade Analyzer · Yahoo’s in-app trade comparison tool</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">7. News &amp; Injury Updates</h3>
+        <p>NBC Sports Edge Player News · Yahoo Player Cards (tap a player’s name for live news/injuries)</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">8. For Beginners</h3>
+        <p>Fantasy Football 101 – NFL Guide · FantasyPros Glossary</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">9. Office-Friendly Podcasts</h3>
+        <p>Yahoo Fantasy Football Forecast · CBS Fantasy Football Today · The Ringer Fantasy Football Show</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-zinc-200 mb-1">10. IDP (New Teams)</h3>
+        <p>New teams who haven't done IDP: review IDP Top Players and defensive scoring guide.</p>
+      </div>
     </div>
   </div>
 

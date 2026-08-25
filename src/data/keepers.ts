@@ -26,7 +26,7 @@ export interface TeamKeepers {
 // Players marked with  were keepers from previous year
 export const teamRosters: TeamKeepers[] = [
   {
-    teamName: "Best Pacheco Hoe",
+    teamName: "💰 KING FUCKN PHILLY🏅",
     manager: "jayyphilly",
     players: [
       { name: "Bijan Robinson", position: "RB", nflTeam: "ATL", draftRound: 1, draftPick: 1, isKeeper: false },
@@ -138,7 +138,7 @@ export const teamRosters: TeamKeepers[] = [
     ],
   },
   {
-    teamName: "Frozen Fury",
+    teamName: "Just Lost To Carlos",
     manager: "Carlitos",
     players: [
       { name: "Omarion Hampton", position: "RB", nflTeam: "CAR", draftRound: 1, draftPick: 5, isKeeper: false },
@@ -166,7 +166,7 @@ export const teamRosters: TeamKeepers[] = [
     ],
   },
   {
-    teamName: "APieceofToast!",
+    teamName: "Kittle_My_Ballz",
     manager: "Daniel",
     players: [
       { name: "Brock Purdy", position: "QB", nflTeam: "SF", draftRound: 1, draftPick: 6, isKeeper: false },
@@ -222,7 +222,7 @@ export const teamRosters: TeamKeepers[] = [
     ],
   },
   {
-    teamName: "The Red Hare & Golden Dragon",
+    teamName: "2 Chainz",
     manager: "darnell",
     players: [
       { name: "Justin Jefferson", position: "WR", nflTeam: "MIN", draftRound: 1, draftPick: 8, isKeeper: false },

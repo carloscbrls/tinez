@@ -17,8 +17,8 @@ export interface WeeklySchedule {
 // 2025 season matchups (will be populated as season progresses)
 export const matchups2025: Matchup[] = [
   // Week 1
-  { week: 1, homeTeam: "Best Pacheco Hoe", homeOwner: "jayyphilly", homeScore: 0, awayTeam: "LaFlamaBlanca", awayOwner: "scooter", awayScore: 0, winner: "TBD" },
-  { week: 1, homeTeam: "The Red Hare & Golden Dragon", homeOwner: "darnell", homeScore: 0, awayTeam: "Take that Daak", awayOwner: "DatDudeVic", awayScore: 0, winner: "TBD" },
+  { week: 1, homeTeam: "💰 KING FUCKN PHILLY🏅", homeOwner: "jayyphilly", homeScore: 0, awayTeam: "LaFlamaBlanca", awayOwner: "scooter", awayScore: 0, winner: "TBD" },
+  { week: 1, homeTeam: "2 Chainz", homeOwner: "darnell", homeScore: 0, awayTeam: "Take that Daak", awayOwner: "DatDudeVic", awayScore: 0, winner: "TBD" },
   { week: 1, homeTeam: "Tua and 0", homeOwner: "Daniel", homeScore: 0, awayTeam: "El Bolillo", awayOwner: "James", awayScore: 0, winner: "TBD" },
   { week: 1, homeTeam: "Hit and Ruggs", homeOwner: "David", homeScore: 0, awayTeam: "Goose", awayOwner: "DatDudeVic", awayScore: 0, winner: "TBD" },
   { week: 1, homeTeam: "Black Team Bitch", homeOwner: "Timothy", homeScore: 0, awayTeam: "I Wentz hard", awayOwner: "scooter", awayScore: 0, winner: "TBD" },

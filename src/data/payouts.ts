@@ -37,8 +37,8 @@ export const payoutStructure = {
 
 // Historical payouts (will be filled as data comes in)
 export const payoutHistory: PayoutRecord[] = [
-  { year: 2025, type: "champion", recipient: "Best Pacheco Hoe (jayyphilly)", amount: 1435, note: "1st Place" },
-  { year: 2025, type: "runnerUp", recipient: "The Red Hare & Golden Dragon (darnell)", amount: 175, note: "2nd Place" },
+  { year: 2025, type: "champion", recipient: "💰 KING FUCKN PHILLY🏅 (jayyphilly)", amount: 1435, note: "1st Place" },
+  { year: 2025, type: "runnerUp", recipient: "2 Chainz (darnell)", amount: 175, note: "2nd Place" },
   { year: 2024, type: "champion", recipient: "Take that Daak (DatDudeVic)", amount: 1435, note: "1st Place" },
   { year: 2024, type: "runnerUp", recipient: "Tua and 0 (Daniel)", amount: 175, note: "2nd Place" },
   { year: 2023, type: "champion", recipient: "Hit and Ruggs (David)", amount: 1435, note: "1st Place" },

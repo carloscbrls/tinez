@@ -366,7 +366,7 @@ export function buildLeagueRecords(): LeagueRecord[] {
     {
       category: "Biggest Blowout Win",
       value: "187.4 - 68.2",
-      holder: "Frozen Fury vs Black Team Bitch",
+      holder: "Just Lost To Carlos vs Black Team Bitch",
       year: 2018,
       icon: "💀",
       description: "Largest margin of victory (119.2 points)",
@@ -390,7 +390,7 @@ export function buildLeagueRecords(): LeagueRecord[] {
     {
       category: "Highest Scoring Game",
       value: "234.8",
-      holder: "Frozen Fury (Carlitos)",
+      holder: "Just Lost To Carlos (Carlitos)",
       year: 2018,
       icon: "⚡",
       description: "Most points in a single matchup",

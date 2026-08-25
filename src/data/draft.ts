@@ -18,8 +18,8 @@ export const draftHistory: DraftYear[] = [
   {
     year: 2025,
     picks: [
-      { round: 1, pick: 1, teamName: "Best Pacheco Hoe", owner: "jayyphilly", playerName: "Christian McCaffrey", position: "RB", nflTeam: "SF" },
-      { round: 1, pick: 2, teamName: "The Red Hare & Golden Dragon", owner: "darnell", playerName: "CeeDee Lamb", position: "WR", nflTeam: "DAL" },
+      { round: 1, pick: 1, teamName: "💰 KING FUCKN PHILLY🏅", owner: "jayyphilly", playerName: "Christian McCaffrey", position: "RB", nflTeam: "SF" },
+      { round: 1, pick: 2, teamName: "2 Chainz", owner: "darnell", playerName: "CeeDee Lamb", position: "WR", nflTeam: "DAL" },
       { round: 1, pick: 3, teamName: "LaFlamaBlanca", owner: "scooter", playerName: "Tyreek Hill", position: "WR", nflTeam: "MIA" },
       { round: 1, pick: 4, teamName: "Take that Daak", owner: "DatDudeVic", playerName: "Ja'Marr Chase", position: "WR", nflTeam: "CIN" },
       { round: 1, pick: 5, teamName: "Tua and 0", owner: "Daniel", playerName: "Bijan Robinson", position: "RB", nflTeam: "ATL" },
@@ -48,8 +48,8 @@ export const draftHistory: DraftYear[] = [
       { round: 1, pick: 9, teamName: "Kraft Mac & Cheese", owner: "karter", playerName: "Puka Nacua", position: "WR", nflTeam: "LAR" },
       { round: 1, pick: 10, teamName: "Jim's Team", owner: "Jim", playerName: "A.J. Brown", position: "WR", nflTeam: "PHI" },
       { round: 1, pick: 11, teamName: "ETSquad", owner: "Eric", playerName: "Josh Allen", position: "QB", nflTeam: "BUF" },
-      { round: 1, pick: 12, teamName: "Best Pacheco Hoe", owner: "jayyphilly", playerName: "Patrick Mahomes", position: "QB", nflTeam: "KC" },
-      { round: 1, pick: 13, teamName: "The Red Hare & Golden Dragon", owner: "darnell", playerName: "Jalen Hurts", position: "QB", nflTeam: "PHI" },
+      { round: 1, pick: 12, teamName: "💰 KING FUCKN PHILLY🏅", owner: "jayyphilly", playerName: "Patrick Mahomes", position: "QB", nflTeam: "KC" },
+      { round: 1, pick: 13, teamName: "2 Chainz", owner: "darnell", playerName: "Jalen Hurts", position: "QB", nflTeam: "PHI" },
       { round: 1, pick: 14, teamName: "LaFlamaBlanca", owner: "scooter", playerName: "Lamar Jackson", position: "QB", nflTeam: "BAL" },
     ],
   },

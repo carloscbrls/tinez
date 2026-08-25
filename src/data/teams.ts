@@ -18,8 +18,8 @@ export interface Team {
 // TINEZ LEAGUE — 14 teams, Yahoo Fantasy Football (ID# 103379)
 // Custom URL: https://football.fantasysports.yahoo.com/league/riptinez
 export const teams: Team[] = [
-  { id: 1, name: "Frozen Fury", owner: "Carlitos", shortName: "FF", primaryColor: "#00BFFF", secondaryColor: "#FFFFFF", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
-  { id: 2, name: "The Red Hare & Golden Dragon", owner: "darnell", shortName: "RHGD", primaryColor: "#DC2626", secondaryColor: "#FFD700", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
+  { id: 1, name: "Just Lost To Carlos", owner: "Carlitos", shortName: "JLTC", primaryColor: "#00BFFF", secondaryColor: "#FFFFFF", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
+  { id: 2, name: "2 Chainz", owner: "darnell", shortName: "2C", primaryColor: "#DC2626", secondaryColor: "#FFD700", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
   { id: 3, name: "LaFlamaBlanca", owner: "scooter", shortName: "LFB", primaryColor: "#FF4500", secondaryColor: "#FFD700", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
   { id: 4, name: "Black Team Bitch", owner: "Timothy", shortName: "BTB", primaryColor: "#1A1A2E", secondaryColor: "#E94560", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
   { id: 5, name: "El Bolillo", owner: "James", shortName: "EB", primaryColor: "#2D6A4F", secondaryColor: "#D4A373", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
@@ -29,8 +29,8 @@ export const teams: Team[] = [
   { id: 9, name: "Injured Reserve's Finest", owner: "David", shortName: "IRF", primaryColor: "#5C4D7D", secondaryColor: "#B8B8D1", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
   { id: 10, name: "Syrup Squad", owner: "karter", shortName: "SS", primaryColor: "#7F4F24", secondaryColor: "#DDB892", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
   { id: 11, name: "THIS WILL HURTS A LITTLE", owner: "tyler", shortName: "TWHL", primaryColor: "#9B2226", secondaryColor: "#CA6702", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
-  { id: 12, name: "Best Pacheco Hoe", owner: "jayyphilly", shortName: "BPH", primaryColor: "#005F73", secondaryColor: "#AE2012", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
-  { id: 13, name: "APieceofToast!", owner: "Daniel", shortName: "APT", primaryColor: "#6B705C", secondaryColor: "#A5A58D", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
+  { id: 12, name: "💰 KING FUCKN PHILLY🏅", owner: "jayyphilly", shortName: "KFP", primaryColor: "#005F73", secondaryColor: "#AE2012", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
+  { id: 13, name: "Kittle_My_Ballz", owner: "abraham", shortName: "KMB", primaryColor: "#6B705C", secondaryColor: "#A5A58D", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
   { id: 14, name: "RemeberTheTrojans", owner: "Todd", shortName: "RTT", primaryColor: "#800000", secondaryColor: "#FFB347", wins: 0, losses: 0, ties: 0, pointsFor: 0, pointsAgainst: 0, streak: "-", xHandle: "" },
 ];
 

@@ -16,9 +16,9 @@ export interface Champion {
 export const champions: Champion[] = [
   {
     year: 2025,
-    champion: "Best Pacheco Hoe",
+    champion: "💰 KING FUCKN PHILLY🏅",
     championOwner: "jayyphilly",
-    runnerUp: "The Red Hare & Golden Dragon",
+    runnerUp: "2 Chainz",
     runnerUpOwner: "darnell",
     thirdPlace: "LaFlamaBlanca",
     thirdPlaceOwner: "scooter",
