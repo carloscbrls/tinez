@@ -26,3 +26,14 @@
   from = "/api/yahoo/callback"
   to = "/.netlify/functions/yahoo-oauth"
   status = 200
+
+# ESPN Fantasy API (public, no approval needed)
+[[redirects]]
+  from = "/api/espn/*"
+  to = "/.netlify/functions/espn/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/espn"
+  to = "/.netlify/functions/espn"
+  status = 200
